@@ -29,6 +29,6 @@ class PageController extends Controller
 
     public function team(): View
     {
-        return view('pages.team');
+    return view('pages.team', ['members' => config('lumeria.team')]);
     }
 }

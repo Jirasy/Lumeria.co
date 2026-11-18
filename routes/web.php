@@ -9,9 +9,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [PageController::class, 'home'])->name('home');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

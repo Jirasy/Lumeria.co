@@ -74,6 +74,27 @@ Di GitHub klik **Compare & pull request**, tulis apa yang diubah, lalu minta pem
 
 Satu tanda kutip yang hilang membuat situs error. Pemilik repo menjalankan ini sebelum merge:
 
+## 6. Error aneh setelah `git pull`
+
+Jalankan ini setelah pull yang mengubah `composer.lock`, `package.json`, atau folder `database/migrations`:
+
+```bash
+composer install
+php artisan migrate
+npm install
+npm run build
+```
+
+Kalau muncul error `Class "..." not found` saat menjalankan `php artisan`, bersihkan cache paket lalu coba lagi:
+
+```bash
+rm -f bootstrap/cache/packages.php bootstrap/cache/services.php
+composer install
+php artisan package:discover
+```
+
+Masih gagal? Kirim error lengkapnya ke pemilik repo. Jangan menghapus folder `vendor/` dan jangan menjalankan `composer update`.
+
 ```bash
 git fetch origin
 git checkout nama-branch-temanmu

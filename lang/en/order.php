@@ -1,0 +1,67 @@
+<?php
+
+return [
+    // Flash messages
+    'added'      => ':name was added to your cart.',
+    'updated'    => 'Order quantity updated.',
+    'removed'    => 'Product removed from your cart.',
+    'placed'     => 'Your order has been placed. Thank you!',
+    'empty_cart' => 'Your cart is empty.',
+
+    // Order & Paylater page
+    'title'          => 'Order & Paylater',
+    'subtitle'       => 'Pick your snacks, pay in cash or in installments, and see the math clearly.',
+    'cart_title'     => 'Cart',
+    'cart_empty'     => 'Your cart is empty.',
+    'browse'         => 'Browse Products',
+    'product'        => 'Product',
+    'price'          => 'Price',
+    'qty'            => 'Quantity',
+    'line_total'     => 'Subtotal',
+    'subtotal'       => 'Order total',
+    'update'         => 'Update',
+    'remove'         => 'Remove',
+    'checkout_title' => 'Customer Details',
+    'name'           => 'Full name',
+    'phone'          => 'Phone number',
+    'address'        => 'Address (optional)',
+    'payment_method' => 'Payment method',
+    'methods'        => [
+        'cash'     => 'Pay in cash',
+        'paylater' => 'Paylater (installments)',
+    ],
+    'paylater_title' => 'Choose an installment term',
+    'tenor'          => 'Term',
+    'months'         => 'months',
+    'margin'         => 'Margin',
+    'installment'    => 'Installment / month',
+    'total_pay'      => 'Total payment',
+    'choose'         => 'Choose',
+    'rounding_note'  => 'Installments are rounded up to whole rupiah, so the margin may differ by a few rupiah from the exact calculation.',
+    'place_order'    => 'Place Order',
+
+    // Simulator & formula
+    'sim_title'           => 'Paylater Simulation',
+    'sim_amount'          => 'Purchase amount (Rp)',
+    'sim_button'          => 'Calculate',
+    'sim_result'          => 'Simulation for :amount',
+    'formula_title'       => 'How it is calculated',
+    'formula_margin'      => 'Margin = principal × :rate% × number of months',
+    'formula_installment' => 'Monthly installment = (principal + margin) ÷ number of months, rounded up',
+    'formula_total'       => 'Total payment = monthly installment × number of months',
+    'formula_fixed'       => 'The margin is fixed upfront and does not grow during the term.',
+
+    // Order detail
+    'detail_title'  => 'Order #:id',
+    'status_label'  => 'Status',
+    'status'        => ['pending' => 'Pending'],
+    'customer'      => 'Customer',
+    'items'         => 'Order items',
+    'payment'       => 'Payment',
+    'margin_rate'   => 'Margin',
+    'per_month'     => ':rate% per month (flat)',
+    'schedule'      => 'Installment schedule',
+    'installment_n' => 'Installment #:n',
+    'privacy_note'  => 'This page can only be opened from the same browser or by the account that placed the order.',
+    'order_again'   => 'Order Again',
+];

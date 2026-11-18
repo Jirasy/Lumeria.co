@@ -1,0 +1,67 @@
+<?php
+
+return [
+    // Pesan flash
+    'added'      => ':name ditambahkan ke keranjang.',
+    'updated'    => 'Jumlah pesanan diperbarui.',
+    'removed'    => 'Produk dihapus dari keranjang.',
+    'placed'     => 'Pesanan berhasil dibuat. Terima kasih!',
+    'empty_cart' => 'Keranjang masih kosong.',
+
+    // Halaman Order & Paylater
+    'title'          => 'Pesan & Paylater',
+    'subtitle'       => 'Pilih camilan, bayar tunai atau cicil, dan lihat hitungannya secara transparan.',
+    'cart_title'     => 'Keranjang',
+    'cart_empty'     => 'Keranjang kamu masih kosong.',
+    'browse'         => 'Lihat Produk',
+    'product'        => 'Produk',
+    'price'          => 'Harga',
+    'qty'            => 'Jumlah',
+    'line_total'     => 'Subtotal',
+    'subtotal'       => 'Total belanja',
+    'update'         => 'Ubah',
+    'remove'         => 'Hapus',
+    'checkout_title' => 'Data Pemesan',
+    'name'           => 'Nama lengkap',
+    'phone'          => 'Nomor telepon',
+    'address'        => 'Alamat (opsional)',
+    'payment_method' => 'Metode pembayaran',
+    'methods'        => [
+        'cash'     => 'Bayar tunai',
+        'paylater' => 'Paylater (cicilan)',
+    ],
+    'paylater_title' => 'Pilih tenor cicilan',
+    'tenor'          => 'Tenor',
+    'months'         => 'bulan',
+    'margin'         => 'Margin',
+    'installment'    => 'Cicilan / bulan',
+    'total_pay'      => 'Total bayar',
+    'choose'         => 'Pilih',
+    'rounding_note'  => 'Cicilan dibulatkan ke atas ke rupiah penuh, sehingga margin bisa berbeda beberapa rupiah dari hitungan murni.',
+    'place_order'    => 'Buat Pesanan',
+
+    // Simulator & rumus
+    'sim_title'           => 'Simulasi Paylater',
+    'sim_amount'          => 'Nominal belanja (Rp)',
+    'sim_button'          => 'Hitung',
+    'sim_result'          => 'Hasil simulasi untuk :amount',
+    'formula_title'       => 'Cara menghitung',
+    'formula_margin'      => 'Margin = pokok × :rate% × jumlah bulan',
+    'formula_installment' => 'Cicilan per bulan = (pokok + margin) ÷ jumlah bulan, dibulatkan ke atas',
+    'formula_total'       => 'Total bayar = cicilan per bulan × jumlah bulan',
+    'formula_fixed'       => 'Margin ditetapkan di awal dan tidak bertambah selama tenor.',
+
+    // Detail pesanan
+    'detail_title'  => 'Pesanan #:id',
+    'status_label'  => 'Status',
+    'status'        => ['pending' => 'Menunggu'],
+    'customer'      => 'Pemesan',
+    'items'         => 'Rincian pesanan',
+    'payment'       => 'Pembayaran',
+    'margin_rate'   => 'Margin',
+    'per_month'     => ':rate% per bulan (flat)',
+    'schedule'      => 'Jadwal cicilan',
+    'installment_n' => 'Cicilan ke-:n',
+    'privacy_note'  => 'Halaman ini hanya bisa dibuka dari browser yang sama atau akun yang membuat pesanan.',
+    'order_again'   => 'Pesan Lagi',
+];

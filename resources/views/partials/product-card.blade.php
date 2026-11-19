@@ -1,4 +1,4 @@
-<div class="card h-100 border-0 shadow-sm product-card overflow-hidden">
+<div id="product-{{ $product->id }}" class="card h-100 border-0 shadow-sm product-card overflow-hidden">
     @if ($product->image)
         <div class="product-art">
             <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-100 h-100 object-fit-cover" loading="lazy">

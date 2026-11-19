@@ -10,17 +10,17 @@
     ];
     $locale = app()->getLocale();
 @endphp
-<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
-    <div class="container">
+<nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top" aria-label="{{ __('nav.menu') }}">
+    <div class="container-fluid px-3 px-xl-4">
         <a class="navbar-brand fw-bold text-lumeria" href="{{ route('home') }}">{{ __('common.brand') }}</a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="{{ __('nav.menu') }}">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav me-auto mb-2 mb-xl-0">
                 @foreach ($links as [$route, $label])
                     @php $active = request()->routeIs($route, $route . '.*'); @endphp
                     <li class="nav-item">
@@ -32,8 +32,8 @@
                 @endforeach
             </ul>
 
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <div class="btn-group btn-group-sm" role="group" aria-label="{{ __('common.language') }}">
+            <div class="nav-actions d-flex flex-wrap align-items-center gap-2">
+                <div class="btn-group btn-group-sm lang-switch" role="group" aria-label="{{ __('common.language') }}">
                     @foreach (['id' => 'ID', 'en' => 'EN'] as $code => $text)
                         <a href="{{ route('lang.switch', $code) }}"
                            class="btn btn-outline-dark{{ $locale === $code ? ' active' : '' }}"@if ($locale === $code) aria-current="true"@endif>{{ $text }}</a>

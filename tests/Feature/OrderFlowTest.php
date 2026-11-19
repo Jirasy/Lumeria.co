@@ -34,11 +34,13 @@ class OrderFlowTest extends TestCase
         ], $override);
     }
 
-    public function test_add_to_cart_stores_product_in_session(): void
+        public function test_add_to_cart_stores_product_in_session(): void
     {
-        $this->post('/cart', ['product_id' => $this->milk->id, 'quantity' => 2])
-            ->assertRedirect(route('order'))
-            ->assertSessionHas('lumeria_cart', [$this->milk->id => 2]);
+        $this->from('/products')
+            ->post('/cart', ['product_id' => $this->milk->id, 'quantity' => 2])
+            ->assertRedirect(url('/products#product-' . $this->milk->id))
+            ->assertSessionHas('lumeria_cart', [$this->milk->id => 2])
+            ->assertSessionHas('cart_link', true);
     }
 
     public function test_guest_can_checkout_with_cash(): void

@@ -10,18 +10,22 @@ use Illuminate\Http\Request;
 class CartController extends Controller
 {
     public function add(Request $request, Cart $cart): RedirectResponse
-    {
-        $data = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-            'quantity'   => ['nullable', 'integer', 'min:1', 'max:99'],
-        ]);
+{
+    $data = $request->validate([
+        'product_id' => ['required', 'integer', 'exists:products,id'],
+        'quantity'   => ['nullable', 'integer', 'min:1', 'max:99'],
+    ]);
 
-        $product = Product::active()->findOrFail($data['product_id']);
-        $cart->add($product, $data['quantity'] ?? 1);
+    $product = Product::active()->findOrFail($data['product_id']);
+    $cart->add($product, $data['quantity'] ?? 1);
 
-        return redirect()->route('order')
-            ->with('status', __('order.added', ['name' => $product->name]));
-    }
+    // Kembali ke halaman asal pada posisi kartu produk, bukan dilempar ke /order.
+    $previous = url()->previous(route('products'));
+
+    return redirect()->to($previous . '#product-' . $product->id)
+        ->with('status', __('order.added', ['name' => $product->name]))
+        ->with('cart_link', true);
+}
 
     public function update(Request $request, Product $product, Cart $cart): RedirectResponse
     {

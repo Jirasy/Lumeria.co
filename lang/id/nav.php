@@ -11,4 +11,6 @@ return [
     'register'  => 'Daftar',
     'dashboard' => 'Dashboard',
     'logout'    => 'Keluar',
+    'cart'      => 'Keranjang',
+    'menu'      => 'Menu',
 ];

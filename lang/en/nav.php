@@ -11,4 +11,6 @@ return [
     'register'  => 'Register',
     'dashboard' => 'Dashboard',
     'logout'    => 'Logout',
+    'cart'      => 'Cart',
+    'menu'      => 'Menu',
 ];

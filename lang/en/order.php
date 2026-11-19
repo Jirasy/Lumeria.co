@@ -64,4 +64,6 @@ return [
     'installment_n' => 'Installment #:n',
     'privacy_note'  => 'This page can only be opened from the same browser or by the account that placed the order.',
     'order_again'   => 'Order Again',
+
+    'view_cart'     => 'View cart',
 ];

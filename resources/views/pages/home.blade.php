@@ -15,8 +15,8 @@
                         <a href="{{ route('order') }}" class="btn btn-outline-dark btn-lg">{{ __('home.cta_order') }}</a>
                     </div>
                 </div>
-                    <div class="col-lg-5 d-none d-md-block" aria-hidden="true">
-                        <div class="hero-art mx-auto">
+                    <div class="col-lg-5 mt-4 mt-lg-0" aria-hidden="true">
+                        <div class="hero-art">
                             <div class="hero-blob"></div>
                                 <x-product-art slug="original-milk" :bare="true" :size="170" class="hero-ball hero-ball-1" />
                                 <x-product-art slug="bola-teh" :bare="true" :size="130" class="hero-ball hero-ball-2" />

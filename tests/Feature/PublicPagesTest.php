@@ -77,4 +77,19 @@ class PublicPagesTest extends TestCase
             ->get('/')
             ->assertSee('text-bg-danger">3</span>', false);
     }
+
+        public function test_public_layout_loads_bootstrap_locally(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('vendor/bootstrap/bootstrap.min.css', false)
+            ->assertSee('vendor/bootstrap/bootstrap.bundle.min.js', false)
+            ->assertDontSee('cdn.jsdelivr.net', false);
+    }
+
+    public function test_bootstrap_files_exist_and_are_not_empty(): void
+    {
+        $this->assertGreaterThan(100000, filesize(public_path('vendor/bootstrap/bootstrap.min.css')));
+        $this->assertGreaterThan(50000, filesize(public_path('vendor/bootstrap/bootstrap.bundle.min.js')));
+    }
 }

@@ -64,4 +64,6 @@ return [
     'installment_n' => 'Cicilan ke-:n',
     'privacy_note'  => 'Halaman ini hanya bisa dibuka dari browser yang sama atau akun yang membuat pesanan.',
     'order_again'   => 'Pesan Lagi',
+
+    'view_cart'     => 'Lihat keranjang',
 ];

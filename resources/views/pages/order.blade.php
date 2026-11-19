@@ -9,7 +9,7 @@
         $method = old('payment_method', 'cash');
     @endphp
 
-    <section class="py-5">
+    <section class="py-4 py-md-5">
         <div class="container">
             <h1 class="fw-bold">{{ __('order.title') }}</h1>
             <p class="lead text-muted">{{ __('order.subtitle') }}</p>
@@ -26,7 +26,7 @@
                                 <a href="{{ route('products') }}" class="btn btn-lumeria">{{ __('order.browse') }}</a>
                             @else
                                 <div class="table-responsive">
-                                    <table class="table align-middle">
+                                    <table class="table align-middle stack-table mb-0">
                                         <thead>
                                             <tr>
                                                 <th scope="col">{{ __('order.product') }}</th>
@@ -40,25 +40,26 @@
                                             @foreach ($items as $row)
                                                 @php $p = $row['product']; @endphp
                                                 <tr>
-                                                    <td>{{ $p->name }}</td>
-                                                    <td class="text-end">{{ $rp($p->price) }}</td>
-                                                    <td style="min-width: 9rem">
+                                                    <td data-label="{{ __('order.product') }}" class="fw-semibold">{{ $p->name }}</td>
+                                                    <td data-label="{{ __('order.price') }}" class="text-sm-end">{{ $rp($p->price) }}</td>
+                                                    <td data-label="{{ __('order.qty') }}" style="min-width: 9rem">
                                                         <form method="POST" action="{{ route('cart.update', $p) }}" class="d-flex gap-1">
                                                             @csrf
                                                             @method('PATCH')
                                                             <input type="number" name="quantity" value="{{ $row['quantity'] }}"
-                                                                   min="0" max="99" class="form-control form-control-sm"
+                                                                   min="0" max="99" inputmode="numeric"
+                                                                   class="form-control form-control-sm"
                                                                    aria-label="{{ __('order.qty') }}">
                                                             <button type="submit" class="btn btn-sm btn-outline-dark">{{ __('order.update') }}</button>
                                                         </form>
                                                     </td>
-                                                    <td class="text-end">{{ $rp($row['line_total']) }}</td>
-                                                    <td class="text-end">
+                                                    <td data-label="{{ __('order.line_total') }}" class="text-sm-end fw-semibold">{{ $rp($row['line_total']) }}</td>
+                                                    <td data-label="" class="text-sm-end">
                                                         <form method="POST" action="{{ route('cart.remove', $p) }}">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                                    aria-label="{{ __('order.remove') }}: {{ $p->name }}">&times;</button>
+                                                                    aria-label="{{ __('order.remove') }}: {{ $p->name }}">{{ __('order.remove') }}</button>
                                                         </form>
                                                     </td>
                                                 </tr>
@@ -66,8 +67,8 @@
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th colspan="3" class="text-end">{{ __('order.subtotal') }}</th>
-                                                <th class="text-end">{{ $rp($subtotal) }}</th>
+                                                <th colspan="3" class="text-sm-end">{{ __('order.subtotal') }}</th>
+                                                <th class="text-sm-end">{{ $rp($subtotal) }}</th>
                                                 <th></th>
                                             </tr>
                                         </tfoot>
@@ -86,21 +87,27 @@
                                 <div class="mb-3">
                                     <label for="customer_name" class="form-label">{{ __('order.name') }}</label>
                                     <input id="customer_name" type="text" name="customer_name" required maxlength="100"
+                                           autocomplete="name"
                                            value="{{ old('customer_name', auth()->user()?->name) }}"
                                            class="form-control @error('customer_name') is-invalid @enderror">
+                                    @error('customer_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="customer_phone" class="form-label">{{ __('order.phone') }}</label>
                                     <input id="customer_phone" type="tel" name="customer_phone" required maxlength="20"
+                                           inputmode="tel" autocomplete="tel"
                                            value="{{ old('customer_phone') }}"
                                            class="form-control @error('customer_phone') is-invalid @enderror">
+                                    @error('customer_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="customer_address" class="form-label">{{ __('order.address') }}</label>
                                     <textarea id="customer_address" name="customer_address" rows="2" maxlength="500"
+                                              autocomplete="street-address"
                                               class="form-control @error('customer_address') is-invalid @enderror">{{ old('customer_address') }}</textarea>
+                                    @error('customer_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                                 <fieldset class="mb-3">
@@ -139,7 +146,7 @@
                                 <div class="col">
                                     <label for="amount" class="visually-hidden">{{ __('order.sim_amount') }}</label>
                                     <input id="amount" type="number" name="amount" min="1000" max="100000000"
-                                           placeholder="{{ __('order.sim_amount') }}"
+                                           inputmode="numeric" placeholder="{{ __('order.sim_amount') }}"
                                            value="{{ request('amount') }}" class="form-control">
                                 </div>
                                 <div class="col-auto">

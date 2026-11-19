@@ -12,7 +12,21 @@
 @endphp
 <nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top" aria-label="{{ __('nav.menu') }}">
     <div class="container-fluid px-3 px-xl-4">
-        <a class="navbar-brand fw-bold text-lumeria" href="{{ route('home') }}">{{ __('common.brand') }}</a>
+        <a class="navbar-brand d-inline-flex align-items-center gap-2 fw-bold text-lumeria"
+        href="{{ route('home') }}"
+        aria-label="{{ __('common.brand') }}">
+
+    <img
+        src="{{ asset('images/lumeria-logo.png') }}"
+        alt=""
+        width="48"
+        height="48"
+        class="rounded-circle"
+        style="object-fit: cover;"
+    >
+
+    <span>{{ __('common.brand') }}</span>
+    </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="{{ __('nav.menu') }}">

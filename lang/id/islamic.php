@@ -51,19 +51,34 @@ return [
             'basis' => 'QS. Al-Muthaffifin: 1–3; QS. Al-An’am: 152',
         ],
         'higienis' => [
-            'title' => 'Higienis dan baik',
-            'text'  => 'Camilan disiapkan dengan alat dan tangan yang bersih. Kami berupaya menyajikan makanan yang halal dan thayyib (baik).',
-            'basis' => 'QS. Al-Baqarah: 168',
+            'title' => 'Halal, thayyib, dan higienis',
+            'text'  => 'Kami berupaya memilih bahan yang halal dan baik mutunya, lalu menyiapkannya dengan alat dan tangan yang bersih. Bahan yang diragukan kehalalan atau kesegarannya tidak kami pakai.',
+            'basis' => 'QS. Al-Baqarah: 168; QS. Al-Ma’idah: 88',
         ],
         'jujur' => [
             'title' => 'Layanan jujur',
             'text'  => 'Deskripsi produk apa adanya. Pada Paylater, rumus margin, cicilan per bulan, dan total bayar ditampilkan sebelum pesanan dibuat.',
             'basis' => 'HR. al-Bukhari no. 2079; HR. Muslim no. 101',
         ],
+        'transparan' => [
+            'title' => 'Transparan',
+            'text'  => 'Rincian pesanan, jadwal cicilan tiap bulan, dan catatan pembulatan ditampilkan lengkap, sehingga pembeli bisa memeriksa ulang hitungannya sendiri.',
+            'basis' => 'QS. Al-Baqarah: 282; HR. al-Bukhari no. 2079',
+        ],
+        'adil' => [
+            'title' => 'Layanan yang adil',
+            'text'  => 'Bayar tunai menjadi pilihan awal; Paylater hanya opsi tambahan dengan tenor singkat. Margin ditetapkan di awal dan tidak bertambah karena keterlambatan, sehingga pembeli tidak terjebak utang yang membengkak. Ini penerapan prinsip keadilan, bukan klaim sertifikasi syariah.',
+            'basis' => 'QS. An-Nahl: 90',
+        ],
         'amanah' => [
             'title' => 'Amanah',
             'text'  => 'Harga pada pesanan dicatat saat transaksi sehingga tidak berubah, dan rincian pesanan hanya bisa dibuka oleh pemesannya.',
             'basis' => 'QS. Al-Anfal: 27',
+        ],
+        'berkah' => [
+            'title' => 'Keberkahan',
+            'text'  => 'Kami meniatkan usaha ini sebagai ikhtiar yang halal. Untung kecil yang jujur lebih kami pilih daripada untung besar dengan menyembunyikan kekurangan, karena berkah lebih berharga daripada sekadar laba.',
+            'basis' => 'HR. al-Bukhari no. 2079',
         ],
     ],
 

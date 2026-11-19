@@ -51,19 +51,34 @@ return [
             'basis' => 'Al-Mutaffifin: 1–3; Al-An’am: 152',
         ],
         'higienis' => [
-            'title' => 'Clean and wholesome',
-            'text'  => 'Our snacks are prepared with clean tools and hands. We strive to serve food that is halal and tayyib (wholesome).',
-            'basis' => 'Al-Baqarah: 168',
+            'title' => 'Halal, tayyib, and hygienic',
+            'text'  => 'We strive to choose ingredients that are halal and of good quality, then prepare them with clean tools and hands. Ingredients whose halal status or freshness is in doubt are not used.',
+            'basis' => 'Al-Baqarah: 168; Al-Ma’idah: 88',
         ],
         'jujur' => [
             'title' => 'Honest service',
             'text'  => 'Product descriptions are straightforward. With Paylater, the margin formula, the monthly installment, and the total payment are shown before an order is placed.',
             'basis' => 'al-Bukhari no. 2079; Muslim no. 101',
         ],
+        'transparan' => [
+            'title' => 'Transparency',
+            'text'  => 'Order details, the monthly installment schedule, and the rounding note are shown in full, so customers can double-check the math themselves.',
+            'basis' => 'Al-Baqarah: 282; al-Bukhari no. 2079',
+        ],
+        'adil' => [
+            'title' => 'Fair service',
+            'text'  => 'Cash is the default choice; Paylater is only an extra option with a short term. The margin is fixed upfront and never grows with late payment, so customers are not trapped in growing debt. This applies the principle of fairness; it is not a claim of sharia certification.',
+            'basis' => 'An-Nahl: 90',
+        ],
         'amanah' => [
             'title' => 'Trustworthiness',
             'text'  => 'Prices are recorded at the time of purchase so they never change afterwards, and order details can only be opened by the person who placed the order.',
             'basis' => 'Al-Anfal: 27',
+        ],
+        'berkah' => [
+            'title' => 'Barakah (blessing)',
+            'text'  => 'We treat this business as an honest effort for lawful earnings. We would rather earn a small, honest profit than a large one made by hiding flaws, because blessing is worth more than profit alone.',
+            'basis' => 'al-Bukhari no. 2079',
         ],
     ],
 

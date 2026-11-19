@@ -1,21 +1,17 @@
-@php
-    $emoji = [
-        'original-milk'           => '🥛',
-        'bola-teh'                => '🍵',
-        'bola-kopi'               => '☕',
-        'bolu-lumer-cokelat-keju' => '🍰',
-        'kue-balok-lumer'         => '🧇',
-        'es-krim-lumeria-creamy'  => '🍦',
-    ][$product->slug] ?? '🍬';
-@endphp
-<div class="card h-100 shadow-sm product-card">
-    <div class="card-body d-flex flex-column">
-        <div class="product-emoji mb-2" aria-hidden="true">{{ $emoji }}</div>
+<div class="card h-100 border-0 shadow-sm product-card overflow-hidden">
+    @if ($product->image)
+        <div class="product-art">
+            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-100 h-100 object-fit-cover" loading="lazy">
+        </div>
+    @else
+        <x-product-art :slug="$product->slug" :size="104" />
+    @endif
 
+    <div class="card-body d-flex flex-column">
         <div class="d-flex justify-content-between align-items-start gap-2">
             <h3 class="h5 card-title mb-1">{{ $product->name }}</h3>
             @if ($product->is_signature)
-                <span class="badge text-bg-warning">{{ __('products.signature_badge') }}</span>
+                <span class="badge rounded-pill text-bg-warning">{{ __('products.signature_badge') }}</span>
             @endif
         </div>
 

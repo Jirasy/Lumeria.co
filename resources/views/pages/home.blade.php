@@ -15,9 +15,14 @@
                         <a href="{{ route('order') }}" class="btn btn-outline-dark btn-lg">{{ __('home.cta_order') }}</a>
                     </div>
                 </div>
-                <div class="col-lg-5 text-center d-none d-lg-block" aria-hidden="true">
-                    <div class="hero-emoji">🥛🍵☕</div>
-                </div>
+                    <div class="col-lg-5 d-none d-md-block" aria-hidden="true">
+                        <div class="hero-art mx-auto">
+                            <div class="hero-blob"></div>
+                                <x-product-art slug="original-milk" :bare="true" :size="170" class="hero-ball hero-ball-1" />
+                                <x-product-art slug="bola-teh" :bare="true" :size="130" class="hero-ball hero-ball-2" />
+                                <x-product-art slug="bola-kopi" :bare="true" :size="150" class="hero-ball hero-ball-3" />
+                            </div>
+                    </div>
             </div>
         </div>
     </section>

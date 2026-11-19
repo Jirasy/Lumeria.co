@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') | {{ __('common.brand') }}</title>
 
-    <link href="{{ asset('vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
 
 
     <style>
@@ -80,7 +80,7 @@
         </div>
     </footer>
 
-    <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

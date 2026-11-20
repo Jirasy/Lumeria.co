@@ -86,22 +86,15 @@ class OrderController extends Controller
         });
 
         $cart->clear();
-        session(['last_order_id' => $order->id]);
 
         return redirect()->route('order.show', $order)->with('status', __('order.placed'));
     }
 
     public function show(Order $order): View
-    {
-        $owns = auth()->check()
-            && $order->user_id !== null
-            && (int) $order->user_id === (int) auth()->id();
+{
+    // Hanya pemilik pesanan yang boleh melihat nama, telepon, dan alamat di dalamnya.
+    abort_unless((int) $order->user_id === (int) auth()->id(), 403);
 
-        $justPlaced = (int) session('last_order_id') === (int) $order->id;
-
-        // Tanpa ini, siapa pun bisa menebak /order/1, /order/2 dan membaca nama, telepon, alamat orang lain.
-        abort_unless($owns || $justPlaced, 403);
-
-        return view('pages.order-show', ['order' => $order->load('items')]);
-    }
+    return view('pages.order-show', ['order' => $order->load('items.product')]);
+}
 }

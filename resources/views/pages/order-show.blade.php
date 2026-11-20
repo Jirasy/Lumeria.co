@@ -46,7 +46,7 @@
                             <tbody>
                                 @foreach ($order->items as $item)
                                     <tr>
-                                        <td>{{ $item->product_name }}</td>
+                                        <td>{{ $item->product?->display_name ?? $item->product_name }}</td>
                                         <td class="text-end">{{ $rp($item->price) }}</td>
                                         <td class="text-end">{{ $item->quantity }}</td>
                                         <td class="text-end">{{ $rp($item->line_total) }}</td>

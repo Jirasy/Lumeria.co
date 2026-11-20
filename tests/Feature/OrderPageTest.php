@@ -59,7 +59,7 @@ class OrderPageTest extends TestCase
 
     public function test_cart_lists_items_and_subtotal(): void
     {
-        $this->withSession(['lumeria_cart' => [$this->milk->id => 2]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$this->milk->id => 2]])
             ->get('/order')
             ->assertOk()
             ->assertSee('Original Milk')
@@ -69,7 +69,7 @@ class OrderPageTest extends TestCase
     public function test_cart_shows_all_paylater_plans_with_radio_per_tenor(): void
     {
         // Pokok 24.000: tenor 3 => margin 1.440, total 25.440, cicilan 8.480
-        $this->withSession(['lumeria_cart' => [$this->milk->id => 2]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$this->milk->id => 2]])
             ->get('/order')
             ->assertSee('name="tenor_months"', false)
             ->assertSee('Rp 25.440')
@@ -119,7 +119,7 @@ class OrderPageTest extends TestCase
     {
         $order = $this->makeOrder();
 
-        $this->withSession(['last_order_id' => $order->id])
+        $this->loginUser()->withSession(['last_order_id' => $order->id])
             ->get(route('order.show', $order))
             ->assertOk()
             ->assertSee('Original Milk');

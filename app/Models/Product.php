@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'category', 'name', 'slug', 'description_id', 'description_en',
+        'category', 'name', 'name_en', 'slug', 'description_id', 'description_en',
         'price', 'is_signature', 'image', 'is_active',
     ];
 
@@ -34,5 +34,13 @@ class Product extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    // $product->display_name: nama mengikuti bahasa aktif; jatuh ke nama utama bila terjemahan kosong.
+    public function getDisplayNameAttribute(): string
+    {
+        return app()->getLocale() === 'en' && filled($this->name_en)
+            ? $this->name_en
+            : $this->name;
     }
 }

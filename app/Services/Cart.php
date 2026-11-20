@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class Cart
 {
@@ -79,6 +80,11 @@ class Cart
 
     private function raw(): array
     {
+        // Keranjang hanya milik pengguna yang login; sesi tamu dianggap kosong.
+        if (! Auth::check()) {
+            return [];
+        }
+
         return session(self::KEY, []);
     }
 

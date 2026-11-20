@@ -45,7 +45,7 @@ class OrderFlowTest extends TestCase
 
     public function test_guest_can_checkout_with_cash(): void
     {
-        $this->withSession(['lumeria_cart' => [$this->milk->id => 2]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$this->milk->id => 2]])
             ->post('/order', $this->payload())
             ->assertSessionHasNoErrors();
 
@@ -60,7 +60,7 @@ class OrderFlowTest extends TestCase
 
     public function test_paylater_checkout_is_calculated_on_the_server(): void
     {
-        $this->withSession(['lumeria_cart' => [$this->milk->id => 3]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$this->milk->id => 3]])
             ->post('/order', $this->payload(['payment_method' => 'paylater', 'tenor_months' => 3]))
             ->assertSessionHasNoErrors();
 
@@ -74,7 +74,7 @@ class OrderFlowTest extends TestCase
 
     public function test_paylater_rejects_tenor_outside_config(): void
     {
-        $this->withSession(['lumeria_cart' => [$this->milk->id => 1]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$this->milk->id => 1]])
             ->post('/order', $this->payload(['payment_method' => 'paylater', 'tenor_months' => 12]))
             ->assertSessionHasErrors('tenor_months');
 

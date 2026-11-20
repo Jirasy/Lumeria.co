@@ -32,7 +32,7 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 2]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$id => 2]])
             ->get('/products')
             ->assertSee('class="cart-fab', false);
     }
@@ -41,7 +41,7 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 2]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$id => 2]])
             ->get('/order')
             ->assertDontSee('class="cart-fab', false);
     }
@@ -61,7 +61,7 @@ class ResponsiveUiTest extends TestCase
 
     public function test_status_toast_links_to_cart_after_adding(): void
     {
-        $this->withSession(['status' => 'Item ditambahkan.', 'cart_link' => true])
+        $this->loginUser()->withSession(['status' => 'Item ditambahkan.', 'cart_link' => true])
             ->get('/products')
             ->assertSee('Lihat keranjang');
     }
@@ -70,7 +70,7 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 1]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$id => 1]])
             ->get('/order')
             ->assertOk()
             ->assertSee('align-middle stack-table', false)
@@ -84,7 +84,7 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 1]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$id => 1]])
             ->from('/order')
             ->post('/order', ['payment_method' => 'cash'])
             ->assertRedirect('/order')

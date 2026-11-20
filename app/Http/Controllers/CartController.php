@@ -23,7 +23,7 @@ class CartController extends Controller
     $previous = url()->previous(route('products'));
 
     return redirect()->to($previous . '#product-' . $product->id)
-        ->with('status', __('order.added', ['name' => $product->name]))
+        ->with('status', __('order.added', ['name' => $product->display_name]))
         ->with('cart_link', true);
 }
 

@@ -22,9 +22,17 @@
                             <h2 class="h4 mb-3">{{ __('order.cart_title') }}</h2>
 
                             @if ($items->isEmpty())
-                                <p class="text-muted">{{ __('order.cart_empty') }}</p>
-                                <a href="{{ route('products') }}" class="btn btn-lumeria">{{ __('order.browse') }}</a>
-                            @else
+                                @guest
+                                    <p class="mb-3">{{ __('order.login_prompt') }}</p>
+                                    <div class="d-flex flex-wrap gap-2">
+                                    <a href="{{ route('login') }}" class="btn btn-lumeria">{{ __('nav.login') }}</a>
+                                    <a href="{{ route('register') }}" class="btn btn-outline-dark">{{ __('nav.register') }}</a>
+                                    </div>
+                                @else
+                                    <p class="text-muted">{{ __('order.cart_empty') }}</p>
+                                    <a href="{{ route('products') }}" class="btn btn-lumeria">{{ __('order.browse') }}</a>
+                                    @endguest
+                                @else
                                 <div class="table-responsive">
                                     <table class="table align-middle stack-table mb-0">
                                         <thead>
@@ -40,7 +48,7 @@
                                             @foreach ($items as $row)
                                                 @php $p = $row['product']; @endphp
                                                 <tr>
-                                                    <td data-label="{{ __('order.product') }}" class="fw-semibold">{{ $p->name }}</td>
+                                                    <td data-label="{{ __('order.product') }}" class="fw-semibold">{{ $p->display_name }}</td>
                                                     <td data-label="{{ __('order.price') }}" class="text-sm-end">{{ $rp($p->price) }}</td>
                                                     <td data-label="{{ __('order.qty') }}" style="min-width: 9rem">
                                                         <form method="POST" action="{{ route('cart.update', $p) }}" class="d-flex gap-1">
@@ -59,7 +67,7 @@
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                                    aria-label="{{ __('order.remove') }}: {{ $p->name }}">{{ __('order.remove') }}</button>
+                                                                    aria-label="{{ __('order.remove') }}: {{ $p->display_name }}">{{ __('order.remove') }}</button>
                                                         </form>
                                                     </td>
                                                 </tr>

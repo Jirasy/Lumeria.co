@@ -9,14 +9,15 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // Catatan: slug, name, price, category, dan is_signature jangan diubah
-        // sembarangan. Tes (PublicPagesTest, OrderFlowTest, OrderPageTest) dan
-        // emoji di partials/product-card.blade.php bergantung pada nilai-nilai itu.
+        // Catatan: slug, name, name_en, price, category, dan is_signature dipakai oleh tes
+        // (PublicPagesTest, OrderFlowTest, OrderPageTest, ProductLocaleTest) dan oleh
+        // components/product-art.blade.php, yang memilih ilustrasi berdasarkan slug.
         $products = [
             // ===== Bola Susu (Signature) =====
             [
                 'category'       => 'bola_susu',
                 'name'           => 'Original Milk',
+                'name_en'        => 'Original Milk',
                 'slug'           => 'original-milk',
                 'price'          => 12000,
                 'is_signature'   => true,
@@ -26,6 +27,7 @@ class ProductSeeder extends Seeder
             [
                 'category'       => 'bola_susu',
                 'name'           => 'Bola Teh',
+                'name_en'        => 'Tea Ball',
                 'slug'           => 'bola-teh',
                 'price'          => 12000,
                 'is_signature'   => true,
@@ -35,6 +37,7 @@ class ProductSeeder extends Seeder
             [
                 'category'       => 'bola_susu',
                 'name'           => 'Bola Kopi',
+                'name_en'        => 'Coffee Ball',
                 'slug'           => 'bola-kopi',
                 'price'          => 12000,
                 'is_signature'   => true,
@@ -46,6 +49,7 @@ class ProductSeeder extends Seeder
             [
                 'category'       => 'lumer_lainnya',
                 'name'           => 'Bolu Lumer Cokelat/Keju',
+                'name_en'        => 'Lumer Chocolate/Cheese Cake',
                 'slug'           => 'bolu-lumer-cokelat-keju',
                 'price'          => 15000,
                 'is_signature'   => false,
@@ -55,6 +59,7 @@ class ProductSeeder extends Seeder
             [
                 'category'       => 'lumer_lainnya',
                 'name'           => 'Kue Balok Lumer',
+                'name_en'        => 'Lumer Block Cake',
                 'slug'           => 'kue-balok-lumer',
                 'price'          => 10000,
                 'is_signature'   => false,
@@ -64,6 +69,7 @@ class ProductSeeder extends Seeder
             [
                 'category'       => 'lumer_lainnya',
                 'name'           => 'Es Krim Lumeria Creamy',
+                'name_en'        => 'Lumeria Creamy Ice Cream',
                 'slug'           => 'es-krim-lumeria-creamy',
                 'price'          => 8000,
                 'is_signature'   => false,

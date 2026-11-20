@@ -73,7 +73,7 @@ class PublicPagesTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 3]])
+        $this->loginUser()->withSession(['lumeria_cart' => [$id => 3]])
             ->get('/')
             ->assertSee('text-bg-danger">3</span>', false);
     }

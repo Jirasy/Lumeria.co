@@ -115,13 +115,4 @@ class OrderPageTest extends TestCase
             ->assertSee('Cicilan ke-3');
     }
 
-    public function test_just_placed_guest_order_is_visible_in_same_session(): void
-    {
-        $order = $this->makeOrder();
-
-        $this->withSession(['last_order_id' => $order->id])
-            ->get(route('order.show', $order))
-            ->assertOk()
-            ->assertSee('Original Milk');
-    }
 }

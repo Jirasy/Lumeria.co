@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Product;
+use App\Models\User;
 use Database\Seeders\ProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -32,7 +33,8 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 2]])
+        $this->actingAs(User::factory()->create())
+            ->withSession(['lumeria_cart' => [$id => 2]])
             ->get('/products')
             ->assertSee('class="cart-fab', false);
     }
@@ -41,7 +43,8 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 2]])
+        $this->actingAs(User::factory()->create())
+            ->withSession(['lumeria_cart' => [$id => 2]])
             ->get('/order')
             ->assertDontSee('class="cart-fab', false);
     }
@@ -55,7 +58,8 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->post('/cart', ['product_id' => $id])
+        $this->actingAs(User::factory()->create())
+            ->post('/cart', ['product_id' => $id])
             ->assertRedirectContains('/products#product-' . $id);
     }
 
@@ -70,7 +74,8 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 1]])
+        $this->actingAs(User::factory()->create())
+            ->withSession(['lumeria_cart' => [$id => 1]])
             ->get('/order')
             ->assertOk()
             ->assertSee('align-middle stack-table', false)
@@ -84,7 +89,8 @@ class ResponsiveUiTest extends TestCase
     {
         $id = Product::firstOrFail()->id;
 
-        $this->withSession(['lumeria_cart' => [$id => 1]])
+        $this->actingAs(User::factory()->create())
+            ->withSession(['lumeria_cart' => [$id => 1]])
             ->from('/order')
             ->post('/order', ['payment_method' => 'cash'])
             ->assertRedirect('/order')

@@ -15,36 +15,46 @@
 
 /* ==========================================================================
    1. TOKEN PALET
-   Ganti nilai hex di blok ini dengan warna resmi dari logo Lumeria dan PPT tim.
-   Warna turunan (hover, bayangan, cincin fokus) dihitung otomatis dari token ini.
+   Sumber warna: logo bola susu Lumeria dan deck "Lumeria Company Profile".
+     Logo : navy #00193E, krem #FCF3E0, kuning emas #FDBC27
+     Deck : krem #F7F4EE (latar), navy #1B2A40 / #132238, biru #31507A,
+            emas lembut #C9A86A (garis & angka), abu-biru #5B6573 (teks sekunder)
+   Ganti hex di blok ini bila palet berubah. Bila --lumeria-dark / --lumeria-darker
+   dihapus, keduanya dihitung otomatis dari --lumeria (lihat rumus di komentar).
+   Halaman login/dashboard/profil (Tailwind) memakai palet yang sama di tailwind.config.js.
    ========================================================================== */
 :root {
-    /* Warna utama: tombol utama, link, nama merek, bagian "filosofi" */
-    --lumeria: #A35A1F;
-    --lumeria-on-primary: #FFFFFF;     /* teks di atas warna utama (min. rasio kontras 4.5:1) */
-    --lumeria-text: var(--lumeria);    /* warna utama saat dipakai sebagai TEKS di latar terang;
-                                          bila warna logo terlalu terang, isi dengan versi lebih gelap */
+    /* Warna utama: tombol utama, nama merek, link, pita filosofi (navy deck) */
+    --lumeria: #1B2A40;
+    --lumeria-on-primary: #F7F4EE;     /* teks krem di atas navy, kontras sekitar 13:1 */
+    --lumeria-text: var(--lumeria);    /* warna utama saat dipakai sebagai TEKS di latar terang */
 
-    /* Warna aksen: badge "Signature", badge jumlah keranjang, hiasan hero */
-    --lumeria-accent: #F2B35E;
-    --lumeria-on-accent: #3B2A20;      /* teks di atas aksen */
+    /* Aksen: badge "Signature", badge jumlah keranjang, hiasan hero (kuning logo) */
+    --lumeria-accent: #FDBC27;
+    --lumeria-on-accent: #1B2A40;      /* teks di atas aksen, kontras sekitar 8:1 */
+    --lumeria-gold: #C9A86A;           /* emas lembut deck: garis, bingkai foto, hiasan (bukan teks) */
 
     /* Latar */
-    --lumeria-surface: #FFF8F0;        /* latar halaman */
-    --lumeria-surface-soft: #FDE7D3;   /* awal gradien hero */
-    --lumeria-card: #FFFFFF;           /* kartu, navbar, footer, pita putih (biasanya biarkan putih) */
+    --lumeria-surface: #F7F4EE;        /* latar halaman (krem deck) */
+    --lumeria-surface-soft: #FCF3E0;   /* awal gradien hero (krem logo) */
+    --lumeria-card: #FFFFFF;           /* kartu, navbar, footer, pita putih */
     --lumeria-card-rgb: 255, 255, 255; /* sama dengan --lumeria-card, format R, G, B */
 
-    /* Teks */
-    --lumeria-ink: #3B2A20;
+    /* Teks dan garis */
+    --lumeria-ink: #1B2A40;            /* teks utama (navy deck) */
+    --lumeria-muted: #5B6573;          /* teks sekunder / .text-muted (abu-biru deck), kontras 5.3:1 di krem */
+    --lumeria-border: #E4DFD3;         /* garis dan batas kartu (krem gelap deck) */
 
-    /* ---- Turunan otomatis (opsional ditimpa bila PPT punya warna hover sendiri) ---- */
-    --lumeria-dark: color-mix(in srgb, var(--lumeria) 82%, #000);    /* hover */
-    --lumeria-darker: color-mix(in srgb, var(--lumeria) 70%, #000);  /* ditekan / aktif */
-    --lumeria-ring: color-mix(in srgb, var(--lumeria) 55%, transparent);
-    --lumeria-tint: color-mix(in srgb, var(--lumeria) 14%, transparent);
-    --lumeria-muted: color-mix(in srgb, var(--lumeria-ink) 75%, transparent);
-    --lumeria-border: color-mix(in srgb, var(--lumeria-ink) 16%, var(--lumeria-card));
+    /* Interaksi: biru dan navy tua dari deck.
+       Rumus otomatis bila ingin diturunkan dari --lumeria:
+         --lumeria-dark:   color-mix(in srgb, var(--lumeria) 82%, #000);
+         --lumeria-darker: color-mix(in srgb, var(--lumeria) 70%, #000); */
+    --lumeria-dark: #31507A;           /* hover */
+    --lumeria-darker: #132238;         /* ditekan / aktif */
+
+    /* ---- Turunan otomatis ---- */
+    --lumeria-ring: color-mix(in srgb, var(--lumeria-dark) 55%, transparent);
+    --lumeria-tint: color-mix(in srgb, var(--lumeria-accent) 22%, transparent);   /* cahaya emas di hero */
     --lumeria-shadow: color-mix(in srgb, var(--lumeria-ink) 16%, transparent);
 }
 
@@ -204,7 +214,7 @@ h1, h2, .display-4, .display-6 { font-family: Georgia, "Times New Roman", serif;
     position: absolute; inset: 7%;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, var(--lumeria-surface-soft),
-                color-mix(in srgb, var(--lumeria-accent) 75%, #fff) 70%);
+                color-mix(in srgb, var(--lumeria-accent) 55%, #fff) 70%);
     opacity: .7;
 }
 .hero-ball {
@@ -243,10 +253,10 @@ h1, h2, .display-4, .display-6 { font-family: Georgia, "Times New Roman", serif;
     width: 5rem; height: 5rem;
     object-fit: cover;
     object-position: 50% 15%;   /* foto potret: pertahankan wajah, potong bagian bawah */
-    background: var(--lumeria-surface-soft);
     border: 3px solid var(--lumeria-card);
-    box-shadow: 0 0 0 2px var(--lumeria);
+    box-shadow: 0 0 0 2px var(--lumeria-gold);
 }
+img.team-photo { background: var(--lumeria-surface-soft); }   /* hanya foto; placeholder inisial memakai .bg-lumeria */
 .team-photo-fallback { font-size: 1.5rem; letter-spacing: .02em; }
 .team-name { min-width: 0; }
 

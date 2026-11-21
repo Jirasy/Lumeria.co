@@ -5,7 +5,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="text-lg font-bold text-amber-800 dark:text-amber-500">
+                    <a href="{{ route('dashboard') }}" class="text-lg font-bold text-gray-800">
                         {{ __('common.brand') }}
                     </a>
                 </div>

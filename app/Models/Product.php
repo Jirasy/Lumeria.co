@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'category', 'name', 'slug', 'description_id', 'description_en',
+        'category', 'name', 'name_en', 'slug', 'description_id', 'description_en',
         'price', 'is_signature', 'image', 'is_active',
     ];
 
@@ -17,12 +17,22 @@ class Product extends Model
         'is_active'    => 'boolean',
     ];
 
+    // Nama otomatis mengikuti bahasa aktif jika name_en tersedia: $product->display_name
+    public function getDisplayNameAttribute(): string
+    {
+        if (app()->getLocale() === 'en' && filled($this->name_en)) {
+            return (string) $this->name_en;
+        }
+
+        return (string) $this->name;
+    }
+
     // Deskripsi otomatis mengikuti bahasa aktif: $product->description
     public function getDescriptionAttribute(): string
     {
         return app()->getLocale() === 'en'
-            ? $this->description_en
-            : $this->description_id;
+            ? (string) $this->description_en
+            : (string) $this->description_id;
     }
 
     // $product->formatted_price => "Rp 12.000"

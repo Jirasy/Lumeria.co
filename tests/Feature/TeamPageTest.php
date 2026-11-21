@@ -21,13 +21,16 @@ class TeamPageTest extends TestCase
 
     public function test_member_without_photo_file_gets_initials_placeholder(): void
     {
-        config(['lumeria.team' => [$this->member(['photo' => 'images/team/tidak-ada.jpg'])]]);
+    config(['lumeria.team' => [$this->member([
+        'key'   => 'zz-missing-photo-member',
+        'photo' => 'images/team/tidak-ada.jpg',
+    ])]]);
 
-        $this->get('/our-team')
-            ->assertOk()
-            ->assertSee('team-photo-fallback', false)
-            ->assertDontSee('class="team-photo rounded-circle', false)
-            ->assertDontSee('tidak-ada.jpg', false);
+    $this->get('/our-team')
+        ->assertOk()
+        ->assertSee('team-photo-fallback', false)
+        ->assertDontSee('class="team-photo rounded-circle', false)
+        ->assertDontSee('tidak-ada.jpg', false);
     }
 
     public function test_member_photo_is_rendered_when_the_file_exists(): void

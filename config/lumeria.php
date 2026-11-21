@@ -39,7 +39,7 @@ return [
         [
             'key' => 'jimny', 'name' => 'Jimny Al Ramadhan Syahnendi',
             'class' => null, 'hobby' => null, 'motto' => null,
-            'photo' => null, 'whatsapp' => null, 'instagram' => null, 'portfolio' => null,
+            'photo' => null, 'whatsapp' => '+62 895-7082-91000', 'instagram' => null, 'portfolio' => null,
         ],
         [
             'key' => 'alfatih', 'name' => 'Alfatih Mahesa Tora Suwigyo',

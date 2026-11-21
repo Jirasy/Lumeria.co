@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class Cart
 {
@@ -11,6 +12,10 @@ class Cart
 
     public function add(Product $product, int $qty = 1): void
     {
+        if (! Auth::check()) {
+            return;
+        }
+
         $items = $this->raw();
         $items[$product->id] = min(99, ($items[$product->id] ?? 0) + max(1, $qty));
         $this->save($items);
@@ -18,6 +23,10 @@ class Cart
 
     public function set(Product $product, int $qty): void
     {
+        if (! Auth::check()) {
+            return;
+        }
+
         $items = $this->raw();
 
         if ($qty < 1) {
@@ -31,6 +40,10 @@ class Cart
 
     public function remove(Product $product): void
     {
+        if (! Auth::check()) {
+            return;
+        }
+
         $items = $this->raw();
         unset($items[$product->id]);
         $this->save($items);
@@ -38,6 +51,10 @@ class Cart
 
     public function clear(): void
     {
+        if (! Auth::check()) {
+            return;
+        }
+
         session()->forget(self::KEY);
     }
 

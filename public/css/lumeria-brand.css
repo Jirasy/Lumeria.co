@@ -1,0 +1,58 @@
+/*
+ * Lumeria.co - brand tokens dan kelas merek
+ * Warna diambil dari logo resmi (ikon bola susu dan tulisan LUMERIA).
+ * Sumber tunggal untuk warna dan tipografi; dimuat SETELAH Bootstrap
+ * (layouts/lumeria.blade.php). Panduan: docs/brand-guidelines.md
+ */
+
+:root {
+    /* Warna inti (dari logo) */
+    --lumeria: #062a4e;          /* navy ikon: tombol, tautan merek, header */
+    --lumeria-dark: #04163e;     /* navy tulisan: teks isi, hover */
+    --lumeria-darker: #020c28;   /* state ditekan (turunan) */
+    --lumeria-accent: #f9c251;   /* kuning madu: lelehan dan titik pada logo; hanya sebagai isian/aksen */
+    --lumeria-milk: #fdf4e3;     /* susu: krem pada bola logo */
+
+    /* Warna halaman */
+    --lumeria-cream: #fff8f0;    /* latar halaman (tint lebih terang dari susu) */
+    --lumeria-peach: #fde7d3;    /* awal gradasi hero */
+    --lumeria-ink: #04163e;      /* teks isi */
+
+    /* Tipografi */
+    --lumeria-font-display: Georgia, "Times New Roman", serif;
+    --lumeria-font-body: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+    /* Jembatan ke Bootstrap 5.3 */
+    --bs-body-bg: var(--lumeria-cream);
+    --bs-body-color: var(--lumeria-ink);
+    --bs-body-font-family: var(--lumeria-font-body);
+    --bs-warning-rgb: 249, 194, 81;               /* badge "Signature" memakai kuning logo */
+    --bs-link-color-rgb: 6, 42, 78;
+    --bs-link-hover-color-rgb: 4, 22, 62;
+}
+
+h1, h2, .display-4, .display-6 {
+    font-family: var(--lumeria-font-display);
+    letter-spacing: -.01em;
+}
+
+:focus-visible {
+    outline: 3px solid rgba(6, 42, 78, .65);
+    outline-offset: 2px;
+}
+
+.text-lumeria { color: var(--lumeria); }
+.bg-lumeria { background: var(--lumeria); color: #fff; }
+
+.btn-lumeria {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--lumeria);
+    --bs-btn-border-color: var(--lumeria);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--lumeria-dark);
+    --bs-btn-hover-border-color: var(--lumeria-dark);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--lumeria-darker);
+    --bs-btn-active-border-color: var(--lumeria-darker);
+    --bs-btn-border-radius: 50rem;
+}

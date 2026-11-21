@@ -11,7 +11,7 @@
         <div class="d-flex justify-content-between align-items-start gap-2">
             <h3 class="h5 card-title mb-1">{{ $product->name }}</h3>
             @if ($product->is_signature)
-                <span class="badge rounded-pill text-bg-warning">{{ __('products.signature_badge') }}</span>
+                <span class="badge rounded-pill badge-lumeria">{{ __('products.signature_badge') }}</span>
             @endif
         </div>
 

@@ -1,0 +1,297 @@
+/* ==========================================================================
+   Lumeria.co - tema situs publik
+   Dimuat oleh resources/views/layouts/lumeria.blade.php (setelah Bootstrap lokal).
+
+   Daftar isi
+     1. TOKEN PALET   <- satu-satunya bagian yang perlu diedit untuk ganti warna
+     2. Pemetaan ke variabel Bootstrap 5.3
+     3. Tombol, badge, form, navbar (warna)
+     4. Tipografi dan aksesibilitas
+     5. Komponen halaman (hero, kartu produk, tim, keranjang)
+     6. Tabel bertumpuk di layar kecil
+     7. Prefers-reduced-motion
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. TOKEN PALET
+   Ganti nilai hex di blok ini dengan warna resmi dari logo Lumeria dan PPT tim.
+   Warna turunan (hover, bayangan, cincin fokus) dihitung otomatis dari token ini.
+   ========================================================================== */
+:root {
+    /* Warna utama: tombol utama, link, nama merek, bagian "filosofi" */
+    --lumeria: #A35A1F;
+    --lumeria-on-primary: #FFFFFF;     /* teks di atas warna utama (min. rasio kontras 4.5:1) */
+    --lumeria-text: var(--lumeria);    /* warna utama saat dipakai sebagai TEKS di latar terang;
+                                          bila warna logo terlalu terang, isi dengan versi lebih gelap */
+
+    /* Warna aksen: badge "Signature", badge jumlah keranjang, hiasan hero */
+    --lumeria-accent: #F2B35E;
+    --lumeria-on-accent: #3B2A20;      /* teks di atas aksen */
+
+    /* Latar */
+    --lumeria-surface: #FFF8F0;        /* latar halaman */
+    --lumeria-surface-soft: #FDE7D3;   /* awal gradien hero */
+    --lumeria-card: #FFFFFF;           /* kartu, navbar, footer, pita putih (biasanya biarkan putih) */
+    --lumeria-card-rgb: 255, 255, 255; /* sama dengan --lumeria-card, format R, G, B */
+
+    /* Teks */
+    --lumeria-ink: #3B2A20;
+
+    /* ---- Turunan otomatis (opsional ditimpa bila PPT punya warna hover sendiri) ---- */
+    --lumeria-dark: color-mix(in srgb, var(--lumeria) 82%, #000);    /* hover */
+    --lumeria-darker: color-mix(in srgb, var(--lumeria) 70%, #000);  /* ditekan / aktif */
+    --lumeria-ring: color-mix(in srgb, var(--lumeria) 55%, transparent);
+    --lumeria-tint: color-mix(in srgb, var(--lumeria) 14%, transparent);
+    --lumeria-muted: color-mix(in srgb, var(--lumeria-ink) 75%, transparent);
+    --lumeria-border: color-mix(in srgb, var(--lumeria-ink) 16%, var(--lumeria-card));
+    --lumeria-shadow: color-mix(in srgb, var(--lumeria-ink) 16%, transparent);
+}
+
+
+/* ==========================================================================
+   2. Pemetaan ke variabel Bootstrap 5.3
+   ========================================================================== */
+:root {
+    --bs-body-bg: var(--lumeria-surface);
+    --bs-body-color: var(--lumeria-ink);
+    --bs-body-font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --bs-secondary-color: var(--lumeria-muted);   /* .text-muted */
+    --bs-border-color: var(--lumeria-border);
+    --bs-link-color: var(--lumeria-text);
+    --bs-link-hover-color: var(--lumeria-dark);
+}
+
+a { color: var(--lumeria-text); }
+a:hover { color: var(--lumeria-dark); }
+
+/* Pita putih (navbar, footer, section) mengikuti token --lumeria-card, transparansi navbar tetap jalan */
+.bg-white { --bs-white-rgb: var(--lumeria-card-rgb); }
+.card { --bs-card-bg: var(--lumeria-card); --bs-card-border-radius: 1rem; }
+
+
+/* ==========================================================================
+   3. Tombol, badge, form, navbar (warna)
+   ========================================================================== */
+.text-lumeria { color: var(--lumeria-text); }
+.bg-lumeria { background: var(--lumeria); color: var(--lumeria-on-primary); }
+
+.btn-lumeria {
+    --bs-btn-color: var(--lumeria-on-primary);
+    --bs-btn-bg: var(--lumeria);
+    --bs-btn-border-color: var(--lumeria);
+    --bs-btn-hover-color: var(--lumeria-on-primary);
+    --bs-btn-hover-bg: var(--lumeria-dark);
+    --bs-btn-hover-border-color: var(--lumeria-dark);
+    --bs-btn-active-color: var(--lumeria-on-primary);
+    --bs-btn-active-bg: var(--lumeria-darker);
+    --bs-btn-active-border-color: var(--lumeria-darker);
+    --bs-btn-focus-box-shadow: 0 0 0 .25rem var(--lumeria-ring);
+    --bs-btn-border-radius: 50rem;
+}
+
+.btn-outline-lumeria {
+    --bs-btn-color: var(--lumeria-text);
+    --bs-btn-border-color: var(--lumeria);
+    --bs-btn-hover-color: var(--lumeria-on-primary);
+    --bs-btn-hover-bg: var(--lumeria);
+    --bs-btn-hover-border-color: var(--lumeria);
+    --bs-btn-active-color: var(--lumeria-on-primary);
+    --bs-btn-active-bg: var(--lumeria-dark);
+    --bs-btn-active-border-color: var(--lumeria-dark);
+    --bs-btn-focus-box-shadow: 0 0 0 .25rem var(--lumeria-ring);
+    --bs-btn-border-radius: 50rem;
+}
+
+/* Tombol outline netral (login, dashboard, bahasa, CTA hero) memakai warna teks merek */
+.btn-outline-dark {
+    --bs-btn-color: var(--lumeria-ink);
+    --bs-btn-border-color: var(--lumeria-ink);
+    --bs-btn-hover-color: var(--lumeria-surface);
+    --bs-btn-hover-bg: var(--lumeria-ink);
+    --bs-btn-hover-border-color: var(--lumeria-ink);
+    --bs-btn-active-color: var(--lumeria-surface);
+    --bs-btn-active-bg: var(--lumeria-ink);
+    --bs-btn-active-border-color: var(--lumeria-ink);
+}
+
+/* Badge "Signature" di kartu produk */
+.badge-lumeria { background-color: var(--lumeria-accent); color: var(--lumeria-on-accent); }
+
+/* Badge jumlah keranjang di navbar (kelas text-bg-danger di HTML sengaja dibiarkan) */
+.navbar .badge.text-bg-danger {
+    background-color: var(--lumeria-accent) !important;
+    color: var(--lumeria-on-accent) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--lumeria);
+    box-shadow: 0 0 0 .25rem var(--lumeria-ring);
+}
+.form-check-input:checked {
+    background-color: var(--lumeria);
+    border-color: var(--lumeria);
+}
+.form-check-input:focus {
+    border-color: var(--lumeria);
+    box-shadow: 0 0 0 .25rem var(--lumeria-ring);
+}
+
+.navbar {
+    --bs-navbar-color: var(--lumeria-muted);
+    --bs-navbar-hover-color: var(--lumeria-dark);
+    --bs-navbar-active-color: var(--lumeria-text);
+}
+.navbar.bg-white { --bs-bg-opacity: .92; backdrop-filter: blur(8px); }
+.nav-actions { border-top: 1px solid var(--bs-border-color); padding: .75rem 0 .5rem; margin-top: .25rem; }
+@media (min-width: 1200px) {
+    .navbar .nav-link { padding-inline: .55rem; font-size: .95rem; }
+    .nav-actions { border-top: 0; padding: 0; margin-top: 0; }
+}
+.lang-switch .btn { min-width: 2.75rem; }
+
+@media (pointer: coarse) {
+    .btn, .form-control, .form-select { min-height: 2.75rem; }
+    .nav-link { padding-block: .65rem; }
+    .form-check-input { width: 1.4rem; height: 1.4rem; }
+}
+
+
+/* ==========================================================================
+   4. Tipografi dan aksesibilitas
+   ========================================================================== */
+html { scroll-behavior: smooth; }
+main:focus { outline: none; }
+[id^="product-"] { scroll-margin-top: 5.5rem; }
+
+h1, h2, .display-4, .display-6 { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.01em; }
+.display-4 { font-size: clamp(2.25rem, 7vw, 3.5rem); }
+.lead { font-size: clamp(1.05rem, 2.6vw, 1.25rem); }
+
+:focus-visible { outline: 3px solid var(--lumeria-ring); outline-offset: 2px; }
+
+.skip-link {
+    position: absolute; left: .75rem; top: -4rem; z-index: 2000;
+    padding: .5rem 1rem; border-radius: .5rem; background: var(--lumeria-card); color: var(--lumeria-dark);
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .2); transition: top .15s ease;
+}
+.skip-link:focus { top: .75rem; }
+
+
+/* ==========================================================================
+   5. Komponen halaman
+   ========================================================================== */
+
+/* ---- Hero ---- */
+.hero-section {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--lumeria-surface-soft) 0%, var(--lumeria-surface) 65%);
+}
+.hero-section::before {
+    content: "";
+    position: absolute;
+    width: 28rem; height: 28rem;
+    right: -8rem; top: -10rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--lumeria-tint), transparent 70%);
+}
+.hero-section > .container { position: relative; }
+
+.hero-art { position: relative; width: min(22rem, 100%); aspect-ratio: 11 / 10; margin-inline: auto; }
+.hero-blob {
+    position: absolute; inset: 7%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--lumeria-surface-soft),
+                color-mix(in srgb, var(--lumeria-accent) 75%, #fff) 70%);
+    opacity: .7;
+}
+.hero-ball {
+    position: absolute; height: auto; aspect-ratio: 1 / 1;
+    filter: drop-shadow(0 12px 14px color-mix(in srgb, var(--lumeria-ink) 25%, transparent));
+}
+.hero-ball-1 { left: 9%; top: 15%; width: 48%; }
+.hero-ball-2 { right: 7%; top: 5%; width: 37%; }
+.hero-ball-3 { left: 30%; bottom: 3%; width: 43%; }
+@media (max-width: 575.98px) { .hero-art { width: min(16rem, 100%); } }
+
+/* ---- Kartu produk ---- */
+.product-card { transition: transform .18s ease, box-shadow .18s ease; }
+.product-card:hover { transform: translateY(-4px); box-shadow: 0 .75rem 1.5rem var(--lumeria-shadow) !important; }
+.product-art {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    height: 9.5rem;
+    overflow: hidden;
+    background: radial-gradient(circle at 30% 25%, var(--lumeria-card) 0, var(--art-bg) 60%);
+}
+.product-art::before, .product-art::after {
+    content: ""; position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .55);
+}
+.product-art::before { width: 7rem; height: 7rem; left: -2rem; top: -2.5rem; }
+.product-art::after { width: 4rem; height: 4rem; right: -1rem; bottom: -1.5rem; }
+.product-art svg, .product-art img { position: relative; z-index: 1; }
+.product-art svg {
+    filter: drop-shadow(0 6px 8px color-mix(in srgb, var(--lumeria-ink) 18%, transparent));
+    transition: transform .18s ease;
+}
+.product-card:hover .product-art svg { transform: translateY(-3px) scale(1.05); }
+
+/* ---- Halaman Our Team ---- */
+.team-photo {
+    width: 5rem; height: 5rem;
+    object-fit: cover;
+    object-position: 50% 15%;   /* foto potret: pertahankan wajah, potong bagian bawah */
+    background: var(--lumeria-surface-soft);
+    border: 3px solid var(--lumeria-card);
+    box-shadow: 0 0 0 2px var(--lumeria);
+}
+.team-photo-fallback { font-size: 1.5rem; letter-spacing: .02em; }
+.team-name { min-width: 0; }
+
+/* ---- Tombol keranjang melayang ---- */
+.cart-fab {
+    position: fixed; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); z-index: 1030;
+    display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.1rem;
+}
+@media (max-width: 1199.98px) { .has-fab main { padding-bottom: 4.5rem; } }
+
+
+/* ==========================================================================
+   6. Tabel bertumpuk di layar kecil
+   ========================================================================== */
+@media (max-width: 575.98px) {
+    .stack-table thead {
+        position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    .stack-table, .stack-table tbody, .stack-table tfoot,
+    .stack-table tr, .stack-table td, .stack-table th { display: block; width: 100%; }
+    .stack-table tbody tr {
+        position: relative; margin-bottom: .75rem; padding: .5rem .85rem;
+        border: 1px solid var(--bs-border-color); border-radius: .85rem; background: var(--lumeria-card);
+    }
+    .stack-table td {
+        display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+        padding: .4rem 0; border: 0; text-align: right; background: transparent;
+    }
+    .stack-table td::before { content: attr(data-label); font-weight: 600; text-align: left; color: var(--bs-secondary-color); }
+    .stack-table td:not([data-label])::before, .stack-table td[data-label=""]::before { content: none; }
+    .stack-table td[data-label=""] { justify-content: flex-end; }
+    .stack-table td form.d-flex { flex: 0 1 11rem; }
+    .stack-table tfoot tr { display: flex; justify-content: space-between; padding: .25rem .85rem; }
+    .stack-table tfoot th { display: block; width: auto; border: 0; padding: .25rem 0; background: transparent; }
+    .stack-table tfoot th:empty { display: none; }
+    .stack-selectable tbody tr { padding-left: 2.6rem; }
+    .stack-selectable td.stack-radio { position: absolute; left: .85rem; top: .9rem; width: auto; padding: 0; display: block; }
+}
+
+
+/* ==========================================================================
+   7. Prefers-reduced-motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .product-card, .product-art svg, .skip-link { transition: none; }
+    .product-card:hover, .product-card:hover .product-art svg { transform: none; }
+}

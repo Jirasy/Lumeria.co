@@ -6,11 +6,45 @@ return [
         'margin_rate' => 2.0, // persen per bulan, flat
     ],
 
-    // Isi class / hobby / motto tiap anggota. Biarkan null untuk menyembunyikan barisnya.
+    'contact' => [
+        // Dipakai untuk nomor WhatsApp yang ditulis diawali 0 (0812... menjadi 62812...).
+        'country_code' => '62',
+    ],
+
+    /*
+     | Data anggota tim (halaman Our Team).
+     |
+     | Semua kolom selain key & name opsional. Biarkan null untuk menyembunyikan barisnya.
+     |
+     |   photo     Biarkan null. Foto otomatis dicari di public/images/team/<key>.webp|jpg|jpeg|png
+     |             (mis. public/images/team/sanaya.jpg). Isi hanya jika nama file berbeda,
+     |             mis. 'images/team/foto-sanaya.png' (relatif terhadap public/).
+     |   whatsapp  Nomor apa adanya: '0812-3456-7890' atau '+62 812 3456 7890' (otomatis jadi link wa.me).
+     |   instagram '@username' atau URL profil Instagram.
+     |   portfolio URL portofolio / GitHub / situs pribadi (tanpa https:// pun boleh).
+     |
+     | Teks peran, fokus, dan bio singkat ada di lang/id/team.php dan lang/en/team.php.
+     */
     'team' => [
-        ['key' => 'sanaya',  'name' => 'Muhammad Sanaya Algifari Suryatman', 'class' => null, 'hobby' => null, 'motto' => null],
-        ['key' => 'aliful',  'name' => 'Aliful Daffa Imtiyaz Munawar',       'class' => null, 'hobby' => null, 'motto' => null],
-        ['key' => 'jimny',   'name' => 'Jimny Al Ramadhan Syahnendi',        'class' => null, 'hobby' => null, 'motto' => null],
-        ['key' => 'alfatih', 'name' => 'Alfatih Mahesa Tora Suwigyo',        'class' => null, 'hobby' => null, 'motto' => null],
+        [
+            'key' => 'sanaya', 'name' => 'Muhammad Sanaya Algifari Suryatman',
+            'class' => null, 'hobby' => null, 'motto' => null,
+            'photo' => null, 'whatsapp' => null, 'instagram' => null, 'portfolio' => null,
+        ],
+        [
+            'key' => 'aliful', 'name' => 'Aliful Daffa Imtiyaz Munawar',
+            'class' => null, 'hobby' => null, 'motto' => null,
+            'photo' => null, 'whatsapp' => null, 'instagram' => null, 'portfolio' => null,
+        ],
+        [
+            'key' => 'jimny', 'name' => 'Jimny Al Ramadhan Syahnendi',
+            'class' => null, 'hobby' => null, 'motto' => null,
+            'photo' => null, 'whatsapp' => null, 'instagram' => null, 'portfolio' => null,
+        ],
+        [
+            'key' => 'alfatih', 'name' => 'Alfatih Mahesa Tora Suwigyo',
+            'class' => null, 'hobby' => null, 'motto' => null,
+            'photo' => null, 'whatsapp' => null, 'instagram' => null, 'portfolio' => null,
+        ],
     ],
 ];

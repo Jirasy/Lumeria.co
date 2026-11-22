@@ -1,0 +1,875 @@
+From 3bbc3a43a6f9ac4b2ce4eb5d01533f4e371eb492 Mon Sep 17 00:00:00 2001
+From: Lumeria Dev <dev@lumeria.local>
+Date: Sun, 22 Nov 2026 04:58:15 +0000
+Subject: [PATCH] Rombak tampilan Login dan Register selaras identitas FoodTech
+ Lumeria.co
+
+- layouts/guest: Bootstrap lokal + token lumeria.css/lumeria-foodtech.css, tanpa Vite/Tailwind/font luar
+- login dan register: kartu hangat responsif, tautan Masuk/Daftar, Beranda, dan Produk
+- komponen x-auth.field: label terhubung, aria-invalid, aria-describedby, fokus ke error pertama
+- x-language-switcher: varian bootstrap (varian Tailwind untuk dashboard tidak berubah)
+- forgot/reset/confirm-password dan verify-email ikut dikonversi karena memakai layout yang sama
+- lang id/en: 9 key baru di auth.php
+- tests/Feature/AuthUiTest: 11 test baru
+---
+ lang/en/auth.php                              |  10 +
+ lang/id/auth.php                              |  11 ++
+ public/css/lumeria-foodtech.css               |  51 ++++-
+ .../views/auth/confirm-password.blade.php     |  27 +--
+ .../views/auth/forgot-password.blade.php      |  27 ++-
+ resources/views/auth/login.blade.php          |  55 ++----
+ resources/views/auth/register.blade.php       |  68 ++-----
+ resources/views/auth/reset-password.blade.php |  37 +---
+ resources/views/auth/verify-email.blade.php   |  23 +--
+ .../components/auth-session-status.blade.php  |   2 +-
+ .../views/components/auth/field.blade.php     |  48 +++++
+ .../components/language-switcher.blade.php    |  30 ++-
+ resources/views/layouts/guest.blade.php       |  96 ++++++---
+ tests/Feature/AuthUiTest.php                  | 182 ++++++++++++++++++
+ 14 files changed, 473 insertions(+), 194 deletions(-)
+ create mode 100644 resources/views/components/auth/field.blade.php
+ create mode 100644 tests/Feature/AuthUiTest.php
+
+diff --git a/lang/en/auth.php b/lang/en/auth.php
+index 6598e2c..dc30abd 100644
+--- a/lang/en/auth.php
++++ b/lang/en/auth.php
+@@ -17,4 +17,14 @@
+     'password' => 'The provided password is incorrect.',
+     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+ 
++    // Login and register page copy
++    'login_title'       => 'Welcome back',
++    'login_subtitle'    => 'Log in to place orders, manage your cart, and follow your orders.',
++    'register_title'    => 'Create your Lumeria.co account',
++    'register_subtitle' => 'Sign up to start ordering your favorite snacks.',
++    'password_hint'     => 'At least 8 characters.',
++    'no_account'        => 'Don\'t have an account yet?',
++    'have_account'      => 'Already have an account?',
++    'back_home'         => 'Back to Home',
++    'browse_products'   => 'Browse products',
+ ];
+diff --git a/lang/id/auth.php b/lang/id/auth.php
+index 030b6b7..0fda594 100644
+--- a/lang/id/auth.php
++++ b/lang/id/auth.php
+@@ -6,4 +6,15 @@
+     'failed'   => 'Identitas tersebut tidak cocok dengan data kami.',
+     'password' => 'Kata sandi salah.',
+     'throttle' => 'Terlalu banyak upaya masuk. Silahkan coba lagi dalam :seconds detik.',
++
++    // Tampilan halaman masuk dan daftar
++    'login_title'       => 'Selamat datang kembali',
++    'login_subtitle'    => 'Masuk untuk memesan, mengelola keranjang, dan memantau pesanan Anda.',
++    'register_title'    => 'Buat akun Lumeria.co',
++    'register_subtitle' => 'Daftar untuk mulai memesan camilan favorit Anda.',
++    'password_hint'     => 'Minimal 8 karakter.',
++    'no_account'        => 'Belum punya akun?',
++    'have_account'      => 'Sudah punya akun?',
++    'back_home'         => 'Kembali ke Beranda',
++    'browse_products'   => 'Lihat produk',
+ ];
+diff --git a/public/css/lumeria-foodtech.css b/public/css/lumeria-foodtech.css
+index 60a3ddc..6202b8d 100644
+--- a/public/css/lumeria-foodtech.css
++++ b/public/css/lumeria-foodtech.css
+@@ -10,7 +10,8 @@
+      3. Kartu Event & Catering
+      4. Halaman detail produk dan catatan tamu
+      5. Footer gelap
+-     6. Prefers-reduced-motion
++     6. Halaman autentikasi (masuk, daftar, lupa kata sandi)
++     7. Prefers-reduced-motion
+    ========================================================================== */
+ 
+ 
+@@ -267,7 +268,53 @@ .ft-copy {
+ }
+ 
+ 
+-/* 6. Prefers-reduced-motion ------------------------------------------------ */
++/* 6. Halaman autentikasi (masuk, daftar, lupa kata sandi) ------------------ */
++/* Latar hangat yang sama dengan hero beranda; kartu putih dengan garis aksen kuning logo. */
++.auth-page {
++    position: relative;
++    overflow: hidden;
++    background: linear-gradient(135deg, var(--lumeria-surface-soft) 0%, var(--lumeria-surface) 65%);
++}
++.auth-page::before {
++    content: "";
++    position: absolute;
++    width: 28rem;
++    height: 28rem;
++    right: -8rem;
++    top: -10rem;
++    border-radius: 50%;
++    background: radial-gradient(circle, var(--lumeria-tint), transparent 70%);
++    pointer-events: none;
++}
++.auth-page > header,
++.auth-page > main,
++.auth-page > footer { position: relative; }   /* di atas cahaya latar */
++
++/* Batas bidang input dan kotak centang dibuat lebih tegas agar terlihat jelas di kartu putih (kontras 3:1). */
++.auth-card .form-control,
++.auth-card .form-check-input {
++    --auth-field-border: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
++    border-color: var(--auth-field-border);
++    background-color: var(--lumeria-card);
++}
++.auth-card .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
++.auth-card .form-check-input:checked { background-color: var(--lumeria); border-color: var(--lumeria); }
++
++.auth-brand-name {
++    font-family: Georgia, "Times New Roman", serif;
++    font-size: clamp(1.6rem, 5vw, 2rem);
++    letter-spacing: -.01em;
++}
++
++.auth-card {
++    --bs-card-border-radius: 1.5rem;
++    border: 1px solid var(--lumeria-border);
++    border-top: .35rem solid var(--lumeria-accent);
++    box-shadow: 0 .75rem 2rem var(--lumeria-shadow);
++}
++
++
++/* 7. Prefers-reduced-motion ------------------------------------------------ */
+ @media (prefers-reduced-motion: no-preference) {
+     .ft-track { scroll-behavior: smooth; }
+ }
+diff --git a/resources/views/auth/confirm-password.blade.php b/resources/views/auth/confirm-password.blade.php
+index 3cbbe08..29f2c4e 100644
+--- a/resources/views/auth/confirm-password.blade.php
++++ b/resources/views/auth/confirm-password.blade.php
+@@ -1,27 +1,16 @@
+ <x-guest-layout>
+-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
++    <x-slot:title>{{ __('Confirm Password') }}</x-slot:title>
++
++    <h1 class="h2 fw-bold mb-2">{{ __('Confirm Password') }}</h1>
++    <p class="text-muted mb-4">
+         {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
+-    </div>
++    </p>
+ 
+-    <form method="POST" action="{{ route('password.confirm') }}">
++    <form method="POST" action="{{ route('password.confirm') }}" novalidate>
+         @csrf
+ 
+-        <!-- Password -->
+-        <div>
+-            <x-input-label for="password" :value="__('Password')" />
+-
+-            <x-text-input id="password" class="block mt-1 w-full"
+-                            type="password"
+-                            name="password"
+-                            required autocomplete="current-password" />
+-
+-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+-        </div>
++        <x-auth.field name="password" type="password" :label="__('Password')" autocomplete="current-password" autofocus />
+ 
+-        <div class="flex justify-end mt-4">
+-            <x-primary-button>
+-                {{ __('Confirm') }}
+-            </x-primary-button>
+-        </div>
++        <button type="submit" class="btn btn-lumeria btn-lg w-100 mt-2">{{ __('Confirm') }}</button>
+     </form>
+ </x-guest-layout>
+diff --git a/resources/views/auth/forgot-password.blade.php b/resources/views/auth/forgot-password.blade.php
+index 3c70788..66b3a35 100644
+--- a/resources/views/auth/forgot-password.blade.php
++++ b/resources/views/auth/forgot-password.blade.php
+@@ -1,25 +1,22 @@
+ <x-guest-layout>
+-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
++    <x-slot:title>{{ __('Reset Password') }}</x-slot:title>
++
++    <h1 class="h2 fw-bold mb-2">{{ __('Reset Password') }}</h1>
++    <p class="text-muted mb-4">
+         {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+-    </div>
++    </p>
+ 
+-    <!-- Session Status -->
+     <x-auth-session-status class="mb-4" :status="session('status')" />
+ 
+-    <form method="POST" action="{{ route('password.email') }}">
++    <form method="POST" action="{{ route('password.email') }}" novalidate>
+         @csrf
+ 
+-        <!-- Email Address -->
+-        <div>
+-            <x-input-label for="email" :value="__('Email')" />
+-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
+-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+-        </div>
++        <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email')" autocomplete="username" autofocus />
+ 
+-        <div class="flex items-center justify-end mt-4">
+-            <x-primary-button>
+-                {{ __('Email Password Reset Link') }}
+-            </x-primary-button>
+-        </div>
++        <button type="submit" class="btn btn-lumeria btn-lg w-100 mt-2">{{ __('Email Password Reset Link') }}</button>
+     </form>
++
++    <p class="text-center mt-4 mb-0">
++        <a href="{{ route('login') }}" class="fw-semibold">{{ __('Log in') }}</a>
++    </p>
+ </x-guest-layout>
+diff --git a/resources/views/auth/login.blade.php b/resources/views/auth/login.blade.php
+index 80e1b39..7ae5f15 100644
+--- a/resources/views/auth/login.blade.php
++++ b/resources/views/auth/login.blade.php
+@@ -1,47 +1,34 @@
+ <x-guest-layout>
+-    <!-- Session Status -->
+-    <x-auth-session-status class="mb-4" :status="session('status')" />
++    <x-slot:title>{{ __('Log in') }}</x-slot:title>
+ 
+-    <form method="POST" action="{{ route('login') }}">
+-        @csrf
++    <h1 class="h2 fw-bold mb-1">{{ __('auth.login_title') }}</h1>
++    <p class="text-muted mb-4">{{ __('auth.login_subtitle') }}</p>
+ 
+-        <!-- Email Address -->
+-        <div>
+-            <x-input-label for="email" :value="__('Email')" />
+-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+-        </div>
++    <x-auth-session-status class="mb-4" :status="session('status')" />
+ 
+-        <!-- Password -->
+-        <div class="mt-4">
+-            <x-input-label for="password" :value="__('Password')" />
++    <form method="POST" action="{{ route('login') }}" novalidate>
++        @csrf
+ 
+-            <x-text-input id="password" class="block mt-1 w-full"
+-                            type="password"
+-                            name="password"
+-                            required autocomplete="current-password" />
++        <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email')" autocomplete="username" autofocus />
+ 
+-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+-        </div>
++        <x-auth.field name="password" type="password" :label="__('Password')" autocomplete="current-password" />
+ 
+-        <!-- Remember Me -->
+-        <div class="block mt-4">
+-            <label for="remember_me" class="inline-flex items-center">
+-                <input id="remember_me" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
+-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
+-            </label>
+-        </div>
++        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
++            <div class="form-check mb-0">
++                <input id="remember_me" type="checkbox" class="form-check-input" name="remember">
++                <label for="remember_me" class="form-check-label">{{ __('Remember me') }}</label>
++            </div>
+ 
+-        <div class="flex items-center justify-end mt-4">
+             @if (Route::has('password.request'))
+-                <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
+-                    {{ __('Forgot your password?') }}
+-                </a>
++                <a href="{{ route('password.request') }}">{{ __('Forgot your password?') }}</a>
+             @endif
+-
+-            <x-primary-button class="ms-3">
+-                {{ __('Log in') }}
+-            </x-primary-button>
+         </div>
++
++        <button type="submit" class="btn btn-lumeria btn-lg w-100">{{ __('Log in') }}</button>
+     </form>
++
++    <p class="text-center mt-4 mb-0">
++        {{ __('auth.no_account') }}
++        <a href="{{ route('register') }}" class="fw-semibold">{{ __('nav.register') }}</a>
++    </p>
+ </x-guest-layout>
+diff --git a/resources/views/auth/register.blade.php b/resources/views/auth/register.blade.php
+index d4b3d58..41f392a 100644
+--- a/resources/views/auth/register.blade.php
++++ b/resources/views/auth/register.blade.php
+@@ -1,52 +1,26 @@
+ <x-guest-layout>
+-    <form method="POST" action="{{ route('register') }}">
++    <x-slot:title>{{ __('Register') }}</x-slot:title>
++
++    <h1 class="h2 fw-bold mb-1">{{ __('auth.register_title') }}</h1>
++    <p class="text-muted mb-4">{{ __('auth.register_subtitle') }}</p>
++
++    {{-- Hanya name, email, password, password_confirmation. Peran akun diisi server (customer); tidak ada kolom role. --}}
++    <form method="POST" action="{{ route('register') }}" novalidate>
+         @csrf
+ 
+-        <!-- Name -->
+-        <div>
+-            <x-input-label for="name" :value="__('Name')" />
+-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+-        </div>
+-
+-        <!-- Email Address -->
+-        <div class="mt-4">
+-            <x-input-label for="email" :value="__('Email')" />
+-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+-        </div>
+-
+-        <!-- Password -->
+-        <div class="mt-4">
+-            <x-input-label for="password" :value="__('Password')" />
+-
+-            <x-text-input id="password" class="block mt-1 w-full"
+-                            type="password"
+-                            name="password"
+-                            required autocomplete="new-password" />
+-
+-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+-        </div>
+-
+-        <!-- Confirm Password -->
+-        <div class="mt-4">
+-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+-
+-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
+-                            type="password"
+-                            name="password_confirmation" required autocomplete="new-password" />
+-
+-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+-        </div>
+-
+-        <div class="flex items-center justify-end mt-4">
+-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
+-                {{ __('Already registered?') }}
+-            </a>
+-
+-            <x-primary-button class="ms-4">
+-                {{ __('Register') }}
+-            </x-primary-button>
+-        </div>
++        <x-auth.field name="name" type="text" :label="__('Name')" :value="old('name')" autocomplete="name" autofocus />
++
++        <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email')" autocomplete="username" />
++
++        <x-auth.field name="password" type="password" :label="__('Password')" :hint="__('auth.password_hint')" autocomplete="new-password" />
++
++        <x-auth.field name="password_confirmation" type="password" :label="__('Confirm Password')" autocomplete="new-password" />
++
++        <button type="submit" class="btn btn-lumeria btn-lg w-100 mt-2">{{ __('Register') }}</button>
+     </form>
++
++    <p class="text-center mt-4 mb-0">
++        {{ __('auth.have_account') }}
++        <a href="{{ route('login') }}" class="fw-semibold">{{ __('nav.login') }}</a>
++    </p>
+ </x-guest-layout>
+diff --git a/resources/views/auth/reset-password.blade.php b/resources/views/auth/reset-password.blade.php
+index a6494cc..07eea81 100644
+--- a/resources/views/auth/reset-password.blade.php
++++ b/resources/views/auth/reset-password.blade.php
+@@ -1,39 +1,20 @@
+ <x-guest-layout>
+-    <form method="POST" action="{{ route('password.store') }}">
++    <x-slot:title>{{ __('Reset Password') }}</x-slot:title>
++
++    <h1 class="h2 fw-bold mb-4">{{ __('Reset Password') }}</h1>
++
++    <form method="POST" action="{{ route('password.store') }}" novalidate>
+         @csrf
+ 
+         <!-- Password Reset Token -->
+         <input type="hidden" name="token" value="{{ $request->route('token') }}">
+ 
+-        <!-- Email Address -->
+-        <div>
+-            <x-input-label for="email" :value="__('Email')" />
+-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
+-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+-        </div>
+-
+-        <!-- Password -->
+-        <div class="mt-4">
+-            <x-input-label for="password" :value="__('Password')" />
+-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+-        </div>
+-
+-        <!-- Confirm Password -->
+-        <div class="mt-4">
+-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
++        <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email', $request->email)" autocomplete="username" autofocus />
+ 
+-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
+-                                type="password"
+-                                name="password_confirmation" required autocomplete="new-password" />
++        <x-auth.field name="password" type="password" :label="__('Password')" :hint="__('auth.password_hint')" autocomplete="new-password" />
+ 
+-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+-        </div>
++        <x-auth.field name="password_confirmation" type="password" :label="__('Confirm Password')" autocomplete="new-password" />
+ 
+-        <div class="flex items-center justify-end mt-4">
+-            <x-primary-button>
+-                {{ __('Reset Password') }}
+-            </x-primary-button>
+-        </div>
++        <button type="submit" class="btn btn-lumeria btn-lg w-100 mt-2">{{ __('Reset Password') }}</button>
+     </form>
+ </x-guest-layout>
+diff --git a/resources/views/auth/verify-email.blade.php b/resources/views/auth/verify-email.blade.php
+index 4e4222f..3dd2931 100644
+--- a/resources/views/auth/verify-email.blade.php
++++ b/resources/views/auth/verify-email.blade.php
+@@ -1,31 +1,26 @@
+ <x-guest-layout>
+-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
++    <x-slot:title>{{ __('Verify Email Address') }}</x-slot:title>
++
++    <h1 class="h2 fw-bold mb-2">{{ __('Verify Email Address') }}</h1>
++    <p class="text-muted mb-4">
+         {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+-    </div>
++    </p>
+ 
+     @if (session('status') == 'verification-link-sent')
+-        <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
++        <div class="alert alert-success" role="status">
+             {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+         </div>
+     @endif
+ 
+-    <div class="mt-4 flex items-center justify-between">
++    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4">
+         <form method="POST" action="{{ route('verification.send') }}">
+             @csrf
+-
+-            <div>
+-                <x-primary-button>
+-                    {{ __('Resend Verification Email') }}
+-                </x-primary-button>
+-            </div>
++            <button type="submit" class="btn btn-lumeria">{{ __('Resend Verification Email') }}</button>
+         </form>
+ 
+         <form method="POST" action="{{ route('logout') }}">
+             @csrf
+-
+-            <button type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+-                {{ __('Log Out') }}
+-            </button>
++            <button type="submit" class="btn btn-link">{{ __('Log Out') }}</button>
+         </form>
+     </div>
+ </x-guest-layout>
+diff --git a/resources/views/components/auth-session-status.blade.php b/resources/views/components/auth-session-status.blade.php
+index a39bc7d..2ca7322 100644
+--- a/resources/views/components/auth-session-status.blade.php
++++ b/resources/views/components/auth-session-status.blade.php
+@@ -1,7 +1,7 @@
+ @props(['status'])
+ 
+ @if ($status)
+-    <div {{ $attributes->merge(['class' => 'font-medium text-sm text-green-600 dark:text-green-400']) }}>
++    <div {{ $attributes->merge(['class' => 'alert alert-success', 'role' => 'status']) }}>
+         {{ $status }}
+     </div>
+ @endif
+diff --git a/resources/views/components/auth/field.blade.php b/resources/views/components/auth/field.blade.php
+new file mode 100644
+index 0000000..93f832b
+--- /dev/null
++++ b/resources/views/components/auth/field.blade.php
+@@ -0,0 +1,48 @@
++{{--
++    Satu kolom form halaman autentikasi (Bootstrap): label terhubung (for/id), pesan bantuan, dan pesan error.
++    Pemakaian:
++        <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email')" autocomplete="username" autofocus />
++
++    - Kata sandi tidak pernah diisi ulang (type="password" selalu kosong).
++    - Saat ada error validasi, hanya kolom error pertama yang mendapat fokus; tanpa error, kolom ber-autofocus yang dipakai.
++--}}
++@props([
++    'name',
++    'label',
++    'type'     => 'text',
++    'value'    => null,
++    'hint'     => null,
++    'id'       => null,
++    'required' => true,
++])
++@php
++    $id         = $id ?: $name;
++    $hasError   = $errors->has($name);
++    $firstError = $hasError && array_key_first($errors->messages()) === $name;
++    $focus      = $errors->any() ? $firstError : $attributes->has('autofocus');
++    $describedBy = trim(($hint ? $id . '-hint ' : '') . ($hasError ? $id . '-error' : ''));
++@endphp
++<div class="mb-3">
++    <label for="{{ $id }}" class="form-label fw-semibold">{{ $label }}</label>
++    <input
++        id="{{ $id }}"
++        name="{{ $name }}"
++        type="{{ $type }}"
++        @if ($type !== 'password' && $value !== null) value="{{ $value }}" @endif
++        {{ $attributes->except('autofocus')->class(['form-control', 'form-control-lg', 'is-invalid' => $hasError]) }}
++        @required($required)
++        @if ($focus) autofocus @endif
++        @if ($hasError) aria-invalid="true" @endif
++        @if ($describedBy !== '') aria-describedby="{{ $describedBy }}" @endif
++    >
++    @if ($hint)
++        <div id="{{ $id }}-hint" class="form-text">{{ $hint }}</div>
++    @endif
++    @if ($hasError)
++        <div id="{{ $id }}-error" class="invalid-feedback">
++            @foreach ($errors->get($name) as $message)
++                <div>{{ $message }}</div>
++            @endforeach
++        </div>
++    @endif
++</div>
+diff --git a/resources/views/components/language-switcher.blade.php b/resources/views/components/language-switcher.blade.php
+index f2b4a2c..d15abd4 100644
+--- a/resources/views/components/language-switcher.blade.php
++++ b/resources/views/components/language-switcher.blade.php
+@@ -1,8 +1,24 @@
++{{--
++    Pengalih bahasa ID / EN.
++    Bawaan: gaya Tailwind (layout dashboard dan profil).
++    Dengan atribut "bootstrap": gaya Bootstrap yang sama dengan navbar publik (halaman login, daftar, dan sejenisnya).
++--}}
++@props(['bootstrap' => false])
+ @php($locale = app()->getLocale())
+-<div {{ $attributes->merge(['class' => 'inline-flex text-xs font-semibold shadow-sm']) }} role="group" aria-label="{{ __('common.language') }}">
+-    @foreach (['id' => 'ID', 'en' => 'EN'] as $code => $label)
+-        <a href="{{ route('lang.switch', $code) }}"
+-           @if ($locale === $code) aria-current="true" @endif
+-           class="px-3 py-1 border border-gray-300 dark:border-gray-600 {{ $loop->first ? 'rounded-s-md' : '-ms-px rounded-e-md' }} {{ $locale === $code ? 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">{{ $label }}</a>
+-    @endforeach
+-</div>
+\ No newline at end of file
++@if ($bootstrap)
++    <div {{ $attributes->merge(['class' => 'btn-group btn-group-sm lang-switch']) }} role="group" aria-label="{{ __('common.language') }}">
++        @foreach (['id' => 'ID', 'en' => 'EN'] as $code => $label)
++            <a href="{{ route('lang.switch', $code) }}"
++               @if ($locale === $code) aria-current="true" @endif
++               class="btn btn-outline-dark{{ $locale === $code ? ' active' : '' }}">{{ $label }}</a>
++        @endforeach
++    </div>
++@else
++    <div {{ $attributes->merge(['class' => 'inline-flex text-xs font-semibold shadow-sm']) }} role="group" aria-label="{{ __('common.language') }}">
++        @foreach (['id' => 'ID', 'en' => 'EN'] as $code => $label)
++            <a href="{{ route('lang.switch', $code) }}"
++               @if ($locale === $code) aria-current="true" @endif
++               class="px-3 py-1 border border-gray-300 dark:border-gray-600 {{ $loop->first ? 'rounded-s-md' : '-ms-px rounded-e-md' }} {{ $locale === $code ? 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">{{ $label }}</a>
++        @endforeach
++    </div>
++@endif
+diff --git a/resources/views/layouts/guest.blade.php b/resources/views/layouts/guest.blade.php
+index 6a2cb72..b7015a9 100644
+--- a/resources/views/layouts/guest.blade.php
++++ b/resources/views/layouts/guest.blade.php
+@@ -1,35 +1,77 @@
++{{--
++    Layout halaman autentikasi (masuk, daftar, lupa kata sandi, dan sejenisnya).
++    Memakai aset yang sama dengan situs publik: Bootstrap lokal + token tema di public/css/lumeria.css
++    dan komponen di public/css/lumeria-foodtech.css. Tidak memuat Vite, Tailwind, atau font dari luar.
++
++    Slot opsional: <x-slot:title>Judul tab browser</x-slot:title>
++--}}
+ <!DOCTYPE html>
+ <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+-    <head>
+-        <meta charset="utf-8">
+-        <meta name="viewport" content="width=device-width, initial-scale=1">
+-        <meta name="csrf-token" content="{{ csrf_token() }}">
+-
+-        <title>{{ config('app.name', 'Laravel') }}</title>
+-
+-        <!-- Fonts -->
+-        <link rel="preconnect" href="https://fonts.bunny.net">
+-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+-
+-        <!-- Scripts -->
+-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+-    </head>
+-    <body class="font-sans text-gray-900 antialiased">
+-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
+-            <div class="w-full sm:max-w-md px-6 mb-4 flex items-center justify-between">
+-                <a href="{{ route('home') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:underline">&larr; {{ __('nav.home') }}</a>
+-                <x-language-switcher />
+-            </div>
++<head>
++    <meta charset="utf-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1">
++    <meta name="csrf-token" content="{{ csrf_token() }}">
++    <title>{{ isset($title) && trim((string) $title) !== '' ? trim((string) $title) . ' | ' : '' }}{{ __('common.brand') }}</title>
++
++    <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
++    <link href="{{ asset('css/lumeria.css') }}?v={{ is_file(public_path('css/lumeria.css')) ? filemtime(public_path('css/lumeria.css')) : 1 }}" rel="stylesheet">
++    <link href="{{ asset('css/lumeria-foodtech.css') }}?v={{ is_file(public_path('css/lumeria-foodtech.css')) ? filemtime(public_path('css/lumeria-foodtech.css')) : 1 }}" rel="stylesheet">
++</head>
++<body>
++    <a href="#main" class="skip-link">{{ __('common.skip') }}</a>
+ 
+-            <div>
+-                <a href="{{ route('home') }}" class="text-3xl font-bold text-gray-800">
+-                    {{ __('common.brand') }}
++    {{-- Pembungkus memotong dekorasi latar agar halaman tidak melebar di layar kecil --}}
++    <div class="auth-page d-flex flex-column min-vh-100">
++        <header class="container py-3">
++            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
++                <a href="{{ route('home') }}" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1">
++                    <x-icon name="chevron-left" :size="14" />{{ __('auth.back_home') }}
+                 </a>
++                <x-language-switcher bootstrap />
+             </div>
++        </header>
++
++        <main id="main" class="flex-grow-1 d-flex align-items-center py-4" tabindex="-1">
++            <div class="container">
++                <div class="row justify-content-center align-items-center g-4 g-xl-5">
++
++                    {{-- Identitas merek: ringkas di layar kecil, lengkap dengan ilustrasi di layar besar --}}
++                    <div class="col-12 col-lg-5 text-center text-lg-start">
++                        <a href="{{ route('home') }}" class="auth-brand d-inline-flex align-items-center gap-3 text-decoration-none">
++                            <img src="{{ asset('images/lumeria-logo.png') }}" alt="" width="64" height="64" class="rounded-circle" style="object-fit: cover;">
++                            <span class="auth-brand-name fw-bold text-lumeria">{{ __('common.brand') }}</span>
++                        </a>
++                        <p class="lead mt-3 mb-0 d-none d-sm-block">{{ __('home.hero_identity') }}</p>
++                        <p class="fst-italic text-lumeria mt-2 mb-0 d-none d-sm-block">&ldquo;{{ __('home.tagline') }}&rdquo;</p>
+ 
+-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-2xl">
+-                {{ $slot }}
++                        <div class="hero-art mt-4 d-none d-lg-block ms-0" aria-hidden="true">
++                            <div class="hero-blob"></div>
++                            <x-product-art slug="original-milk" :bare="true" :size="170" class="hero-ball hero-ball-1" />
++                            <x-product-art slug="bola-teh" :bare="true" :size="130" class="hero-ball hero-ball-2" />
++                            <x-product-art slug="bola-kopi" :bare="true" :size="150" class="hero-ball hero-ball-3" />
++                        </div>
++                    </div>
++
++                    {{-- Kartu autentikasi --}}
++                    <div class="col-12 col-md-10 col-lg-6 col-xl-5">
++                        <div class="card auth-card">
++                            <div class="card-body p-4 p-md-5">
++                                {{ $slot }}
++                            </div>
++                        </div>
++
++                        <p class="text-center small mt-4 mb-0">
++                            <a href="{{ route('products') }}">{{ __('auth.browse_products') }}</a>
++                        </p>
++                    </div>
++
++                </div>
+             </div>
+-        </div>
+-    </body>
++        </main>
++
++        <footer class="container py-3 text-center small text-muted">
++            &copy; {{ date('Y') }} {{ __('common.brand') }}. {{ __('common.footer_rights') }}
++        </footer>
++    </div>
++</body>
+ </html>
+diff --git a/tests/Feature/AuthUiTest.php b/tests/Feature/AuthUiTest.php
+new file mode 100644
+index 0000000..739af09
+--- /dev/null
++++ b/tests/Feature/AuthUiTest.php
+@@ -0,0 +1,182 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\User;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Tests\TestCase;
++
++/**
++ * Tampilan halaman masuk dan daftar (layout guest berbasis Bootstrap + tema Lumeria).
++ * Alur autentikasinya sendiri diuji di tests/Feature/Auth/*.
++ */
++class AuthUiTest extends TestCase
++{
++    use RefreshDatabase;
++
++    public function test_guest_layout_uses_the_lumeria_theme_and_no_external_assets(): void
++    {
++        foreach (['/login', '/register', '/forgot-password'] as $url) {
++            $this->get($url)
++                ->assertOk()
++                ->assertSee('vendor/bootstrap/bootstrap.min.css', false)
++                ->assertSee('css/lumeria.css', false)
++                ->assertSee('css/lumeria-foodtech.css', false)
++                ->assertSee('btn-lumeria', false)
++                ->assertSee('href="#main"', false)
++                ->assertSee('id="main"', false)
++                ->assertDontSee('fonts.bunny.net', false)
++                ->assertDontSee('cdn.jsdelivr.net', false);
++        }
++    }
++
++    public function test_login_page_links_to_register_home_and_products(): void
++    {
++        $this->get('/login')
++            ->assertOk()
++            ->assertSee('action="' . route('login') . '"', false)
++            ->assertSee('name="_token"', false)
++            ->assertSee(route('register'), false)
++            ->assertSee(route('home'), false)
++            ->assertSee(route('products'), false)
++            ->assertSee(route('password.request'), false);
++    }
++
++    public function test_register_page_links_back_to_login(): void
++    {
++        $this->get('/register')
++            ->assertOk()
++            ->assertSee('action="' . route('register') . '"', false)
++            ->assertSee('name="_token"', false)
++            ->assertSee(route('login'), false)
++            ->assertSee(route('home'), false)
++            ->assertSee(route('products'), false);
++    }
++
++    public function test_login_inputs_have_connected_labels_and_keep_field_names(): void
++    {
++        $html = $this->get('/login')->assertOk()->getContent();
++
++        foreach (['email' => 'email', 'password' => 'password'] as $id => $type) {
++            $this->assertMatchesRegularExpression('/<label for="' . $id . '"/', $html, "Label untuk #{$id} tidak terhubung");
++            $this->assertMatchesRegularExpression('/id="' . $id . '"\s+name="' . $id . '"\s+type="' . $type . '"/', $html);
++        }
++
++        $this->assertStringContainsString('<label for="remember_me"', $html);
++        $this->assertStringContainsString('id="remember_me" type="checkbox"', $html);
++        $this->assertStringContainsString('name="remember"', $html);
++        $this->assertStringContainsString('autocomplete="username"', $html);
++        $this->assertStringContainsString('autocomplete="current-password"', $html);
++    }
++
++    public function test_register_inputs_have_connected_labels_and_no_role_field(): void
++    {
++        $html = $this->get('/register')->assertOk()->getContent();
++
++        foreach (['name', 'email', 'password', 'password_confirmation'] as $id) {
++            $this->assertMatchesRegularExpression('/<label for="' . $id . '"/', $html, "Label untuk #{$id} tidak terhubung");
++            $this->assertStringContainsString('id="' . $id . '"', $html);
++            $this->assertStringContainsString('name="' . $id . '"', $html);
++        }
++
++        $this->assertStringContainsString('autocomplete="new-password"', $html);
++        $this->assertStringNotContainsString('name="role"', $html, 'Form registrasi tidak boleh punya kolom role');
++        $this->assertStringNotContainsString('admin', strtolower($html), 'Tidak ada petunjuk atau kolom admin di form registrasi');
++    }
++
++    public function test_pages_follow_the_active_locale(): void
++    {
++        $this->withCookie('locale', 'id')->get('/login')
++            ->assertSee('Selamat datang kembali')
++            ->assertSee('Belum punya akun?')
++            ->assertSee('Kembali ke Beranda')
++            ->assertDontSee('Welcome back');
++
++        $this->withCookie('locale', 'en')->get('/login')
++            ->assertSee('Welcome back')
++            ->assertSee('Back to Home')
++            ->assertDontSee('Selamat datang kembali');
++
++        $this->withCookie('locale', 'id')->get('/register')
++            ->assertSee('Buat akun Lumeria.co')
++            ->assertSee('Minimal 8 karakter.')
++            ->assertSee('Konfirmasi Kata Sandi');
++
++        $this->withCookie('locale', 'en')->get('/register')
++            ->assertSee('Create your Lumeria.co account')
++            ->assertSee('At least 8 characters.')
++            ->assertSee('Confirm Password');
++    }
++
++    public function test_language_switcher_marks_the_active_language(): void
++    {
++        $this->withCookie('locale', 'en')->get('/login')
++            ->assertSee('lang-switch', false)
++            ->assertSee(route('lang.switch', 'id'), false)
++            ->assertSee(route('lang.switch', 'en'), false)
++            ->assertSee('class="btn btn-outline-dark active"', false)
++            ->assertSee('aria-current="true"', false);
++    }
++
++    public function test_failed_login_shows_a_localised_accessible_error(): void
++    {
++        $user = User::factory()->create();
++
++        $this->withCookie('locale', 'en')
++            ->from('/login')
++            ->followingRedirects()
++            ->post('/login', ['email' => $user->email, 'password' => 'wrong-password'])
++            ->assertSee('is-invalid', false)
++            ->assertSee('aria-invalid="true"', false)
++            ->assertSee('aria-describedby="email-error"', false)
++            ->assertSee('id="email-error"', false)
++            ->assertSee('These credentials do not match our records.')
++            ->assertSee('value="' . $user->email . '"', false);
++
++        $this->assertGuest();
++    }
++
++    public function test_register_errors_are_shown_next_to_fields_and_password_is_not_refilled(): void
++    {
++        $this->withCookie('locale', 'id')
++            ->from('/register')
++            ->followingRedirects()
++            ->post('/register', [
++                'name'                  => 'Budi',
++                'email'                 => 'budi@example.com',
++                'password'              => 'abc',
++                'password_confirmation' => 'xyz',
++            ])
++            ->assertSee('id="password-error"', false)
++            ->assertSee('aria-describedby="password-hint password-error"', false)
++            ->assertSee('value="Budi"', false)
++            ->assertSee('value="budi@example.com"', false)
++            ->assertDontSee('value="abc"', false)
++            ->assertDontSee('value="xyz"', false);
++
++        $this->assertGuest();
++    }
++
++    public function test_auth_language_files_have_the_same_keys_in_both_locales(): void
++    {
++        $id = require lang_path('id/auth.php');
++        $en = require lang_path('en/auth.php');
++
++        $this->assertSame([], array_diff(array_keys($id), array_keys($en)), 'Key ada di id tapi tidak di en');
++        $this->assertSame([], array_diff(array_keys($en), array_keys($id)), 'Key ada di en tapi tidak di id');
++
++        foreach (['login_title', 'login_subtitle', 'register_title', 'register_subtitle', 'password_hint', 'no_account', 'have_account', 'back_home', 'browse_products'] as $key) {
++            $this->assertArrayHasKey($key, $id);
++            $this->assertNotSame($id[$key], $en[$key], "Terjemahan '{$key}' sama persis di id dan en");
++        }
++    }
++
++    public function test_other_guest_pages_still_render_with_the_new_layout(): void
++    {
++        $user = User::factory()->create();
++
++        $this->get(route('password.reset', 'token-uji'))->assertOk()->assertSee('name="token"', false);
++        $this->actingAs($user)->get(route('password.confirm'))->assertOk()->assertSee('name="password"', false);
++        $this->actingAs($user)->get(route('verification.notice'))->assertRedirect();
++    }
++}
+-- 
+2.43.0
+

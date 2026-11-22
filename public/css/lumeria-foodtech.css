@@ -10,7 +10,8 @@
      3. Kartu Event & Catering
      4. Halaman detail produk dan catatan tamu
      5. Footer gelap
-     6. Prefers-reduced-motion
+     6. Halaman autentikasi (masuk, daftar, lupa kata sandi)
+     7. Prefers-reduced-motion
    ========================================================================== */
 
 
@@ -267,7 +268,53 @@
 }
 
 
-/* 6. Prefers-reduced-motion ------------------------------------------------ */
+/* 6. Halaman autentikasi (masuk, daftar, lupa kata sandi) ------------------ */
+/* Latar hangat yang sama dengan hero beranda; kartu putih dengan garis aksen kuning logo. */
+.auth-page {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--lumeria-surface-soft) 0%, var(--lumeria-surface) 65%);
+}
+.auth-page::before {
+    content: "";
+    position: absolute;
+    width: 28rem;
+    height: 28rem;
+    right: -8rem;
+    top: -10rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--lumeria-tint), transparent 70%);
+    pointer-events: none;
+}
+.auth-page > header,
+.auth-page > main,
+.auth-page > footer { position: relative; }   /* di atas cahaya latar */
+
+/* Batas bidang input dan kotak centang dibuat lebih tegas agar terlihat jelas di kartu putih (kontras 3:1). */
+.auth-card .form-control,
+.auth-card .form-check-input {
+    --auth-field-border: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
+    border-color: var(--auth-field-border);
+    background-color: var(--lumeria-card);
+}
+.auth-card .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
+.auth-card .form-check-input:checked { background-color: var(--lumeria); border-color: var(--lumeria); }
+
+.auth-brand-name {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.6rem, 5vw, 2rem);
+    letter-spacing: -.01em;
+}
+
+.auth-card {
+    --bs-card-border-radius: 1.5rem;
+    border: 1px solid var(--lumeria-border);
+    border-top: .35rem solid var(--lumeria-accent);
+    box-shadow: 0 .75rem 2rem var(--lumeria-shadow);
+}
+
+
+/* 7. Prefers-reduced-motion ------------------------------------------------ */
 @media (prefers-reduced-motion: no-preference) {
     .ft-track { scroll-behavior: smooth; }
 }

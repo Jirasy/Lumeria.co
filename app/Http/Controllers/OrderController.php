@@ -1,6 +1,8 @@
 <?php
 
+
 namespace App\Http\Controllers;
+
 
 use App\Models\Order;
 use App\Services\Cart;
@@ -11,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
+
 class OrderController extends Controller
 {
     public function index(Request $request, Cart $cart, PaylaterCalculator $calc): View
@@ -18,11 +21,13 @@ class OrderController extends Controller
         $items    = $cart->items();
         $subtotal = (int) $items->sum('line_total');
 
+
         // Simulator bebas: /order?amount=50000 (tidak menyentuh keranjang)
         $amount     = $request->integer('amount');
         $simulation = ($amount >= 1000 && $amount <= 100_000_000)
             ? ['amount' => $amount, 'plans' => $calc->plans($amount)]
             : null;
+
 
         return view('pages.order', [
             'items'      => $items,
@@ -34,13 +39,16 @@ class OrderController extends Controller
         ]);
     }
 
+
     public function store(Request $request, Cart $cart, PaylaterCalculator $calc): RedirectResponse
     {
         $items = $cart->items();
 
+
         if ($items->isEmpty()) {
             return redirect()->route('order')->with('error', __('order.empty_cart'));
         }
+
 
         $data = $request->validate([
             'customer_name'    => ['required', 'string', 'max:100'],
@@ -50,11 +58,13 @@ class OrderController extends Controller
             'tenor_months'     => ['required_if:payment_method,paylater', 'nullable', 'integer', Rule::in($calc->tenors())],
         ]);
 
+
         // Semua angka dihitung ulang di server; input dari form hanya memilih tenor.
         $subtotal = (int) $items->sum('line_total');
         $plan     = $data['payment_method'] === 'paylater'
             ? $calc->calculate($subtotal, (int) $data['tenor_months'])
             : null;
+
 
         $order = DB::transaction(function () use ($data, $items, $subtotal, $plan) {
             $order = Order::create([
@@ -72,6 +82,7 @@ class OrderController extends Controller
                 'status'             => 'pending',
             ]);
 
+
             foreach ($items as $row) {
                 $order->items()->create([
                     'product_id'   => $row['product']->id,
@@ -82,14 +93,30 @@ class OrderController extends Controller
                 ]);
             }
 
+
             return $order;
         });
+
 
         $cart->clear();
         session(['last_order_id' => $order->id]);
 
+
         return redirect()->route('order.show', $order)->with('status', __('order.placed'));
     }
+
+
+    /** Pesanan Saya: riwayat dan status pesanan milik pelanggan yang login. */
+    public function history(Request $request): View
+    {
+        $orders = Order::where('user_id', $request->user()->id)
+            ->withCount('items')
+            ->latest()
+            ->paginate(10);
+
+        return view('pages.order-history', ['orders' => $orders]);
+    }
+
 
     public function show(Order $order): View
     {
@@ -97,10 +124,15 @@ class OrderController extends Controller
             && $order->user_id !== null
             && (int) $order->user_id === (int) auth()->id();
 
+
         $justPlaced = (int) session('last_order_id') === (int) $order->id;
 
+
         // Tanpa ini, siapa pun bisa menebak /order/1, /order/2 dan membaca nama, telepon, alamat orang lain.
-        abort_unless($owns || $justPlaced, 403);
+        $isAdmin = (bool) auth()->user()?->isAdmin();
+
+        abort_unless($owns || $justPlaced || $isAdmin, 403);
+
 
         return view('pages.order-show', ['order' => $order->load('items')]);
     }

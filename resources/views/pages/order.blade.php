@@ -1,6 +1,8 @@
 @extends('layouts.lumeria')
 
+
 @section('title', __('order.title'))
+
 
 @section('content')
     @php
@@ -9,10 +11,28 @@
         $method = old('payment_method', 'cash');
     @endphp
 
+
     <section class="py-4 py-md-5">
         <div class="container">
             <h1 class="fw-bold">{{ __('order.title') }}</h1>
             <p class="lead text-muted">{{ __('order.subtitle') }}</p>
+
+            @guest
+                {{-- Keranjang dan checkout hanya untuk pelanggan login; simulator Paylater tetap terbuka. --}}
+                @php $waGuest = \App\Support\StoreContact::whatsapp(__('foodtech.footer.wa_message')); @endphp
+                <div class="ft-note my-3">
+                    <h2 class="h5">{{ __('foodtech.guest_order.title') }}</h2>
+                    <p class="mb-3">{{ __('foodtech.guest_order.text') }}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('login') }}" class="btn btn-lumeria">{{ __('nav.login') }}</a>
+                        <a href="{{ route('register') }}" class="btn btn-outline-dark">{{ __('nav.register') }}</a>
+                        @if ($waGuest)
+                            <a href="{{ $waGuest }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark">{{ __('foodtech.footer.chat_wa') }}</a>
+                        @endif
+                    </div>
+                </div>
+            @endguest
+
 
             <div class="row g-4 mt-1">
                 {{-- ===== Kolom kiri: keranjang + checkout ===== --}}
@@ -20,6 +40,7 @@
                     <div class="card shadow-sm mb-4">
                         <div class="card-body">
                             <h2 class="h4 mb-3">{{ __('order.cart_title') }}</h2>
+
 
                             @if ($items->isEmpty())
                                 <p class="text-muted">{{ __('order.cart_empty') }}</p>
@@ -78,11 +99,13 @@
                         </div>
                     </div>
 
+
                     @unless ($items->isEmpty())
                         <form method="POST" action="{{ route('order.store') }}" class="card shadow-sm">
                             @csrf
                             <div class="card-body">
                                 <h2 class="h4 mb-3">{{ __('order.checkout_title') }}</h2>
+
 
                                 <div class="mb-3">
                                     <label for="customer_name" class="form-label">{{ __('order.name') }}</label>
@@ -93,6 +116,7 @@
                                     @error('customer_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
+
                                 <div class="mb-3">
                                     <label for="customer_phone" class="form-label">{{ __('order.phone') }}</label>
                                     <input id="customer_phone" type="tel" name="customer_phone" required maxlength="20"
@@ -102,6 +126,7 @@
                                     @error('customer_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
+
                                 <div class="mb-3">
                                     <label for="customer_address" class="form-label">{{ __('order.address') }}</label>
                                     <textarea id="customer_address" name="customer_address" rows="2" maxlength="500"
@@ -109,6 +134,7 @@
                                               class="form-control @error('customer_address') is-invalid @enderror">{{ old('customer_address') }}</textarea>
                                     @error('customer_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
+
 
                                 <fieldset class="mb-3">
                                     <legend class="form-label fs-6">{{ __('order.payment_method') }}</legend>
@@ -124,11 +150,13 @@
                                     </div>
                                 </fieldset>
 
+
                                 <div id="paylater-box" class="border rounded p-3 mb-3 bg-light">
                                     <h3 class="h6">{{ __('order.paylater_title') }}</h3>
                                     @include('partials.plans-table', ['plans' => $plans, 'selectable' => true])
                                     <p class="small text-muted mt-2 mb-0">{{ __('order.rounding_note') }}</p>
                                 </div>
+
 
                                 <button type="submit" class="btn btn-lumeria btn-lg w-100">{{ __('order.place_order') }}</button>
                             </div>
@@ -136,11 +164,13 @@
                     @endunless
                 </div>
 
+
                 {{-- ===== Kolom kanan: simulator + rumus ===== --}}
                 <div class="col-lg-5">
                     <div class="card shadow-sm mb-4">
                         <div class="card-body">
                             <h2 class="h4 mb-3">{{ __('order.sim_title') }}</h2>
+
 
                             <form method="GET" action="{{ route('order') }}" class="row g-2 mb-3">
                                 <div class="col">
@@ -154,6 +184,7 @@
                                 </div>
                             </form>
 
+
                             @if ($simulation)
                                 <h3 class="h6">{{ __('order.sim_result', ['amount' => $rp($simulation['amount'])]) }}</h3>
                                 @include('partials.plans-table', ['plans' => $simulation['plans'], 'selectable' => false])
@@ -161,6 +192,7 @@
                             @endif
                         </div>
                     </div>
+
 
                     <div class="card shadow-sm">
                         <div class="card-body">
@@ -179,16 +211,19 @@
     </section>
 @endsection
 
+
 @push('scripts')
     <script>
         (function () {
             var box = document.getElementById('paylater-box');
             if (!box) { return; }
 
+
             function sync() {
                 var chosen = document.querySelector('input[name="payment_method"]:checked');
                 box.classList.toggle('d-none', !(chosen && chosen.value === 'paylater'));
             }
+
 
             document.querySelectorAll('input[name="payment_method"]').forEach(function (r) {
                 r.addEventListener('change', sync);

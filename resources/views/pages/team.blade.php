@@ -11,12 +11,15 @@
             <div class="row g-4 mt-1">
                 @foreach ($members as $m)
                     @php
-                        $initials = collect(explode(' ', $m['name']))
+                        $name = (string) ($m['name'] ?? '');
+                        $key  = (string) ($m['key'] ?? '');
+
+                        $initials = collect(preg_split('/\s+/u', trim($name), -1, PREG_SPLIT_NO_EMPTY))
                             ->take(2)
                             ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
                             ->implode('');
 
-                        $hasBio     = \Illuminate\Support\Facades\Lang::has('team.bio.' . $m['key']);
+                        $hasBio     = $key !== '' && \Illuminate\Support\Facades\Lang::has('team.bio.' . $key);
                         $hasContact = ! empty($m['whatsapp_url']) || ! empty($m['instagram_url']) || ! empty($m['portfolio_url']);
                     @endphp
                     <div class="col-12 col-md-6">
@@ -25,7 +28,7 @@
                                 <div class="d-flex align-items-center gap-3 mb-3">
                                     @if (! empty($m['photo_url']))
                                         <img src="{{ $m['photo_url'] }}"
-                                             alt="{{ __('team.photo_alt', ['name' => $m['name']]) }}"
+                                             alt="{{ __('team.photo_alt', ['name' => $name]) }}"
                                              width="80" height="80"
                                              class="team-photo rounded-circle flex-shrink-0"
                                              loading="lazy" decoding="async">
@@ -33,22 +36,27 @@
                                         <div class="team-photo team-photo-fallback rounded-circle bg-lumeria d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
                                              aria-hidden="true">{{ $initials }}</div>
                                     @endif
+
                                     <div class="team-name">
-                                        <h2 class="h5 mb-0 text-break">{{ $m['name'] }}</h2>
-                                        <span class="text-lumeria">{{ __('team.roles.' . $m['key']) }}</span>
+                                        <h2 class="h5 mb-0 text-break">{{ $name }}</h2>
+                                        @if ($key !== '')
+                                            <span class="text-lumeria">{{ __('team.roles.' . $key) }}</span>
+                                        @endif
                                     </div>
                                 </div>
 
                                 @if ($hasBio)
-                                    <p class="text-muted">{{ __('team.bio.' . $m['key']) }}</p>
+                                    <p class="text-muted">{{ __('team.bio.' . $key) }}</p>
                                 @endif
 
-                                <h3 class="h6">{{ __('team.focus_title') }}</h3>
-                                <ul class="ps-3">
-                                    @foreach ((array) __('team.focus.' . $m['key']) as $item)
-                                        <li>{{ $item }}</li>
-                                    @endforeach
-                                </ul>
+                                @if ($key !== '')
+                                    <h3 class="h6">{{ __('team.focus_title') }}</h3>
+                                    <ul class="ps-3">
+                                        @foreach ((array) __('team.focus.' . $key) as $item)
+                                            <li>{{ $item }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
 
                                 <dl class="row mb-0 small">
                                     @foreach (['class', 'hobby', 'motto'] as $field)
@@ -67,21 +75,21 @@
                                                 <a href="{{ $m['whatsapp_url'] }}"
                                                    class="btn btn-sm btn-outline-lumeria"
                                                    target="_blank" rel="noopener noreferrer"
-                                                   aria-label="{{ __('team.contact.whatsapp_aria', ['name' => $m['name']]) }}">{{ __('team.contact.whatsapp') }}</a>
+                                                   aria-label="{{ __('team.contact.whatsapp_aria', ['name' => $name]) }}">{{ __('team.contact.whatsapp') }}</a>
                                             @endif
 
-                                            @if (! empty($m['instagram_url']))
+                                            @if (! empty($m['instagram_url']) && ! empty($m['instagram_handle']))
                                                 <a href="{{ $m['instagram_url'] }}"
                                                    class="btn btn-sm btn-outline-lumeria"
                                                    target="_blank" rel="noopener noreferrer"
-                                                   aria-label="{{ __('team.contact.instagram_aria', ['name' => $m['name'], 'handle' => '@' . $m['instagram_handle']]) }}">{{ '@' . $m['instagram_handle'] }}</a>
+                                                   aria-label="{{ __('team.contact.instagram_aria', ['name' => $name, 'handle' => '@' . ltrim($m['instagram_handle'], '@')]) }}">{{ '@' . ltrim($m['instagram_handle'], '@') }}</a>
                                             @endif
 
                                             @if (! empty($m['portfolio_url']))
                                                 <a href="{{ $m['portfolio_url'] }}"
                                                    class="btn btn-sm btn-outline-lumeria"
                                                    target="_blank" rel="noopener noreferrer"
-                                                   aria-label="{{ __('team.contact.portfolio_aria', ['name' => $m['name']]) }}">{{ __('team.contact.portfolio') }}</a>
+                                                   aria-label="{{ __('team.contact.portfolio_aria', ['name' => $name]) }}">{{ __('team.contact.portfolio') }}</a>
                                             @endif
                                         </div>
                                     </div>

@@ -51,7 +51,8 @@ class OrderPageTest extends TestCase
 
     public function test_empty_cart_shows_message_and_link_to_products(): void
     {
-        $this->get('/order')
+        $this->actingAs(User::factory()->create())
+            ->get('/order')
             ->assertOk()
             ->assertSee('Keranjang kamu masih kosong.')
             ->assertSee(route('products'), false);
@@ -59,7 +60,8 @@ class OrderPageTest extends TestCase
 
     public function test_cart_lists_items_and_subtotal(): void
     {
-        $this->withSession(['lumeria_cart' => [$this->milk->id => 2]])
+        $this->actingAs(User::factory()->create())
+            ->withSession(['lumeria_cart' => [$this->milk->id => 2]])
             ->get('/order')
             ->assertOk()
             ->assertSee('Original Milk')
@@ -69,7 +71,8 @@ class OrderPageTest extends TestCase
     public function test_cart_shows_all_paylater_plans_with_radio_per_tenor(): void
     {
         // Pokok 24.000: tenor 3 => margin 1.440, total 25.440, cicilan 8.480
-        $this->withSession(['lumeria_cart' => [$this->milk->id => 2]])
+        $this->actingAs(User::factory()->create())
+            ->withSession(['lumeria_cart' => [$this->milk->id => 2]])
             ->get('/order')
             ->assertSee('name="tenor_months"', false)
             ->assertSee('Rp 25.440')
@@ -97,7 +100,9 @@ class OrderPageTest extends TestCase
 
     public function test_order_page_is_available_in_english(): void
     {
-        $this->withCookie('locale', 'en')->get('/order')
+        $this->actingAs(User::factory()->create())
+            ->withCookie('locale', 'en')
+            ->get('/order')
             ->assertOk()
             ->assertSee('Your cart is empty.');
     }
@@ -115,13 +120,12 @@ class OrderPageTest extends TestCase
             ->assertSee('Cicilan ke-3');
     }
 
-    public function test_just_placed_guest_order_is_visible_in_same_session(): void
+    public function test_guest_cannot_open_an_order_even_with_a_stale_session_marker(): void
     {
         $order = $this->makeOrder();
 
         $this->withSession(['last_order_id' => $order->id])
             ->get(route('order.show', $order))
-            ->assertOk()
-            ->assertSee('Original Milk');
+            ->assertRedirect(route('login'));
     }
 }

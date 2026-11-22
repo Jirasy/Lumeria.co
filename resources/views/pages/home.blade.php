@@ -1,6 +1,8 @@
 @extends('layouts.lumeria')
 
+
 @section('title', __('home.title'))
+
 
 @section('content')
     <section class="hero-section py-5">
@@ -27,6 +29,7 @@
         </div>
     </section>
 
+
     <section class="py-5">
         <div class="container">
             <h2 class="h1 fw-bold mb-1">{{ __('home.signature_title') }}</h2>
@@ -43,10 +46,28 @@
         </div>
     </section>
 
+
+    {{-- Event & Catering --}}
+    <section class="pb-5">
+        <div class="container">
+            @include('partials.catering-card')
+        </div>
+    </section>
+
+
+    {{-- Carousel semua produk --}}
+    <section class="pb-5">
+        <div class="container">
+            @include('partials.product-carousel', ['products' => $catalog, 'id' => 'home-menu'])
+        </div>
+    </section>
+
+
     <section class="py-5 bg-white">
         <div class="container">
             <h2 class="h1 fw-bold mb-3">{{ __('home.about_title') }}</h2>
             <p class="lead mb-4">{{ __('home.about_text') }}</p>
+
 
             <div class="row g-4">
                 <div class="col-md-6">
@@ -72,6 +93,7 @@
             </div>
         </div>
     </section>
+
 
     <section class="py-5 bg-lumeria">
         <div class="container text-center">

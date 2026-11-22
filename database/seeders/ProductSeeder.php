@@ -1,9 +1,12 @@
 <?php
 
+
 namespace Database\Seeders;
+
 
 use App\Models\Product;
 use Illuminate\Database\Seeder;
+
 
 class ProductSeeder extends Seeder
 {
@@ -20,6 +23,7 @@ class ProductSeeder extends Seeder
                 'slug'           => 'original-milk',
                 'price'          => 12000,
                 'is_signature'   => true,
+                'badge'          => 'best_seller', // CONTOH: pastikan benar dengan tim, atau ubah/hapus. Pilihan: promo | discount | best_seller | new
                 'description_id' => 'Bola susu lembut dengan rasa susu murni yang langsung lumer di mulut. Manisnya pas dan tidak berlebihan, cocok untuk pencinta rasa klasik yang sederhana.',
                 'description_en' => 'A soft milk ball with pure milky flavor that melts in your mouth. Its gentle, balanced sweetness makes it a perfect pick for fans of a simple classic.',
             ],
@@ -41,6 +45,7 @@ class ProductSeeder extends Seeder
                 'description_id' => 'Bola susu rasa kopi untuk mood booster dalam satu gigitan. Aroma kopinya terasa, dipadukan dengan susu yang lembut agar tidak terlalu pahit.',
                 'description_en' => 'A coffee-flavored milk ball: a mood booster in one bite. A rich coffee aroma balanced with smooth milk, so it is never too bitter.',
             ],
+
 
             // ===== Varian Lumer Lainnya =====
             [
@@ -71,6 +76,7 @@ class ProductSeeder extends Seeder
                 'description_en' => 'Soft, creamy ice cream: a fresh way to end the day. Smooth and cool on the tongue, a sweet partner to any warm treat.',
             ],
         ];
+
 
         // updateOrCreate memakai slug sebagai kunci, jadi seeder aman dijalankan
         // berulang: data yang sudah ada diperbarui, bukan diduplikasi.

@@ -1,14 +1,28 @@
 <?php
 
+
 namespace Tests\Feature;
 
+
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
+
 class TeamPageTest extends TestCase
 {
     use RefreshDatabase;
+
+
+    // Our Team hanya untuk pengguna login (tamu diarahkan ke login; lihat RoleAccessTest).
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->actingAs(User::factory()->create());
+    }
+
 
     private function member(array $overrides = []): array
     {
@@ -19,9 +33,11 @@ class TeamPageTest extends TestCase
         ], $overrides);
     }
 
+
     public function test_member_without_photo_file_gets_initials_placeholder(): void
     {
         config(['lumeria.team' => [$this->member(['photo' => 'images/team/tidak-ada.jpg'])]]);
+
 
         $this->get('/our-team')
             ->assertOk()
@@ -30,18 +46,22 @@ class TeamPageTest extends TestCase
             ->assertDontSee('tidak-ada.jpg', false);
     }
 
+
     public function test_member_photo_is_rendered_when_the_file_exists(): void
     {
         $dir  = public_path('images/team');
         $file = $dir . '/zz-test-member.png';
+
 
         File::ensureDirectoryExists($dir);
         file_put_contents($file, base64_decode(
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
         ));
 
+
         try {
             config(['lumeria.team' => [$this->member(['key' => 'zz-test-member'])]]);
+
 
             $this->get('/our-team')
                 ->assertOk()
@@ -53,6 +73,7 @@ class TeamPageTest extends TestCase
         }
     }
 
+
     public function test_contact_buttons_use_clean_and_safe_links(): void
     {
         config(['lumeria.team' => [$this->member([
@@ -60,6 +81,7 @@ class TeamPageTest extends TestCase
             'instagram' => '@lumeria.co',
             'portfolio' => 'example.com/lumeria',
         ])]]);
+
 
         $this->get('/our-team')
             ->assertOk()
@@ -71,6 +93,7 @@ class TeamPageTest extends TestCase
             ->assertSee('rel="noopener noreferrer"', false);
     }
 
+
     public function test_contact_labels_are_localised(): void
     {
         config(['lumeria.team' => [$this->member([
@@ -78,13 +101,16 @@ class TeamPageTest extends TestCase
             'portfolio' => 'example.com/lumeria',
         ])]]);
 
+
         $this->get('/our-team')->assertSee('Portofolio')->assertSee('Hubungi');
+
 
         $this->withCookie('locale', 'en')->get('/our-team')
             ->assertSee('Portfolio')
             ->assertSee('Get in touch')
             ->assertDontSee('Portofolio');
     }
+
 
     public function test_invalid_contact_values_are_hidden_instead_of_rendered(): void
     {
@@ -93,6 +119,7 @@ class TeamPageTest extends TestCase
             'instagram' => 'bad handle!',
             'portfolio' => 'javascript:alert(1)',
         ])]]);
+
 
         $this->get('/our-team')
             ->assertOk()

@@ -5,9 +5,10 @@ namespace App\Support;
 /**
  * Mencari foto anggota tim di folder public/.
  *
- * Urutan pencarian:
- *   1. path yang diisi di config('lumeria.team.*.photo') (relatif terhadap public/)
- *   2. public/images/team/<key>.webp | .jpg | .jpeg | .png
+ * Aturan pencarian:
+ *   1. Jika path yang diisi di config('lumeria.team.*.photo') ada isinya,
+ *      hanya path tersebut yang dicek; jika tidak ada filenya, kembalikan null.
+ *   2. Jika photo kosong/null, cari public/images/team/<key>.webp | .jpg | .jpeg | .png.
  *
  * Mengembalikan path relatif (mis. "images/team/sanaya.jpg") hanya jika filenya
  * benar-benar ada; selain itu null, supaya view memakai placeholder inisial dan
@@ -22,32 +23,45 @@ final class TeamPhoto
     public static function resolve(string $key, ?string $configured = null, ?string $publicPath = null): ?string
     {
         $publicPath = rtrim($publicPath ?? public_path(), '/\\');
-        $candidates = [];
 
-        if ($configured !== null && trim($configured) !== '') {
-            $candidates[] = trim($configured);
+        $hasConfigured = $configured !== null && trim($configured) !== '';
+
+        if ($hasConfigured) {
+            $relative = self::normalizeRelativePath((string) $configured);
+
+            if ($relative === null) {
+                return null;
+            }
+
+            return is_file($publicPath . '/' . $relative) ? $relative : null;
         }
 
         $slug = preg_replace('/[^A-Za-z0-9_-]/', '', $key) ?? '';
-        if ($slug !== '') {
-            foreach (self::EXTENSIONS as $ext) {
-                $candidates[] = self::DIR . '/' . $slug . '.' . $ext;
-            }
+        if ($slug === '') {
+            return null;
         }
 
-        foreach ($candidates as $relative) {
-            $relative = ltrim(str_replace('\\', '/', $relative), '/');
+        foreach (self::EXTENSIONS as $ext) {
+            $relative = self::normalizeRelativePath(self::DIR . '/' . $slug . '.' . $ext);
 
-            if (str_contains($relative, '..')
-                || ! preg_match('~\.(webp|jpe?g|png)$~i', $relative)) {
-                continue;
-            }
-
-            if (is_file($publicPath . '/' . $relative)) {
+            if ($relative !== null && is_file($publicPath . '/' . $relative)) {
                 return $relative;
             }
         }
 
         return null;
+    }
+
+    private static function normalizeRelativePath(string $path): ?string
+    {
+        $relative = ltrim(str_replace('\\', '/', trim($path)), '/');
+
+        if ($relative === ''
+            || str_contains($relative, '..')
+            || ! preg_match('~\.(webp|jpe?g|png)$~i', $relative)) {
+            return null;
+        }
+
+        return $relative;
     }
 }

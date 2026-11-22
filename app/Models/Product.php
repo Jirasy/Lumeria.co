@@ -6,9 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    public const BADGES = [
+        'promo',
+        'discount',
+        'best_seller',
+        'new',
+    ];
+
     protected $fillable = [
         'category', 'name', 'name_en', 'slug', 'description_id', 'description_en',
-        'price', 'is_signature', 'image', 'is_active',
+        'price', 'is_signature', 'badge', 'image', 'is_active',
     ];
 
     protected $casts = [
@@ -17,7 +24,6 @@ class Product extends Model
         'is_active'    => 'boolean',
     ];
 
-    // Nama otomatis mengikuti bahasa aktif jika name_en tersedia: $product->display_name
     public function getDisplayNameAttribute(): string
     {
         if (app()->getLocale() === 'en' && filled($this->name_en)) {
@@ -27,7 +33,6 @@ class Product extends Model
         return (string) $this->name;
     }
 
-    // Deskripsi otomatis mengikuti bahasa aktif: $product->description
     public function getDescriptionAttribute(): string
     {
         return app()->getLocale() === 'en'
@@ -35,7 +40,28 @@ class Product extends Model
             : (string) $this->description_id;
     }
 
-    // $product->formatted_price => "Rp 12.000"
+    public function getBadgeLabelAttribute(): ?string
+    {
+        $badge = (string) ($this->badge ?? '');
+
+        if (! in_array($badge, self::BADGES, true)) {
+            return null;
+        }
+
+        return (string) __('foodtech.badges.' . $badge);
+    }
+
+    public function getBadgeToneAttribute(): string
+    {
+        return match ($this->badge) {
+            'promo'       => 'hot',
+            'discount'    => 'discount',
+            'best_seller' => 'bestseller',
+            'new'         => 'new',
+            default        => 'hot',
+        };
+    }
+
     public function getFormattedPriceAttribute(): string
     {
         return 'Rp ' . number_format($this->price, 0, ',', '.');

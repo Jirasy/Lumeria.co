@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') | {{ __('common.brand') }}</title>
 
+
     <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
     {{-- Palet warna dan gaya situs: edit token di public/css/lumeria.css (bagian 1). --}}
     <link href="{{ asset('css/lumeria.css') }}?v={{ is_file(public_path('css/lumeria.css')) ? filemtime(public_path('css/lumeria.css')) : 1 }}" rel="stylesheet">
+    {{-- Komponen etalase foodtech: badge pojok, carousel, kartu catering, footer gelap. --}}
+    <link href="{{ asset('css/lumeria-foodtech.css') }}?v={{ is_file(public_path('css/lumeria-foodtech.css')) ? filemtime(public_path('css/lumeria-foodtech.css')) : 1 }}" rel="stylesheet">
     @stack('styles')
 </head>
 @php
@@ -17,7 +20,9 @@
 <body class="d-flex flex-column min-vh-100{{ $showFab ? ' has-fab' : '' }}">
     <a href="#main" class="skip-link">{{ __('common.skip') }}</a>
 
+
     @include('partials.navbar')
+
 
     <main id="main" class="flex-grow-1" tabindex="-1">
         @if (session('error') || $errors->any())
@@ -40,8 +45,10 @@
             </div>
         @endif
 
+
         @yield('content')
     </main>
+
 
     @if (session('status'))
         <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-5" style="z-index: 1090">
@@ -67,17 +74,16 @@
         @endpush
     @endif
 
+
     @if ($showFab)
         <a href="{{ route('order') }}" class="cart-fab btn btn-lumeria shadow d-xl-none">
             {{ __('nav.cart') }} <span class="badge text-bg-light">{{ $cartCount }}</span>
         </a>
     @endif
 
-    <footer class="bg-white border-top py-4 mt-5">
-        <div class="container text-center text-muted small">
-            &copy; {{ date('Y') }} {{ __('common.brand') }}. {{ __('common.footer_rights') }}
-        </div>
-    </footer>
+
+    @include('partials.footer')
+
 
     <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
     @stack('scripts')

@@ -1,15 +1,30 @@
 <?php
 
+
 return [
     'paylater' => [
         'tenors'      => [1, 2, 3],
         'margin_rate' => 2.0, // persen per bulan, flat
     ],
 
+
     'contact' => [
         // Dipakai untuk nomor WhatsApp yang ditulis diawali 0 (0812... menjadi 62812...).
         'country_code' => '62',
+
+        // Kontak toko untuk footer, kartu catering, dan halaman detail produk.
+        // Isi di .env (LUMERIA_WHATSAPP=0812-3456-7890). Kosong/tidak valid = tombolnya otomatis disembunyikan.
+        'whatsapp'  => env('LUMERIA_WHATSAPP'),
+        'instagram' => env('LUMERIA_INSTAGRAM'), // '@username' atau URL profil
     ],
+
+    // Akun admin awal untuk seeder (php artisan db:seed). Dua-duanya wajib diisi agar akun dibuat.
+    'admin' => [
+        'name'     => env('LUMERIA_ADMIN_NAME', 'Admin Lumeria'),
+        'email'    => env('LUMERIA_ADMIN_EMAIL'),
+        'password' => env('LUMERIA_ADMIN_PASSWORD'),
+    ],
+
 
     /*
      | Data anggota tim (halaman Our Team).

@@ -1,13 +1,26 @@
 @inject('cart', 'App\Services\Cart')
 @php
+    // Tiga perspektif: tamu, pelanggan login, admin.
+    $user = auth()->user();
+
     $links = [
         ['home', 'nav.home'],
         ['products', 'nav.products'],
         ['order', 'nav.order'],
-        ['islamic', 'nav.islamic'],
-        ['economic', 'nav.economic'],
-        ['team', 'nav.team'],
     ];
+
+    if ($user) {
+        $links[] = ['orders.index', 'foodtech.nav.my_orders'];
+        $links[] = ['team', 'nav.team'];
+    }
+
+    if ($user?->isAdmin()) {
+        $links[] = ['admin.dashboard', 'foodtech.nav.admin'];
+    }
+
+    // Materi khusus admin (Nilai Islam dan Diskusi Ekonomi)
+    $materials = $user?->isAdmin() ? [['islamic', 'nav.islamic'], ['economic', 'nav.economic']] : [];
+    $materialsActive = request()->routeIs('islamic', 'economic');
     $locale = app()->getLocale();
 @endphp
 <nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top" aria-label="{{ __('nav.menu') }}">
@@ -15,6 +28,7 @@
         <a class="navbar-brand d-inline-flex align-items-center gap-2 fw-bold text-lumeria"
         href="{{ route('home') }}"
         aria-label="{{ __('common.brand') }}">
+
 
     <img
         src="{{ asset('images/lumeria-logo.png') }}"
@@ -25,13 +39,16 @@
         style="object-fit: cover;"
     >
 
+
     <span>{{ __('common.brand') }}</span>
     </a>
+
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="{{ __('nav.menu') }}">
             <span class="navbar-toggler-icon"></span>
         </button>
+
 
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto mb-2 mb-xl-0">
@@ -44,7 +61,20 @@
                         </a>
                     </li>
                 @endforeach
+
+                @if ($materials)
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle{{ $materialsActive ? ' active fw-semibold' : '' }}" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">{{ __('foodtech.nav.materials') }}</a>
+                        <ul class="dropdown-menu">
+                            @foreach ($materials as [$route, $label])
+                                <li><a class="dropdown-item{{ request()->routeIs($route) ? ' active' : '' }}" href="{{ route($route) }}">{{ __($label) }}</a></li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
             </ul>
+
 
             <div class="nav-actions d-flex flex-wrap align-items-center gap-2">
                 <div class="btn-group btn-group-sm lang-switch" role="group" aria-label="{{ __('common.language') }}">
@@ -53,6 +83,7 @@
                            class="btn btn-outline-dark{{ $locale === $code ? ' active' : '' }}"@if ($locale === $code) aria-current="true"@endif>{{ $text }}</a>
                     @endforeach
                 </div>
+
 
                 @auth
                     <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-dark">{{ __('nav.dashboard') }}</a>

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Product;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 
 class Cart
 {
@@ -12,7 +11,7 @@ class Cart
 
     public function add(Product $product, int $qty = 1): void
     {
-        if (! Auth::check()) {
+        if (! auth()->check()) {
             return;
         }
 
@@ -23,7 +22,7 @@ class Cart
 
     public function set(Product $product, int $qty): void
     {
-        if (! Auth::check()) {
+        if (! auth()->check()) {
             return;
         }
 
@@ -40,7 +39,7 @@ class Cart
 
     public function remove(Product $product): void
     {
-        if (! Auth::check()) {
+        if (! auth()->check()) {
             return;
         }
 
@@ -51,7 +50,7 @@ class Cart
 
     public function clear(): void
     {
-        if (! Auth::check()) {
+        if (! auth()->check()) {
             return;
         }
 
@@ -61,6 +60,10 @@ class Cart
     /** Harga selalu diambil dari database, tidak pernah dari request. */
     public function items(): Collection
     {
+        if (! auth()->check()) {
+            return collect();
+        }
+
         $raw = $this->raw();
 
         if (! $raw) {
@@ -85,12 +88,20 @@ class Cart
 
     public function subtotal(): int
     {
+        if (! auth()->check()) {
+            return 0;
+        }
+
         return (int) $this->items()->sum('line_total');
     }
 
     /** Untuk badge navbar: murah, tanpa query. */
     public function count(): int
     {
+        if (! auth()->check()) {
+            return 0;
+        }
+
         return array_sum($this->raw());
     }
 

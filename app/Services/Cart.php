@@ -11,6 +11,10 @@ class Cart
 
     public function add(Product $product, int $qty = 1): void
     {
+        if (! auth()->check()) {
+            return;
+        }
+
         $items = $this->raw();
         $items[$product->id] = min(99, ($items[$product->id] ?? 0) + max(1, $qty));
         $this->save($items);
@@ -18,6 +22,10 @@ class Cart
 
     public function set(Product $product, int $qty): void
     {
+        if (! auth()->check()) {
+            return;
+        }
+
         $items = $this->raw();
 
         if ($qty < 1) {
@@ -31,6 +39,10 @@ class Cart
 
     public function remove(Product $product): void
     {
+        if (! auth()->check()) {
+            return;
+        }
+
         $items = $this->raw();
         unset($items[$product->id]);
         $this->save($items);
@@ -79,11 +91,21 @@ class Cart
 
     private function raw(): array
     {
+        // Keranjang hanya untuk pelanggan login. Sisa keranjang sesi lama milik tamu diabaikan,
+        // jadi badge navbar, tombol keranjang, dan halaman Pesan tidak menampilkannya.
+        if (! auth()->check()) {
+            return [];
+        }
+
         return session(self::KEY, []);
     }
 
     private function save(array $items): void
     {
+        if (! auth()->check()) {
+            return;
+        }
+
         session([self::KEY => $items]);
     }
 }

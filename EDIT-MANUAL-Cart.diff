@@ -1,0 +1,17 @@
+diff --git a/app/Services/Cart.php b/app/Services/Cart.php
+index b1064e3..a2cd705 100644
+--- a/app/Services/Cart.php
++++ b/app/Services/Cart.php
+@@ -96,6 +96,12 @@ class Cart
+ 
+     private function raw(): array
+     {
++        // Keranjang hanya untuk pelanggan login. Sisa keranjang sesi lama milik tamu diabaikan,
++        // jadi badge navbar, tombol keranjang, dan halaman Pesan tidak menampilkannya.
++        if (! auth()->check()) {
++            return [];
++        }
++
+         return session(self::KEY, []);
+     }
+ 

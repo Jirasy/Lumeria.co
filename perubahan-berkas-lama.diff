@@ -1,0 +1,866 @@
+diff --git a/.env.example b/.env.example
+index ce761b1..5ebc59d 100644
+--- a/.env.example
++++ b/.env.example
+@@ -77,3 +77,13 @@ AWS_USE_PATH_STYLE_ENDPOINT=false
+ 
+ 
+ VITE_APP_NAME="${APP_NAME}"
++
++# --- Lumeria.co ---
++# Nomor WhatsApp toko (footer, kartu catering, halaman detail produk). Contoh: 0812-3456-7890
++LUMERIA_WHATSAPP=
++# Instagram toko (opsional): @username atau URL profil
++LUMERIA_INSTAGRAM=
++# Akun admin awal untuk `php artisan db:seed` (kosongkan bila tidak ingin dibuat)
++LUMERIA_ADMIN_NAME="Admin Lumeria"
++LUMERIA_ADMIN_EMAIL=
++LUMERIA_ADMIN_PASSWORD=
+diff --git a/app/Http/Controllers/Auth/AuthenticatedSessionController.php b/app/Http/Controllers/Auth/AuthenticatedSessionController.php
+index b0f5de1..cef622b 100644
+--- a/app/Http/Controllers/Auth/AuthenticatedSessionController.php
++++ b/app/Http/Controllers/Auth/AuthenticatedSessionController.php
+@@ -34,7 +34,12 @@ class AuthenticatedSessionController extends Controller
+         $request->session()->regenerate();
+ 
+ 
+-        return redirect()->intended(route('dashboard', absolute: false));
++        // Admin langsung ke panel pengelolaan; pelanggan ke dashboard seperti biasa.
++        $home = $request->user()->isAdmin()
++            ? route('admin.dashboard', absolute: false)
++            : route('dashboard', absolute: false);
++
++        return redirect()->intended($home);
+     }
+ 
+ 
+diff --git a/app/Http/Controllers/OrderController.php b/app/Http/Controllers/OrderController.php
+index b612b94..781eec1 100644
+--- a/app/Http/Controllers/OrderController.php
++++ b/app/Http/Controllers/OrderController.php
+@@ -106,6 +106,18 @@ class OrderController extends Controller
+     }
+ 
+ 
++    /** Pesanan Saya: riwayat dan status pesanan milik pelanggan yang login. */
++    public function history(Request $request): View
++    {
++        $orders = Order::where('user_id', $request->user()->id)
++            ->withCount('items')
++            ->latest()
++            ->paginate(10);
++
++        return view('pages.order-history', ['orders' => $orders]);
++    }
++
++
+     public function show(Order $order): View
+     {
+         $owns = auth()->check()
+@@ -117,7 +129,9 @@ class OrderController extends Controller
+ 
+ 
+         // Tanpa ini, siapa pun bisa menebak /order/1, /order/2 dan membaca nama, telepon, alamat orang lain.
+-        abort_unless($owns || $justPlaced, 403);
++        $isAdmin = (bool) auth()->user()?->isAdmin();
++
++        abort_unless($owns || $justPlaced || $isAdmin, 403);
+ 
+ 
+         return view('pages.order-show', ['order' => $order->load('items')]);
+diff --git a/app/Http/Controllers/PageController.php b/app/Http/Controllers/PageController.php
+index 32c9973..c11b671 100644
+--- a/app/Http/Controllers/PageController.php
++++ b/app/Http/Controllers/PageController.php
+@@ -14,11 +14,11 @@ class PageController extends Controller
+ {
+     public function home(): View
+     {
++        $catalog = Product::active()->orderBy('id')->get();
++
+         return view('pages.home', [
+-            'signatureProducts' => Product::active()
+-                ->where('is_signature', true)
+-                ->orderBy('id')
+-                ->get(),
++            'signatureProducts' => $catalog->where('is_signature', true)->values(),
++            'catalog'           => $catalog, // untuk carousel semua produk
+         ]);
+     }
+ 
+diff --git a/app/Http/Controllers/ProductController.php b/app/Http/Controllers/ProductController.php
+index 4fc8305..7008ce8 100644
+--- a/app/Http/Controllers/ProductController.php
++++ b/app/Http/Controllers/ProductController.php
+@@ -20,4 +20,23 @@ class ProductController extends Controller
+             'others'    => $products->get('lumer_lainnya', collect()),
+         ]);
+     }
++
++
++    public function show(Product $product): View
++    {
++        abort_unless($product->is_active, 404);
++
++        // Rekomendasi: kategori yang sama dulu, lalu sisanya.
++        $related = Product::active()
++            ->where('id', '!=', $product->id)
++            ->orderByRaw('category = ? desc', [$product->category])
++            ->orderBy('id')
++            ->limit(3)
++            ->get();
++
++        return view('pages.product-show', [
++            'product' => $product,
++            'related' => $related,
++        ]);
++    }
+ }
+diff --git a/app/Models/Product.php b/app/Models/Product.php
+index 9f91d60..b7c216e 100644
+--- a/app/Models/Product.php
++++ b/app/Models/Product.php
+@@ -11,10 +11,13 @@ class Product extends Model
+ {
+     protected $fillable = [
+         'category', 'name', 'slug', 'description_id', 'description_en',
+-        'price', 'is_signature', 'image', 'is_active',
++        'price', 'is_signature', 'badge', 'image', 'is_active',
+     ];
+ 
+ 
++    // Kunci badge yang dikenali kartu produk; label-nya ada di lang/*/foodtech.php.
++    public const BADGES = ['promo', 'discount', 'best_seller', 'new'];
++
+     protected $casts = [
+         'price'        => 'integer',
+         'is_signature' => 'boolean',
+@@ -38,6 +41,20 @@ class Product extends Model
+     }
+ 
+ 
++    // Label badge pojok kartu, atau null bila kosong / kunci tidak dikenal.
++    public function getBadgeLabelAttribute(): ?string
++    {
++        return in_array($this->badge, self::BADGES, true)
++            ? __('foodtech.badges.' . $this->badge)
++            : null;
++    }
++
++    // promo & discount tampil mencolok (hot); best_seller & new tampil lembut (soft).
++    public function getBadgeToneAttribute(): string
++    {
++        return in_array($this->badge, ['promo', 'discount'], true) ? 'hot' : 'soft';
++    }
++
+     public function scopeActive($query)
+     {
+         return $query->where('is_active', true);
+diff --git a/app/Models/User.php b/app/Models/User.php
+index 65fa9d2..cd12af0 100644
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -16,6 +16,9 @@ class User extends Authenticatable
+     /** @use HasFactory<UserFactory> */
+     use HasFactory, Notifiable;
+ 
++    public const ROLE_CUSTOMER = 'customer';
++    public const ROLE_ADMIN    = 'admin';
++
+ 
+     /**
+      * The attributes that are mass assignable.
+@@ -40,6 +43,13 @@ class User extends Authenticatable
+     ];
+ 
+ 
++    // Sengaja TIDAK masuk $fillable: peran hanya boleh diubah lewat seeder/tinker,
++    // supaya form registrasi tidak bisa dipakai untuk menjadikan diri sendiri admin.
++    public function isAdmin(): bool
++    {
++        return $this->role === self::ROLE_ADMIN;
++    }
++
+     /**
+      * Get the attributes that should be cast.
+      *
+diff --git a/bootstrap/app.php b/bootstrap/app.php
+index aa7ddd1..fcf6e5f 100644
+--- a/bootstrap/app.php
++++ b/bootstrap/app.php
+@@ -4,6 +4,7 @@
+ use Illuminate\Foundation\Application;
+ use Illuminate\Foundation\Configuration\Exceptions;
+ use Illuminate\Foundation\Configuration\Middleware;
++use App\Http\Middleware\EnsureUserIsAdmin;
+ use App\Http\Middleware\SetLocale;
+ 
+ 
+@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
+     $middleware->web(append: [
+         SetLocale::class,
+     ]);
++
++    $middleware->alias([
++        'admin' => EnsureUserIsAdmin::class,
++    ]);
+     })
+     ->withExceptions(function (Exceptions $exceptions): void {
+         //
+diff --git a/config/lumeria.php b/config/lumeria.php
+index 9e96462..9f393b1 100644
+--- a/config/lumeria.php
++++ b/config/lumeria.php
+@@ -11,6 +11,18 @@ return [
+     'contact' => [
+         // Dipakai untuk nomor WhatsApp yang ditulis diawali 0 (0812... menjadi 62812...).
+         'country_code' => '62',
++
++        // Kontak toko untuk footer, kartu catering, dan halaman detail produk.
++        // Isi di .env (LUMERIA_WHATSAPP=0812-3456-7890). Kosong/tidak valid = tombolnya otomatis disembunyikan.
++        'whatsapp'  => env('LUMERIA_WHATSAPP'),
++        'instagram' => env('LUMERIA_INSTAGRAM'), // '@username' atau URL profil
++    ],
++
++    // Akun admin awal untuk seeder (php artisan db:seed). Dua-duanya wajib diisi agar akun dibuat.
++    'admin' => [
++        'name'     => env('LUMERIA_ADMIN_NAME', 'Admin Lumeria'),
++        'email'    => env('LUMERIA_ADMIN_EMAIL'),
++        'password' => env('LUMERIA_ADMIN_PASSWORD'),
+     ],
+ 
+ 
+diff --git a/database/factories/UserFactory.php b/database/factories/UserFactory.php
+index e407c7d..0f75717 100644
+--- a/database/factories/UserFactory.php
++++ b/database/factories/UserFactory.php
+@@ -38,6 +38,16 @@ class UserFactory extends Factory
+     }
+ 
+ 
++    /**
++     * Pengguna dengan peran admin toko.
++     */
++    public function admin(): static
++    {
++        return $this->state(fn (array $attributes) => [
++            'role' => User::ROLE_ADMIN,
++        ]);
++    }
++
+     /**
+      * Indicate that the model's email address should be unverified.
+      */
+diff --git a/database/seeders/DatabaseSeeder.php b/database/seeders/DatabaseSeeder.php
+index 23bbec7..d1cad88 100644
+--- a/database/seeders/DatabaseSeeder.php
++++ b/database/seeders/DatabaseSeeder.php
+@@ -26,5 +26,19 @@ class DatabaseSeeder extends Seeder
+             'name' => 'Test User',
+             'email' => 'test@example.com',
+         ]);
++
++        // Admin awal: hanya dibuat bila LUMERIA_ADMIN_EMAIL dan LUMERIA_ADMIN_PASSWORD diisi di .env.
++        $email    = config('lumeria.admin.email');
++        $password = config('lumeria.admin.password');
++
++        if ($email && $password) {
++            $admin = User::firstOrNew(['email' => $email]);
++            $admin->forceFill([
++                'name'              => config('lumeria.admin.name'),
++                'password'          => $password,
++                'role'              => User::ROLE_ADMIN,
++                'email_verified_at' => now(),
++            ])->save();
++        }
+     }
+ }
+diff --git a/database/seeders/ProductSeeder.php b/database/seeders/ProductSeeder.php
+index 609e7ea..e538657 100644
+--- a/database/seeders/ProductSeeder.php
++++ b/database/seeders/ProductSeeder.php
+@@ -23,6 +23,7 @@ class ProductSeeder extends Seeder
+                 'slug'           => 'original-milk',
+                 'price'          => 12000,
+                 'is_signature'   => true,
++                'badge'          => 'best_seller', // CONTOH: pastikan benar dengan tim, atau ubah/hapus. Pilihan: promo | discount | best_seller | new
+                 'description_id' => 'Bola susu lembut dengan rasa susu murni yang langsung lumer di mulut. Manisnya pas dan tidak berlebihan, cocok untuk pencinta rasa klasik yang sederhana.',
+                 'description_en' => 'A soft milk ball with pure milky flavor that melts in your mouth. Its gentle, balanced sweetness makes it a perfect pick for fans of a simple classic.',
+             ],
+diff --git a/resources/views/layouts/lumeria.blade.php b/resources/views/layouts/lumeria.blade.php
+index 54fa259..fdb776c 100644
+--- a/resources/views/layouts/lumeria.blade.php
++++ b/resources/views/layouts/lumeria.blade.php
+@@ -9,6 +9,8 @@
+     <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+     {{-- Palet warna dan gaya situs: edit token di public/css/lumeria.css (bagian 1). --}}
+     <link href="{{ asset('css/lumeria.css') }}?v={{ is_file(public_path('css/lumeria.css')) ? filemtime(public_path('css/lumeria.css')) : 1 }}" rel="stylesheet">
++    {{-- Komponen etalase foodtech: badge pojok, carousel, kartu catering, footer gelap. --}}
++    <link href="{{ asset('css/lumeria-foodtech.css') }}?v={{ is_file(public_path('css/lumeria-foodtech.css')) ? filemtime(public_path('css/lumeria-foodtech.css')) : 1 }}" rel="stylesheet">
+     @stack('styles')
+ </head>
+ @php
+@@ -80,11 +82,7 @@
+     @endif
+ 
+ 
+-    <footer class="bg-white border-top py-4 mt-5">
+-        <div class="container text-center text-muted small">
+-            &copy; {{ date('Y') }} {{ __('common.brand') }}. {{ __('common.footer_rights') }}
+-        </div>
+-    </footer>
++    @include('partials.footer')
+ 
+ 
+     <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+diff --git a/resources/views/pages/home.blade.php b/resources/views/pages/home.blade.php
+index 38b2cf4..e785543 100644
+--- a/resources/views/pages/home.blade.php
++++ b/resources/views/pages/home.blade.php
+@@ -47,6 +47,22 @@
+     </section>
+ 
+ 
++    {{-- Event & Catering --}}
++    <section class="pb-5">
++        <div class="container">
++            @include('partials.catering-card')
++        </div>
++    </section>
++
++
++    {{-- Carousel semua produk --}}
++    <section class="pb-5">
++        <div class="container">
++            @include('partials.product-carousel', ['products' => $catalog, 'id' => 'home-menu'])
++        </div>
++    </section>
++
++
+     <section class="py-5 bg-white">
+         <div class="container">
+             <h2 class="h1 fw-bold mb-3">{{ __('home.about_title') }}</h2>
+diff --git a/resources/views/pages/order.blade.php b/resources/views/pages/order.blade.php
+index fa56200..e0769e7 100644
+--- a/resources/views/pages/order.blade.php
++++ b/resources/views/pages/order.blade.php
+@@ -17,6 +17,22 @@
+             <h1 class="fw-bold">{{ __('order.title') }}</h1>
+             <p class="lead text-muted">{{ __('order.subtitle') }}</p>
+ 
++            @guest
++                {{-- Keranjang dan checkout hanya untuk pelanggan login; simulator Paylater tetap terbuka. --}}
++                @php $waGuest = \App\Support\StoreContact::whatsapp(__('foodtech.footer.wa_message')); @endphp
++                <div class="ft-note my-3">
++                    <h2 class="h5">{{ __('foodtech.guest_order.title') }}</h2>
++                    <p class="mb-3">{{ __('foodtech.guest_order.text') }}</p>
++                    <div class="d-flex flex-wrap gap-2">
++                        <a href="{{ route('login') }}" class="btn btn-lumeria">{{ __('nav.login') }}</a>
++                        <a href="{{ route('register') }}" class="btn btn-outline-dark">{{ __('nav.register') }}</a>
++                        @if ($waGuest)
++                            <a href="{{ $waGuest }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark">{{ __('foodtech.footer.chat_wa') }}</a>
++                        @endif
++                    </div>
++                </div>
++            @endguest
++
+ 
+             <div class="row g-4 mt-1">
+                 {{-- ===== Kolom kiri: keranjang + checkout ===== --}}
+diff --git a/resources/views/partials/navbar.blade.php b/resources/views/partials/navbar.blade.php
+index 8ef2ae6..8b964c3 100644
+--- a/resources/views/partials/navbar.blade.php
++++ b/resources/views/partials/navbar.blade.php
+@@ -1,13 +1,26 @@
+ @inject('cart', 'App\Services\Cart')
+ @php
++    // Tiga perspektif: tamu, pelanggan login, admin.
++    $user = auth()->user();
++
+     $links = [
+         ['home', 'nav.home'],
+         ['products', 'nav.products'],
+         ['order', 'nav.order'],
+-        ['islamic', 'nav.islamic'],
+-        ['economic', 'nav.economic'],
+-        ['team', 'nav.team'],
+     ];
++
++    if ($user) {
++        $links[] = ['orders.index', 'foodtech.nav.my_orders'];
++        $links[] = ['team', 'nav.team'];
++    }
++
++    if ($user?->isAdmin()) {
++        $links[] = ['admin.dashboard', 'foodtech.nav.admin'];
++    }
++
++    // Materi khusus admin (Nilai Islam dan Diskusi Ekonomi)
++    $materials = $user?->isAdmin() ? [['islamic', 'nav.islamic'], ['economic', 'nav.economic']] : [];
++    $materialsActive = request()->routeIs('islamic', 'economic');
+     $locale = app()->getLocale();
+ @endphp
+ <nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top" aria-label="{{ __('nav.menu') }}">
+@@ -48,6 +61,18 @@
+                         </a>
+                     </li>
+                 @endforeach
++
++                @if ($materials)
++                    <li class="nav-item dropdown">
++                        <a class="nav-link dropdown-toggle{{ $materialsActive ? ' active fw-semibold' : '' }}" href="#" role="button"
++                           data-bs-toggle="dropdown" aria-expanded="false">{{ __('foodtech.nav.materials') }}</a>
++                        <ul class="dropdown-menu">
++                            @foreach ($materials as [$route, $label])
++                                <li><a class="dropdown-item{{ request()->routeIs($route) ? ' active' : '' }}" href="{{ route($route) }}">{{ __($label) }}</a></li>
++                            @endforeach
++                        </ul>
++                    </li>
++                @endif
+             </ul>
+ 
+ 
+diff --git a/resources/views/partials/product-card.blade.php b/resources/views/partials/product-card.blade.php
+index d121b11..cc914cc 100644
+--- a/resources/views/partials/product-card.blade.php
++++ b/resources/views/partials/product-card.blade.php
+@@ -1,12 +1,18 @@
++{{-- Kartu produk etalase: badge pojok (promo/diskon/terlaris/baru) + tombol langsung ke halaman detail. --}}
+ <div id="product-{{ $product->id }}" class="card h-100 border-0 shadow-sm product-card overflow-hidden">
+-    @if ($product->image)
+-        <div class="product-art">
+-            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-100 h-100 object-fit-cover" loading="lazy">
+-        </div>
+-    @else
+-        <x-product-art :slug="$product->slug" :size="104" />
+-    @endif
++    <div class="ft-media">
++        @if ($product->badge_label)
++            <span class="ft-badge ft-badge-{{ $product->badge_tone }}">{{ $product->badge_label }}</span>
++        @endif
+ 
++        @if ($product->image)
++            <div class="product-art">
++                <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-100 h-100 object-fit-cover" loading="lazy">
++            </div>
++        @else
++            <x-product-art :slug="$product->slug" :size="104" />
++        @endif
++    </div>
+ 
+     <div class="card-body d-flex flex-column">
+         <div class="d-flex justify-content-between align-items-start gap-2">
+@@ -16,18 +22,11 @@
+             @endif
+         </div>
+ 
+-
+-        <p class="card-text text-muted flex-grow-1">{{ $product->description }}</p>
++        <p class="card-text text-muted flex-grow-1 ft-clamp">{{ $product->description }}</p>
+         <p class="fs-5 fw-bold mb-3">{{ $product->formatted_price }}</p>
+ 
+-
+-        <form method="POST" action="{{ route('cart.add') }}" class="d-flex gap-2">
+-            @csrf
+-            <input type="hidden" name="product_id" value="{{ $product->id }}">
+-            <label for="qty-{{ $product->id }}" class="visually-hidden">{{ __('products.qty') }}</label>
+-            <input id="qty-{{ $product->id }}" type="number" name="quantity" value="1" min="1" max="99"
+-                   class="form-control" style="max-width: 5.5rem">
+-            <button type="submit" class="btn btn-lumeria flex-grow-1">{{ __('products.add') }}</button>
+-        </form>
++        <a href="{{ route('products.show', $product) }}" class="btn btn-lumeria w-100">
++            {{ __('foodtech.card.detail') }}<span class="visually-hidden">: {{ $product->name }}</span>
++        </a>
+     </div>
+ </div>
+diff --git a/routes/web.php b/routes/web.php
+index b49540e..b8be571 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -1,50 +1,74 @@
+ <?php
+ 
+ 
+-use App\Http\Controllers\ProfileController;
+-use Illuminate\Support\Facades\Route;
+-use App\Http\Controllers\LocaleController;
+-use App\Http\Middleware\SetLocale;
++use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+ use App\Http\Controllers\CartController;
++use App\Http\Controllers\LocaleController;
+ use App\Http\Controllers\OrderController;
+ use App\Http\Controllers\PageController;
+ use App\Http\Controllers\ProductController;
++use App\Http\Controllers\ProfileController;
++use App\Http\Middleware\SetLocale;
++use Illuminate\Support\Facades\Route;
++
+ 
++/*
++|--------------------------------------------------------------------------
++| Tiga perspektif (arahan Pak CEO)
++|--------------------------------------------------------------------------
++| 1. TAMU      : etalase produk, detail produk, info pemesanan & simulasi Paylater.
++| 2. PELANGGAN : (group 'auth') keranjang, checkout, Pesanan Saya, profil, Our Team.
++| 3. ADMIN     : (group 'auth' + 'admin') panel toko dan materi Nilai Islam / Diskusi Ekonomi.
++*/
+ 
++
++// ---------- 1. Tamu (publik) ----------
+ Route::get('/', [PageController::class, 'home'])->name('home');
+ 
++Route::get('/lang/{locale}', [LocaleController::class, 'switch'])
++    ->whereIn('locale', SetLocale::SUPPORTED)
++    ->name('lang.switch');
++
++Route::get('/products', [ProductController::class, 'index'])->name('products');
++Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+ 
+-Route::get('/dashboard', function () {
+-    return view('dashboard');
+-})->middleware(['auth', 'verified'])->name('dashboard');
++// Info pemesanan + simulator Paylater tetap publik. Keranjang dan checkout ada di group 'auth' di bawah.
++Route::get('/order', [OrderController::class, 'index'])->name('order');
++
++// Tetap publik karena otorisasinya ada di controller (pemilik, admin, atau sesi yang baru memesan -> selain itu 403).
++Route::get('/order/{order}', [OrderController::class, 'show'])->name('order.show')->whereNumber('order');
+ 
+ 
++// ---------- 2. Pelanggan (sudah login) ----------
+ Route::middleware('auth')->group(function () {
++    Route::get('/dashboard', function () {
++        return view('dashboard');
++    })->middleware('verified')->name('dashboard');
++
+     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+-});
+-
+-
+-Route::get('/lang/{locale}', [LocaleController::class, 'switch'])
+-    ->whereIn('locale', SetLocale::SUPPORTED)
+-    ->name('lang.switch');
+ 
++    Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
++    Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update')->whereNumber('product');
++    Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove')->whereNumber('product');
+ 
+-    Route::get('/products', [ProductController::class, 'index'])->name('products');
+-Route::get('/islamic-values', [PageController::class, 'islamic'])->name('islamic');
+-Route::get('/economic-discussion', [PageController::class, 'economic'])->name('economic');
+-Route::get('/our-team', [PageController::class, 'team'])->name('team');
++    Route::post('/order', [OrderController::class, 'store'])->name('order.store');
++    Route::get('/orders', [OrderController::class, 'history'])->name('orders.index');
+ 
++    // Our Team: disembunyikan dari tamu. Untuk membatasi ke admin saja, pindahkan baris ini ke group admin di bawah.
++    Route::get('/our-team', [PageController::class, 'team'])->name('team');
++});
+ 
+-Route::get('/order', [OrderController::class, 'index'])->name('order');
+-Route::post('/order', [OrderController::class, 'store'])->name('order.store');
+-Route::get('/order/{order}', [OrderController::class, 'show'])->name('order.show')->whereNumber('order');
+ 
++// ---------- 3. Admin ----------
++Route::middleware(['auth', 'admin'])->group(function () {
++    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+ 
+-Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+-Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update')->whereNumber('product');
+-Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove')->whereNumber('product');
++    // Bagian khusus / materi keagamaan dan diskusi. URL tetap sama seperti sebelumnya.
++    Route::get('/islamic-values', [PageController::class, 'islamic'])->name('islamic');
++    Route::get('/economic-discussion', [PageController::class, 'economic'])->name('economic');
++});
+ 
+ 
+ require __DIR__.'/auth.php';
+diff --git a/tests/Feature/IslamicLangTest.php b/tests/Feature/IslamicLangTest.php
+index 28c47fc..d41fa12 100644
+--- a/tests/Feature/IslamicLangTest.php
++++ b/tests/Feature/IslamicLangTest.php
+@@ -4,6 +4,7 @@
+ namespace Tests\Feature;
+ 
+ 
++use App\Models\User;
+ use Illuminate\Foundation\Testing\RefreshDatabase;
+ use Tests\TestCase;
+ 
+@@ -37,6 +38,9 @@ class IslamicLangTest extends TestCase
+ 
+     public function test_new_apply_items_are_rendered_in_both_locales(): void
+     {
++        // Materi Nilai Islam hanya untuk admin.
++        $this->actingAs(User::factory()->admin()->create());
++
+         $this->get('/islamic-values')
+             ->assertOk()
+             ->assertSee('Transparan')
+diff --git a/tests/Feature/OrderFlowTest.php b/tests/Feature/OrderFlowTest.php
+index 2a7ed6e..1c26b22 100644
+--- a/tests/Feature/OrderFlowTest.php
++++ b/tests/Feature/OrderFlowTest.php
+@@ -18,6 +18,7 @@ class OrderFlowTest extends TestCase
+ 
+ 
+     private Product $milk;
++    private User $customer;
+ 
+ 
+     protected function setUp(): void
+@@ -26,7 +27,8 @@ class OrderFlowTest extends TestCase
+ 
+ 
+         $this->seed(ProductSeeder::class);
+-        $this->milk = Product::where('slug', 'original-milk')->firstOrFail();
++        $this->milk     = Product::where('slug', 'original-milk')->firstOrFail();
++        $this->customer = User::factory()->create();
+         config(['lumeria.paylater.margin_rate' => 2.0]);
+     }
+ 
+@@ -42,9 +44,10 @@ class OrderFlowTest extends TestCase
+     }
+ 
+ 
+-        public function test_add_to_cart_stores_product_in_session(): void
++    public function test_add_to_cart_stores_product_in_session(): void
+     {
+-        $this->from('/products')
++        $this->actingAs($this->customer)
++            ->from('/products')
+             ->post('/cart', ['product_id' => $this->milk->id, 'quantity' => 2])
+             ->assertRedirect(url('/products#product-' . $this->milk->id))
+             ->assertSessionHas('lumeria_cart', [$this->milk->id => 2])
+@@ -52,9 +55,25 @@ class OrderFlowTest extends TestCase
+     }
+ 
+ 
+-    public function test_guest_can_checkout_with_cash(): void
++    public function test_guest_cannot_add_to_cart_or_checkout(): void
+     {
++        $this->post('/cart', ['product_id' => $this->milk->id, 'quantity' => 1])
++            ->assertRedirect(route('login'));
++
++
+         $this->withSession(['lumeria_cart' => [$this->milk->id => 2]])
++            ->post('/order', $this->payload())
++            ->assertRedirect(route('login'));
++
++
++        $this->assertSame(0, Order::count());
++    }
++
++
++    public function test_customer_can_checkout_with_cash(): void
++    {
++        $this->actingAs($this->customer)
++            ->withSession(['lumeria_cart' => [$this->milk->id => 2]])
+             ->post('/order', $this->payload())
+             ->assertSessionHasNoErrors();
+ 
+@@ -62,7 +81,7 @@ class OrderFlowTest extends TestCase
+         $order = Order::firstOrFail();
+ 
+ 
+-        $this->assertNull($order->user_id);
++        $this->assertSame($this->customer->id, $order->user_id);
+         $this->assertSame('cash', $order->payment_method);
+         $this->assertSame(24000, $order->grand_total);
+         $this->assertCount(1, $order->items);
+@@ -72,7 +91,8 @@ class OrderFlowTest extends TestCase
+ 
+     public function test_paylater_checkout_is_calculated_on_the_server(): void
+     {
+-        $this->withSession(['lumeria_cart' => [$this->milk->id => 3]])
++        $this->actingAs($this->customer)
++            ->withSession(['lumeria_cart' => [$this->milk->id => 3]])
+             ->post('/order', $this->payload(['payment_method' => 'paylater', 'tenor_months' => 3]))
+             ->assertSessionHasNoErrors();
+ 
+@@ -89,7 +109,8 @@ class OrderFlowTest extends TestCase
+ 
+     public function test_paylater_rejects_tenor_outside_config(): void
+     {
+-        $this->withSession(['lumeria_cart' => [$this->milk->id => 1]])
++        $this->actingAs($this->customer)
++            ->withSession(['lumeria_cart' => [$this->milk->id => 1]])
+             ->post('/order', $this->payload(['payment_method' => 'paylater', 'tenor_months' => 12]))
+             ->assertSessionHasErrors('tenor_months');
+ 
+diff --git a/tests/Feature/PublicPagesTest.php b/tests/Feature/PublicPagesTest.php
+index 8907b29..e971604 100644
+--- a/tests/Feature/PublicPagesTest.php
++++ b/tests/Feature/PublicPagesTest.php
+@@ -30,7 +30,7 @@ class PublicPagesTest extends TestCase
+             ->assertOk()
+             ->assertSee('Kecil, tapi berarti')
+             ->assertSee('Mood booster dalam satu gigitan')
+-            ->assertSee('Tim Kami')
++            ->assertDontSee('Tim Kami') // menu Our Team tidak tampil untuk tamu
+             ->assertSee('Original Milk');
+     }
+ 
+@@ -41,7 +41,7 @@ class PublicPagesTest extends TestCase
+             ->assertOk()
+             ->assertSee('Small, but meaningful')
+             ->assertSee('A mood booster in one bite')
+-            ->assertSee('Our Team');
++            ->assertDontSee('Our Team'); // menu Our Team tidak tampil untuk tamu
+     }
+ 
+ 
+diff --git a/tests/Feature/ResponsiveUiTest.php b/tests/Feature/ResponsiveUiTest.php
+index 373bfaa..ced88df 100644
+--- a/tests/Feature/ResponsiveUiTest.php
++++ b/tests/Feature/ResponsiveUiTest.php
+@@ -5,6 +5,7 @@ namespace Tests\Feature;
+ 
+ 
+ use App\Models\Product;
++use App\Models\User;
+ use Database\Seeders\ProductSeeder;
+ use Illuminate\Foundation\Testing\RefreshDatabase;
+ use Tests\TestCase;
+@@ -68,7 +69,8 @@ class ResponsiveUiTest extends TestCase
+         $id = Product::firstOrFail()->id;
+ 
+ 
+-        $this->post('/cart', ['product_id' => $id])
++        $this->actingAs(User::factory()->create())
++            ->post('/cart', ['product_id' => $id])
+             ->assertRedirectContains('/products#product-' . $id);
+     }
+ 
+@@ -102,7 +104,8 @@ class ResponsiveUiTest extends TestCase
+         $id = Product::firstOrFail()->id;
+ 
+ 
+-        $this->withSession(['lumeria_cart' => [$id => 1]])
++        $this->actingAs(User::factory()->create())
++            ->withSession(['lumeria_cart' => [$id => 1]])
+             ->from('/order')
+             ->post('/order', ['payment_method' => 'cash'])
+             ->assertRedirect('/order')
+diff --git a/tests/Feature/StaticPagesTest.php b/tests/Feature/StaticPagesTest.php
+index 52cb12a..9015db4 100644
+--- a/tests/Feature/StaticPagesTest.php
++++ b/tests/Feature/StaticPagesTest.php
+@@ -4,6 +4,7 @@
+ namespace Tests\Feature;
+ 
+ 
++use App\Models\User;
+ use Illuminate\Foundation\Testing\RefreshDatabase;
+ use Tests\TestCase;
+ 
+@@ -13,9 +14,22 @@ class StaticPagesTest extends TestCase
+     use RefreshDatabase;
+ 
+ 
++    // Halaman materi (Nilai Islam, Diskusi Ekonomi) hanya untuk admin; Our Team untuk pengguna login.
++    private function admin(): static
++    {
++        return $this->actingAs(User::factory()->admin()->create());
++    }
++
++
++    private function customer(): static
++    {
++        return $this->actingAs(User::factory()->create());
++    }
++
++
+     public function test_islamic_page_renders_in_indonesian(): void
+     {
+-        $this->get('/islamic-values')
++        $this->admin()->get('/islamic-values')
+             ->assertOk()
+             ->assertSee('Bukti Beriman')
+             ->assertSee('Muthaffifin')
+@@ -27,7 +41,7 @@ class StaticPagesTest extends TestCase
+ 
+     public function test_islamic_page_renders_in_english(): void
+     {
+-        $this->withCookie('locale', 'en')->get('/islamic-values')
++        $this->admin()->withCookie('locale', 'en')->get('/islamic-values')
+             ->assertOk()
+             ->assertSee('Proofs of Faith')
+             ->assertSee('Fair measures')
+@@ -37,6 +51,8 @@ class StaticPagesTest extends TestCase
+ 
+     public function test_economic_discussion_keeps_discussion_text_structure_in_both_locales(): void
+     {
++        $this->admin();
++
+         foreach (['id', 'en'] as $locale) {
+             $this->withCookie('locale', $locale)->get('/economic-discussion')
+                 ->assertOk()
+@@ -51,6 +67,8 @@ class StaticPagesTest extends TestCase
+ 
+     public function test_team_page_lists_four_founders_with_roles(): void
+     {
++        $this->customer();
++
+         $this->get('/our-team')
+             ->assertOk()
+             ->assertSee('Muhammad Sanaya Algifari Suryatman')
+@@ -67,6 +85,8 @@ class StaticPagesTest extends TestCase
+ 
+     public function test_optional_bio_fields_only_show_when_filled(): void
+     {
++        $this->customer();
++
+         config(['lumeria.team' => [[
+             'key' => 'sanaya', 'name' => 'Tester Satu',
+             'class' => null, 'hobby' => null, 'motto' => null,
+@@ -83,9 +103,19 @@ class StaticPagesTest extends TestCase
+     }
+ 
+ 
+-    public function test_every_navbar_page_returns_ok(): void
++    public function test_public_navbar_pages_return_ok_for_guests(): void
+     {
+-        foreach (['/', '/products', '/order', '/islamic-values', '/economic-discussion', '/our-team'] as $url) {
++        foreach (['/', '/products', '/order'] as $url) {
++            $this->get($url)->assertOk();
++        }
++    }
++
++
++    public function test_every_navbar_page_returns_ok_for_admin(): void
++    {
++        $this->admin();
++
++        foreach (['/', '/products', '/order', '/islamic-values', '/economic-discussion', '/our-team', '/admin', '/orders'] as $url) {
+             $this->get($url)->assertOk();
+         }
+     }
+diff --git a/tests/Feature/TeamPageTest.php b/tests/Feature/TeamPageTest.php
+index bc89fa8..0ddfd5f 100644
+--- a/tests/Feature/TeamPageTest.php
++++ b/tests/Feature/TeamPageTest.php
+@@ -4,6 +4,7 @@
+ namespace Tests\Feature;
+ 
+ 
++use App\Models\User;
+ use Illuminate\Foundation\Testing\RefreshDatabase;
+ use Illuminate\Support\Facades\File;
+ use Tests\TestCase;
+@@ -14,6 +15,15 @@ class TeamPageTest extends TestCase
+     use RefreshDatabase;
+ 
+ 
++    // Our Team hanya untuk pengguna login (tamu diarahkan ke login; lihat RoleAccessTest).
++    protected function setUp(): void
++    {
++        parent::setUp();
++
++        $this->actingAs(User::factory()->create());
++    }
++
++
+     private function member(array $overrides = []): array
+     {
+         return array_merge([

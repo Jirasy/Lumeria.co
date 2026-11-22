@@ -23,6 +23,11 @@ class CartAuthTest extends TestCase
         $this->milk = Product::where('slug', 'original-milk')->firstOrFail();
     }
 
+    private function loginUser(?User $user = null): static
+    {
+        return $this->actingAs($user ?? User::factory()->create());
+    }
+
     public function test_guest_cannot_add_to_cart_and_is_sent_to_login_with_message(): void
     {
         $this->from('/products')

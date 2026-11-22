@@ -1,0 +1,277 @@
+/* ==========================================================================
+   Lumeria.co - komponen etalase foodtech
+   Dimuat oleh resources/views/layouts/lumeria.blade.php SETELAH lumeria.css.
+   Semua warna memakai token dari public/css/lumeria.css bagian 1; tidak ada warna baru di sini
+   kecuali tiga warna bola susu pada kotak catering (.ft-ball-*).
+
+   Daftar isi
+     1. Badge pojok dan media kartu
+     2. Carousel produk
+     3. Kartu Event & Catering
+     4. Halaman detail produk dan catatan tamu
+     5. Footer gelap
+     6. Prefers-reduced-motion
+   ========================================================================== */
+
+
+/* 1. Badge pojok dan media kartu ------------------------------------------ */
+.ft-media { position: relative; }
+
+.ft-badge {
+    position: absolute;
+    top: .75rem;
+    left: .75rem;
+    z-index: 2;
+    padding: .3rem .75rem;
+    border-radius: 50rem;
+    font-size: .8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    box-shadow: 0 .15rem .5rem var(--lumeria-shadow);
+}
+.ft-badge-hot  { background: var(--lumeria); color: var(--lumeria-on-primary); }
+.ft-badge-soft { background: var(--lumeria-accent); color: var(--lumeria-on-accent); }
+
+/* Deskripsi kartu maksimal 3 baris; teks lengkap tetap ada di halaman detail. */
+.ft-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+/* 2. Carousel produk ------------------------------------------------------- */
+.ft-track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: .25rem;
+    margin: -.25rem;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+.ft-track::-webkit-scrollbar { display: none; }
+.ft-track:focus-visible { outline: 3px solid var(--lumeria-ring); outline-offset: 4px; border-radius: 1rem; }
+
+.ft-slide {
+    flex: 0 0 clamp(11.5rem, 70%, 15rem);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    color: var(--lumeria-ink);
+    text-decoration: none;
+}
+.ft-slide:hover { color: var(--lumeria-ink); }
+.ft-slide:hover .ft-slide-name { text-decoration: underline; text-underline-offset: .2em; }
+
+.ft-slide-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1 / 1;
+    border-radius: 1.25rem;
+    background: var(--lumeria-surface-soft);
+    overflow: hidden;
+}
+.ft-slide-art svg, .ft-slide-art img { width: 62%; height: auto; transition: transform .2s ease; }
+.ft-slide-art img { object-fit: cover; }
+.ft-slide:hover .ft-slide-art svg { transform: translateY(-3px) scale(1.06); }
+
+.ft-slide-name { font-size: 1.15rem; font-weight: 700; line-height: 1.25; }
+.ft-slide-price { color: var(--lumeria-muted); }
+
+.ft-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .75rem; }
+.ft-dots { display: flex; flex-wrap: wrap; }
+.ft-dot {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 50%;
+}
+.ft-dot::before {
+    content: "";
+    width: .6rem;
+    height: .6rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--lumeria-ink) 22%, transparent);
+}
+.ft-dot[aria-current="true"]::before { width: .8rem; height: .8rem; background: var(--lumeria-ink); }
+.ft-dot:focus-visible, .ft-arrow:focus-visible { outline: 3px solid var(--lumeria-ring); outline-offset: 2px; }
+
+.ft-arrows { display: flex; gap: .5rem; }
+.ft-arrow {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--lumeria-ink);
+    background: transparent;
+    color: var(--lumeria-ink);
+}
+.ft-arrow:hover:not(:disabled) { background: var(--lumeria-ink); color: var(--lumeria-surface); }
+.ft-arrow:disabled { opacity: .35; }
+
+/* Bila semua produk muat dalam satu layar, tombol dan titik tidak perlu. */
+.ft-static .ft-controls { display: none; }
+
+.ft-more { color: var(--lumeria-text); }
+
+
+/* 3. Kartu Event & Catering ------------------------------------------------ */
+.ft-event { display: grid; grid-template-columns: 1fr; border-radius: 1.5rem; }
+@media (min-width: 768px) { .ft-event { grid-template-columns: 5fr 6fr; } }
+
+.ft-event-media {
+    display: grid;
+    place-items: center;
+    min-height: 15rem;
+    padding: 1.75rem 1.25rem;
+    background-color: var(--lumeria-accent);
+    /* tekstur anyaman halus, seperti alas kain di foto referensi */
+    background-image:
+        repeating-linear-gradient(0deg, color-mix(in srgb, var(--lumeria-ink) 8%, transparent) 0 2px, transparent 2px 6px),
+        repeating-linear-gradient(90deg, color-mix(in srgb, var(--lumeria-ink) 8%, transparent) 0 2px, transparent 2px 6px);
+}
+
+.ft-box {
+    width: min(17rem, 90%);
+    transform: rotate(-3deg);
+    filter: drop-shadow(0 .8rem 1rem color-mix(in srgb, var(--lumeria-ink) 35%, transparent));
+}
+.ft-box-lid {
+    padding: .65rem 1rem .55rem;
+    border-radius: .9rem .9rem 0 0;
+    background: var(--lumeria-ink);
+    color: var(--lumeria-surface);
+    text-align: center;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+.ft-box-tray {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .55rem;
+    padding: .9rem;
+    border: 3px solid var(--lumeria-ink);
+    border-top: 0;
+    border-radius: 0 0 .9rem .9rem;
+    background: var(--lumeria-surface);
+}
+.ft-ball {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--c1), var(--c2));
+    box-shadow: inset -.15rem -.2rem .35rem color-mix(in srgb, var(--lumeria-ink) 14%, transparent);
+}
+.ft-ball-milk   { --c1: #fffaf0; --c2: #f0d9a8; }
+.ft-ball-tea    { --c1: #f4fadf; --c2: #9bbd68; }
+.ft-ball-coffee { --c1: #e9cfae; --c2: #7b4a28; }
+
+.ft-event-body { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; padding: 1.75rem 1.5rem; }
+@media (min-width: 768px) { .ft-event-body { padding: 2.5rem 2.25rem; justify-content: center; } }
+
+.ft-pill {
+    padding: .35rem .9rem;
+    border-radius: 50rem;
+    background: var(--lumeria-surface-soft);
+    color: var(--lumeria-ink);
+    font-weight: 700;
+    font-size: .95rem;
+}
+.ft-event-title {
+    margin: 0;
+    font-size: clamp(1.9rem, 5vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -.02em;
+}
+.ft-event-text { margin: 0; max-width: 34rem; font-size: 1.05rem; }
+
+
+/* 4. Halaman detail produk dan catatan tamu -------------------------------- */
+.ft-detail-media {
+    display: grid;
+    place-items: center;
+    min-height: 18rem;
+    border-radius: 1.5rem;
+    background: var(--lumeria-surface-soft);
+    overflow: hidden;
+}
+.ft-detail-media .product-art { background: transparent; }
+
+.ft-note {
+    padding: 1rem 1.25rem;
+    border-left: .35rem solid var(--lumeria-accent);
+    border-radius: .75rem;
+    background: var(--lumeria-card);
+    box-shadow: 0 .1rem .5rem var(--lumeria-shadow);
+}
+
+
+/* 5. Footer gelap ---------------------------------------------------------- */
+.ft-footer {
+    margin-top: 4rem;
+    padding: 2.5rem 0 1.5rem;
+    background: var(--lumeria-ink);
+    color: var(--lumeria-surface);
+}
+.ft-footer a { color: inherit; text-decoration: none; }
+.ft-footer a:hover { color: var(--lumeria-accent); text-decoration: underline; text-underline-offset: .25em; }
+.ft-footer a:focus-visible { outline: 3px solid var(--lumeria-accent); outline-offset: 3px; border-radius: .25rem; }
+
+.ft-social { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 2rem; }
+.ft-social a {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1.5px solid color-mix(in srgb, var(--lumeria-surface) 45%, transparent);
+    border-radius: 50%;
+}
+.ft-social a:hover { background: var(--lumeria-accent); border-color: var(--lumeria-accent); color: var(--lumeria-on-accent); text-decoration: none; }
+
+.ft-footer-brand { margin: 0 0 .25rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; font-weight: 700; }
+.ft-footer-muted { color: color-mix(in srgb, var(--lumeria-surface) 75%, transparent); }
+.ft-footer-title { margin: 0 0 1rem; font-size: 1.15rem; font-weight: 800; color: var(--lumeria-surface); }
+.ft-footer ul { display: grid; gap: .7rem; margin: 0; padding: 0; list-style: none; }
+
+.ft-btn-accent {
+    display: inline-flex;
+    align-items: center;
+    border: 0;
+    border-radius: 50rem;
+    background: var(--lumeria-accent);
+    color: var(--lumeria-on-accent);
+    font-weight: 700;
+    padding: .6rem 1.25rem;
+}
+.ft-footer a.ft-btn-accent:hover { background: var(--lumeria-surface); color: var(--lumeria-ink); text-decoration: none; }
+
+.ft-copy {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid color-mix(in srgb, var(--lumeria-surface) 20%, transparent);
+    font-size: .9rem;
+    color: color-mix(in srgb, var(--lumeria-surface) 75%, transparent);
+}
+
+
+/* 6. Prefers-reduced-motion ------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+    .ft-track { scroll-behavior: smooth; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ft-slide-art svg { transition: none; }
+    .ft-slide:hover .ft-slide-art svg { transform: none; }
+}

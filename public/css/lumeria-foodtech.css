@@ -11,7 +11,8 @@
      4. Halaman detail produk dan catatan tamu
      5. Footer gelap
      6. Halaman autentikasi (masuk, daftar, lupa kata sandi)
-     7. Prefers-reduced-motion
+     7. Area akun (dashboard dan profil)
+     8. Prefers-reduced-motion
    ========================================================================== */
 
 
@@ -314,11 +315,40 @@
 }
 
 
-/* 7. Prefers-reduced-motion ------------------------------------------------ */
+/* 7. Area akun (dashboard dan profil) --------------------------------------- */
+.account-card,
+.account-section {
+    border: 1px solid var(--lumeria-border);
+    border-radius: 1.25rem;
+    box-shadow: 0 .25rem 1rem var(--lumeria-shadow);
+}
+.account-card { transition: box-shadow .15s ease, transform .15s ease; }
+.account-card:hover,
+.account-card:focus-within {
+    box-shadow: 0 .75rem 1.75rem var(--lumeria-shadow);
+    transform: translateY(-2px);
+}
+.account-section-danger { border-color: var(--bs-danger-border-subtle); }
+
+/* Bidang formulir di kartu putih: batas tegas (kontras 3:1), sama dengan halaman autentikasi. */
+.account-section .form-control {
+    border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
+    background-color: var(--lumeria-card);
+}
+.account-section .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
+.modal-content .form-control {
+    border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
+}
+.modal-content .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
+
+/* 8. Prefers-reduced-motion ------------------------------------------------ */
 @media (prefers-reduced-motion: no-preference) {
     .ft-track { scroll-behavior: smooth; }
 }
 @media (prefers-reduced-motion: reduce) {
     .ft-slide-art svg { transition: none; }
     .ft-slide:hover .ft-slide-art svg { transform: none; }
+    .account-card { transition: none; }
+    .account-card:hover,
+    .account-card:focus-within { transform: none; }
 }

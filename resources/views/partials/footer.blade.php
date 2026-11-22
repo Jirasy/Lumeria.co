@@ -48,6 +48,7 @@
                     @else
                         <li><a href="{{ route('orders.index') }}">{{ __('foodtech.nav.my_orders') }}</a></li>
                         <li><a href="{{ route('dashboard') }}">{{ __('nav.dashboard') }}</a></li>
+                        <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
                         @if ($user->isAdmin())
                             <li><a href="{{ route('admin.dashboard') }}">{{ __('foodtech.nav.admin') }}</a></li>
                         @endif

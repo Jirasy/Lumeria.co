@@ -10,9 +10,13 @@
      3. Kartu Event & Catering
      4. Halaman detail produk dan catatan tamu
      5. Footer gelap
+<<<<<<< HEAD
      6. Halaman autentikasi (masuk, daftar, lupa kata sandi)
      7. Area akun (dashboard dan profil)
      8. Prefers-reduced-motion
+=======
+     6. Prefers-reduced-motion
+>>>>>>> origin/main
    ========================================================================== */
 
 
@@ -269,6 +273,7 @@
 }
 
 
+<<<<<<< HEAD
 /* 6. Halaman autentikasi (masuk, daftar, lupa kata sandi) ------------------ */
 /* Latar hangat yang sama dengan hero beranda; kartu putih dengan garis aksen kuning logo. */
 .auth-page {
@@ -342,13 +347,19 @@
 .modal-content .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
 
 /* 8. Prefers-reduced-motion ------------------------------------------------ */
+=======
+/* 6. Prefers-reduced-motion ------------------------------------------------ */
+>>>>>>> origin/main
 @media (prefers-reduced-motion: no-preference) {
     .ft-track { scroll-behavior: smooth; }
 }
 @media (prefers-reduced-motion: reduce) {
     .ft-slide-art svg { transition: none; }
     .ft-slide:hover .ft-slide-art svg { transform: none; }
+<<<<<<< HEAD
     .account-card { transition: none; }
     .account-card:hover,
     .account-card:focus-within { transform: none; }
+=======
+>>>>>>> origin/main
 }

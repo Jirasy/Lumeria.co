@@ -107,11 +107,21 @@ class Cart
 
     private function raw(): array
     {
+        // Keranjang hanya untuk pelanggan login. Sisa keranjang sesi lama milik tamu diabaikan,
+        // jadi badge navbar, tombol keranjang, dan halaman Pesan tidak menampilkannya.
+        if (! auth()->check()) {
+            return [];
+        }
+
         return session(self::KEY, []);
     }
 
     private function save(array $items): void
     {
+        if (! auth()->check()) {
+            return;
+        }
+
         session([self::KEY => $items]);
     }
 }

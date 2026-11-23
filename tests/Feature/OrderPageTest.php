@@ -120,7 +120,10 @@ class OrderPageTest extends TestCase
             ->assertSee('Cicilan ke-3');
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
     public function test_guest_cannot_open_an_order_even_with_a_stale_session_marker(): void
     {
         $order = $this->makeOrder();

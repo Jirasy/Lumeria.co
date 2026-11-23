@@ -1,11 +1,23 @@
+{{-- Kartu produk etalase: badge pojok (promo/diskon/terlaris/baru) + tombol langsung ke halaman detail. --}}
 <div id="product-{{ $product->id }}" class="card h-100 border-0 shadow-sm product-card overflow-hidden">
     <div class="ft-media">
+<<<<<<< HEAD
         @if (!empty($product->badge_label))
             <span class="ft-badge ft-badge-{{ $product->badge_tone ?? 'promo' }}">{{ $product->badge_label }}</span>
         @endif
 
         @if ($product->image)
             <img src="{{ asset($product->image) }}" alt="{{ $product->display_name }}" class="w-100 h-100 object-fit-cover" loading="lazy">
+=======
+        @if ($product->badge_label)
+            <span class="ft-badge ft-badge-{{ $product->badge_tone }}">{{ $product->badge_label }}</span>
+        @endif
+
+        @if ($product->image)
+            <div class="product-art">
+                <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-100 h-100 object-fit-cover" loading="lazy">
+            </div>
+>>>>>>> origin/main
         @else
             <x-product-art :slug="$product->slug" :size="104" />
         @endif
@@ -23,7 +35,11 @@
         <p class="fs-5 fw-bold mb-3">{{ $product->formatted_price }}</p>
 
         <a href="{{ route('products.show', $product) }}" class="btn btn-lumeria w-100">
+<<<<<<< HEAD
             {{ __('foodtech.card.detail') }}<span class="visually-hidden">: {{ $product->display_name }}</span>
+=======
+            {{ __('foodtech.card.detail') }}<span class="visually-hidden">: {{ $product->name }}</span>
+>>>>>>> origin/main
         </a>
 
         @auth

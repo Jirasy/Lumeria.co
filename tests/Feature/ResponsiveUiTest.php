@@ -41,7 +41,10 @@ class ResponsiveUiTest extends TestCase
         $id = Product::firstOrFail()->id;
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
         $this->actingAs(User::factory()->create())
             ->withSession(['lumeria_cart' => [$id => 2]])
             ->get('/products')
@@ -54,7 +57,10 @@ class ResponsiveUiTest extends TestCase
         $id = Product::firstOrFail()->id;
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
         $this->actingAs(User::factory()->create())
             ->withSession(['lumeria_cart' => [$id => 2]])
             ->get('/order')
@@ -73,8 +79,11 @@ class ResponsiveUiTest extends TestCase
         $id = Product::firstOrFail()->id;
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> origin/main
         $this->actingAs(User::factory()->create())
             ->post('/cart', ['product_id' => $id])
             ->assertRedirectContains('/products#product-' . $id);

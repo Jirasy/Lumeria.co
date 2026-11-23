@@ -20,12 +20,32 @@
 <body>
     <a href="#main" class="skip-link">{{ __('common.skip') }}</a>
 
+<<<<<<< HEAD
     {{-- Pembungkus memotong dekorasi latar agar halaman tidak melebar di layar kecil --}}
     <div class="auth-page d-flex flex-column min-vh-100">
         <header class="container py-3">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <a href="{{ route('home') }}" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1">
                     <x-icon name="chevron-left" :size="14" />{{ __('auth.back_home') }}
+=======
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+        <!-- Scripts -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    </head>
+    <body class="font-sans text-gray-900 antialiased">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
+            <div class="w-full sm:max-w-md px-6 mb-4 flex items-center justify-between">
+                <a href="{{ route('home') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:underline">&larr; {{ __('nav.home') }}</a>
+                <x-language-switcher />
+            </div>
+
+            <div>
+                <a href="{{ route('home') }}" class="text-3xl font-bold text-gray-800">
+                    {{ __('common.brand') }}
+>>>>>>> origin/main
                 </a>
                 <x-language-switcher bootstrap />
             </div>
@@ -67,6 +87,7 @@
 
                 </div>
             </div>
+<<<<<<< HEAD
         </main>
 
         <footer class="container py-3 text-center small text-muted">
@@ -74,4 +95,8 @@
         </footer>
     </div>
 </body>
+=======
+        </div>
+    </body>
+>>>>>>> origin/main
 </html>

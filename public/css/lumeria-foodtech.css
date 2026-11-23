@@ -10,13 +10,9 @@
      3. Kartu Event & Catering
      4. Halaman detail produk dan catatan tamu
      5. Footer gelap
-<<<<<<< HEAD
      6. Halaman autentikasi (masuk, daftar, lupa kata sandi)
      7. Area akun (dashboard dan profil)
      8. Prefers-reduced-motion
-=======
-     6. Prefers-reduced-motion
->>>>>>> origin/main
    ========================================================================== */
 
 
@@ -225,55 +221,49 @@
 }
 
 
-/* 5. Footer gelap ---------------------------------------------------------- */
+/* 5. Footer terang bergaya marketplace ------------------------------------- */
 .ft-footer {
     margin-top: 4rem;
-    padding: 2.5rem 0 1.5rem;
-    background: var(--lumeria-ink);
-    color: var(--lumeria-surface);
+    padding: 2.5rem 0 1.25rem;
+    background: var(--lumeria-card);
+    border-top: .25rem solid var(--lumeria-accent);
+    color: var(--lumeria-ink);
 }
-.ft-footer a { color: inherit; text-decoration: none; }
-.ft-footer a:hover { color: var(--lumeria-accent); text-decoration: underline; text-underline-offset: .25em; }
-.ft-footer a:focus-visible { outline: 3px solid var(--lumeria-accent); outline-offset: 3px; border-radius: .25rem; }
+.ft-footer a { color: var(--lumeria-muted); text-decoration: none; }
+.ft-footer a:hover { color: var(--lumeria-ink); text-decoration: underline; text-underline-offset: .25em; }
+.ft-footer a:focus-visible { outline: 3px solid var(--lumeria); outline-offset: 3px; border-radius: .25rem; }
 
-.ft-social { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 2rem; }
-.ft-social a {
-    display: grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border: 1.5px solid color-mix(in srgb, var(--lumeria-surface) 45%, transparent);
-    border-radius: 50%;
-}
-.ft-social a:hover { background: var(--lumeria-accent); border-color: var(--lumeria-accent); color: var(--lumeria-on-accent); text-decoration: none; }
+.ft-footer-title { margin: 0 0 1rem; font-family: var(--bs-body-font-family); font-size: .95rem; font-weight: 800; color: var(--lumeria-ink); }
+.ft-footer ul { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; font-size: .92rem; }
+.ft-footer-note { margin: .75rem 0 0; font-size: .85rem; color: var(--lumeria-muted); }
 
-.ft-footer-brand { margin: 0 0 .25rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; font-weight: 700; }
-.ft-footer-muted { color: color-mix(in srgb, var(--lumeria-surface) 75%, transparent); }
-.ft-footer-title { margin: 0 0 1rem; font-size: 1.15rem; font-weight: 800; color: var(--lumeria-surface); }
-.ft-footer ul { display: grid; gap: .7rem; margin: 0; padding: 0; list-style: none; }
-
-.ft-btn-accent {
-    display: inline-flex;
-    align-items: center;
-    border: 0;
-    border-radius: 50rem;
-    background: var(--lumeria-accent);
-    color: var(--lumeria-on-accent);
+/* Ubin metode pembayaran (teks saja, tanpa logo pihak ketiga) */
+.ft-footer .ft-pay-list { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ft-pay {
+    padding: .35rem .8rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: .5rem;
+    background: var(--lumeria-surface);
+    color: var(--lumeria-ink);
     font-weight: 700;
-    padding: .6rem 1.25rem;
+    font-size: .85rem;
 }
-.ft-footer a.ft-btn-accent:hover { background: var(--lumeria-surface); color: var(--lumeria-ink); text-decoration: none; }
+
+.ft-follow a { display: inline-flex; align-items: center; gap: .6rem; }
+.ft-follow svg { flex: 0 0 auto; }
 
 .ft-copy {
-    margin-top: 2.5rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid color-mix(in srgb, var(--lumeria-surface) 20%, transparent);
-    font-size: .9rem;
-    color: color-mix(in srgb, var(--lumeria-surface) 75%, transparent);
+    margin-top: 2.25rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--lumeria-border);
+    font-size: .88rem;
+    color: var(--lumeria-muted);
 }
+.ft-lang a { margin-inline-start: .6rem; padding-inline-start: .6rem; border-inline-start: 1px solid var(--lumeria-border); }
+.ft-lang a:first-of-type { border-inline-start: 0; padding-inline-start: 0; margin-inline-start: .25rem; }
+.ft-lang a[aria-current] { color: var(--lumeria-ink); font-weight: 700; }
 
 
-<<<<<<< HEAD
 /* 6. Halaman autentikasi (masuk, daftar, lupa kata sandi) ------------------ */
 /* Latar hangat yang sama dengan hero beranda; kartu putih dengan garis aksen kuning logo. */
 .auth-page {
@@ -344,22 +334,67 @@
 .modal-content .form-control {
     border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
 }
+/* Radio dan kotak centang: batas tegas di kartu putih dan modal */
+.account-section .form-check-input,
+.modal-content .form-check-input {
+    border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
+    background-color: var(--lumeria-card);
+}
+.account-section .form-check-input:checked,
+.modal-content .form-check-input:checked { background-color: var(--lumeria); border-color: var(--lumeria); }
 .modal-content .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
 
+/* Foto profil bulat dan inisial cadangan (navbar, profil, daftar pengguna) */
+.user-avatar { object-fit: cover; flex: 0 0 auto; }
+.user-avatar-initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--lumeria);
+    color: var(--lumeria-on-primary);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: .02em;
+    user-select: none;
+}
+.nav-avatar { border-radius: 50rem; }
+.nav-avatar:focus-visible { outline: 3px solid var(--lumeria-accent); outline-offset: 3px; }
+.min-w-0 { min-width: 0; }
+
+/* Halaman profil bergaya marketplace: menu samping + kartu Profil Saya */
+.account-section { scroll-margin-top: 5.5rem; }
+.profile-nav { display: flex; gap: .25rem; margin: 0; padding: 0; list-style: none; overflow-x: auto; }
+.profile-nav a {
+    display: block;
+    padding: .5rem .85rem;
+    border-radius: 50rem;
+    white-space: nowrap;
+    color: var(--lumeria-ink);
+    text-decoration: none;
+}
+.profile-nav a:hover { background: var(--lumeria-tint); }
+.profile-nav a:focus-visible { outline: 3px solid var(--lumeria); outline-offset: 2px; }
+.profile-file:focus-visible + label { outline: 3px solid var(--lumeria); outline-offset: 3px; }
+@media (min-width: 992px) {
+    .profile-side { position: sticky; top: 5.5rem; }
+    .profile-nav { flex-direction: column; overflow: visible; }
+    .profile-nav a { padding: .45rem .25rem; border-radius: .5rem; white-space: normal; }
+    .profile-nav a:hover { background: transparent; color: var(--lumeria); text-decoration: underline; text-underline-offset: .25em; }
+    .profile-nav-main { margin-top: .75rem; }
+}
+@media (min-width: 768px) {
+    .profile-photo-col { border-left: 1px solid var(--lumeria-border); }
+}
+
+
 /* 8. Prefers-reduced-motion ------------------------------------------------ */
-=======
-/* 6. Prefers-reduced-motion ------------------------------------------------ */
->>>>>>> origin/main
 @media (prefers-reduced-motion: no-preference) {
     .ft-track { scroll-behavior: smooth; }
 }
 @media (prefers-reduced-motion: reduce) {
     .ft-slide-art svg { transition: none; }
     .ft-slide:hover .ft-slide-art svg { transform: none; }
-<<<<<<< HEAD
     .account-card { transition: none; }
     .account-card:hover,
     .account-card:focus-within { transform: none; }
-=======
->>>>>>> origin/main
 }

@@ -17,11 +17,7 @@ class Product extends Model
     ];
 
     protected $fillable = [
-<<<<<<< HEAD
         'category', 'name', 'name_en', 'slug', 'description_id', 'description_en',
-=======
-        'category', 'name', 'slug', 'description_id', 'description_en',
->>>>>>> origin/main
         'price', 'is_signature', 'badge', 'image', 'is_active',
     ];
 
@@ -35,7 +31,6 @@ class Product extends Model
         'is_active'    => 'boolean',
     ];
 
-<<<<<<< HEAD
     public function getDisplayNameAttribute(): string
     {
         if (app()->getLocale() === 'en' && filled($this->name_en)) {
@@ -45,10 +40,6 @@ class Product extends Model
         return (string) $this->name;
     }
 
-=======
-
-    // Deskripsi otomatis mengikuti bahasa aktif: $product->description
->>>>>>> origin/main
     public function getDescriptionAttribute(): string
     {
         return app()->getLocale() === 'en'
@@ -78,11 +69,6 @@ class Product extends Model
         };
     }
 
-<<<<<<< HEAD
-=======
-
-    // $product->formatted_price => "Rp 12.000"
->>>>>>> origin/main
     public function getFormattedPriceAttribute(): string
     {
         return 'Rp ' . number_format($this->price, 0, ',', '.');

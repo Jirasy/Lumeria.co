@@ -68,6 +68,15 @@ return [
         'chat_wa'    => 'Chat on WhatsApp',
         'instagram'  => 'Instagram',
         'wa_message' => 'Hello Lumeria.co, I would like to ask something.',
+        'customer_service' => 'Customer Service',
+        'how_to_order'     => 'How to Order',
+        'track_order'      => 'Track Order',
+        'contact_us'       => 'Contact Us',
+        'payment'          => 'Payment',
+        'pay_cash'         => 'Cash',
+        'pay_paylater'     => 'Paylater',
+        'pay_note'         => 'Installments of :min to :max months',
+        'follow'           => 'Follow Us',
     ],
 
     'guest_order' => [

@@ -114,25 +114,25 @@ class RoleAccessTest extends TestCase
 
     // ---------- Pelanggan ----------
 
-    public function test_customer_gets_orders_and_team_menu_but_not_admin_menu(): void
+    public function test_customer_gets_orders_menu_but_not_team_or_admin_menu(): void
     {
         $this->actingAs(User::factory()->create())
             ->get('/')
             ->assertOk()
             ->assertSee(route('orders.index'), false)
             ->assertSee('Pesanan Saya')
-            ->assertSee(route('team'), false)
+            ->assertDontSee(route('team'), false)
             ->assertDontSee(route('islamic'), false)
             ->assertDontSee(route('admin.dashboard'), false);
     }
 
 
-    public function test_customer_can_open_team_but_is_forbidden_from_admin_pages(): void
+    public function test_customer_is_forbidden_from_team_and_admin_pages(): void
     {
         $this->actingAs(User::factory()->create());
 
 
-        $this->get('/our-team')->assertOk();
+        $this->get('/our-team')->assertForbidden();
         $this->get('/islamic-values')->assertForbidden();
         $this->get('/economic-discussion')->assertForbidden();
         $this->get('/admin')->assertForbidden();

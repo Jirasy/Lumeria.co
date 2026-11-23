@@ -70,6 +70,15 @@ return [
         'chat_wa'    => 'Chat lewat WhatsApp',
         'instagram'  => 'Instagram',
         'wa_message' => 'Halo Lumeria.co, saya ingin bertanya.',
+        'customer_service' => 'Layanan Pelanggan',
+        'how_to_order'     => 'Cara Memesan',
+        'track_order'      => 'Lacak Pesanan',
+        'contact_us'       => 'Hubungi Kami',
+        'payment'          => 'Pembayaran',
+        'pay_cash'         => 'Tunai',
+        'pay_paylater'     => 'Paylater',
+        'pay_note'         => 'Cicilan :min sampai :max bulan',
+        'follow'           => 'Ikuti Kami',
     ],
 
     'guest_order' => [

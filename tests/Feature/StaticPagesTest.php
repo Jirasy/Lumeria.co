@@ -14,17 +14,12 @@ class StaticPagesTest extends TestCase
     use RefreshDatabase;
 
 
-    // Halaman materi (Nilai Islam, Diskusi Ekonomi) hanya untuk admin; Our Team untuk pengguna login.
+    // Halaman materi (Nilai Islam, Diskusi Ekonomi) dan Our Team hanya untuk admin.
     private function admin(): static
     {
         return $this->actingAs(User::factory()->admin()->create());
     }
 
-
-    private function customer(): static
-    {
-        return $this->actingAs(User::factory()->create());
-    }
 
 
     public function test_islamic_page_renders_in_indonesian(): void
@@ -67,7 +62,7 @@ class StaticPagesTest extends TestCase
 
     public function test_team_page_lists_four_founders_with_roles(): void
     {
-        $this->customer();
+        $this->admin();
 
         $this->get('/our-team')
             ->assertOk()
@@ -85,7 +80,7 @@ class StaticPagesTest extends TestCase
 
     public function test_optional_bio_fields_only_show_when_filled(): void
     {
-        $this->customer();
+        $this->admin();
 
         config(['lumeria.team' => [[
             'key' => 'sanaya', 'name' => 'Tester Satu',

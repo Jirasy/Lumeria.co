@@ -160,6 +160,8 @@ return [
         'address'                  => 'alamat',
         'affiliate_url'            => 'URL afiliasi',
         'age'                      => 'usia',
+        'avatar'                   => 'foto profil',
+        'birth_date'               => 'tanggal lahir',
         'amount'                   => 'jumlah',
         'announcement'             => 'pengumuman',
         'area'                     => 'daerah',

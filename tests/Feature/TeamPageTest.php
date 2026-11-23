@@ -15,12 +15,12 @@ class TeamPageTest extends TestCase
     use RefreshDatabase;
 
 
-    // Our Team hanya untuk pengguna login (tamu diarahkan ke login; lihat RoleAccessTest).
+    // Our Team hanya untuk admin (tamu ke login, pelanggan 403; lihat RoleAccessTest).
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
     }
 
 

@@ -11,16 +11,18 @@
 
     if ($user) {
         $links[] = ['orders.index', 'foodtech.nav.my_orders'];
-        $links[] = ['team', 'nav.team'];
     }
 
-    if ($user?->isAdmin()) {
-        $links[] = ['admin.dashboard', 'foodtech.nav.admin'];
-    }
-
-    // Materi khusus admin (Nilai Islam dan Diskusi Ekonomi)
-    $materials = $user?->isAdmin() ? [['islamic', 'nav.islamic'], ['economic', 'nav.economic']] : [];
-    $materialsActive = request()->routeIs('islamic', 'economic');
+    // Menu admin dikelompokkan dalam satu dropdown agar bilah navigasi tidak penuh.
+    // Format: [rute, label, pola rute aktif]
+    $adminMenu = $user?->isAdmin() ? [
+        ['admin.dashboard',   'foodtech.nav.admin', 'admin.dashboard'],
+        ['admin.users.index', 'users.nav',          'admin.users.*'],
+        ['team',              'nav.team',           'team'],
+        ['islamic',           'nav.islamic',        'islamic'],
+        ['economic',          'nav.economic',       'economic'],
+    ] : [];
+    $adminActive = request()->routeIs('admin.*', 'team', 'islamic', 'economic');
     $locale = app()->getLocale();
 @endphp
 <nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top" aria-label="{{ __('nav.menu') }}">
@@ -62,13 +64,13 @@
                     </li>
                 @endforeach
 
-                @if ($materials)
+                @if ($adminMenu)
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle{{ $materialsActive ? ' active fw-semibold' : '' }}" href="#" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">{{ __('foodtech.nav.materials') }}</a>
+                        <a class="nav-link dropdown-toggle{{ $adminActive ? ' active fw-semibold' : '' }}" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">{{ __('users.admin_menu') }}</a>
                         <ul class="dropdown-menu">
-                            @foreach ($materials as [$route, $label])
-                                <li><a class="dropdown-item{{ request()->routeIs($route) ? ' active' : '' }}" href="{{ route($route) }}">{{ __($label) }}</a></li>
+                            @foreach ($adminMenu as [$route, $label, $pattern])
+                                <li><a class="dropdown-item{{ request()->routeIs($pattern) ? ' active' : '' }}" href="{{ route($route) }}">{{ __($label) }}</a></li>
                             @endforeach
                         </ul>
                     </li>
@@ -86,6 +88,11 @@
 
 
                 @auth
+                    <a href="{{ route('profile.edit') }}" class="nav-avatar d-inline-flex align-items-center gap-2 text-decoration-none"
+                       aria-label="{{ __('profile.open_profile') }}: {{ $user->name }}"@if (request()->routeIs('profile.edit')) aria-current="page"@endif>
+                        <x-user-avatar :user="$user" :size="36" />
+                        <span class="d-xl-none fw-semibold text-dark">{{ $user->name }}</span>
+                    </a>
                     <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-dark">{{ __('nav.dashboard') }}</a>
                     <form method="POST" action="{{ route('logout') }}" class="d-inline">
                         @csrf

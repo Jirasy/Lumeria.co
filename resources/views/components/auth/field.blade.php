@@ -7,6 +7,7 @@
     Props:
         bag   nama error bag Laravel (bawaan "default"; profil memakai "updatePassword" dan "userDeletion")
         lg    true (bawaan) untuk input besar; false untuk input ukuran biasa
+        horizontal  true untuk tata letak label di kiri, input di kanan (halaman profil)
         id    bila beda dari name (mis. dua form di satu halaman)
 
     - Kata sandi tidak pernah diisi ulang (type="password" selalu kosong).
@@ -22,6 +23,7 @@
     'id'       => null,
     'bag'      => 'default',
     'lg'       => true,
+    'horizontal' => false,
     'required' => true,
 ])
 @php
@@ -33,8 +35,14 @@
     $focus       = $anyErrors ? $firstError : $attributes->has('autofocus');
     $describedBy = trim(($hint ? $id . '-hint ' : '') . ($hasError ? $id . '-error' : ''));
 @endphp
+@if ($horizontal)
+<div class="row mb-3">
+    <label for="{{ $id }}" class="col-sm-3 col-form-label text-sm-end fw-semibold">{{ $label }}</label>
+    <div class="col-sm-9">
+@else
 <div class="mb-3">
     <label for="{{ $id }}" class="form-label fw-semibold">{{ $label }}</label>
+@endif
     <input
         id="{{ $id }}"
         name="{{ $name }}"
@@ -56,4 +64,7 @@
             @endforeach
         </div>
     @endif
+@if ($horizontal)
+    </div>
+@endif
 </div>

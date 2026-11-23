@@ -57,3 +57,27 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Akun admin, peran, dan foto profil
+
+**Peran.** Tamu hanya melihat (etalase, detail produk, info pemesanan) dan harus login atau daftar sebelum memesan.
+Pelanggan bisa memesan, melihat Pesanan Saya, dan mengatur profil. Admin juga mengelola pengguna (tambah, ubah, hapus),
+panel toko, halaman Our Team, dan materi. Peran tidak bisa diubah lewat form registrasi atau profil.
+
+**Setelah menarik perubahan ini**, jalankan migrasi (menambah kolom profil di tabel users):
+
+```bash
+php artisan migrate
+php artisan db:seed --class=AdminSeeder   # atau: php artisan db:seed (seluruh seeder)
+```
+
+`AdminSeeder` membuat 4 admin tim: `sanaya@`, `aliful@`, `jimny@`, dan `alfatih@` diikuti `LUMERIA_ADMIN_EMAIL_DOMAIN`
+(bawaan `lumeria.test`; ganti di `.env` bila perlu). Nama lengkap diambil dari `config/lumeria.php`.
+
+- Isi `LUMERIA_ADMIN_PASSWORD` di `.env` agar keempat akun memakai kata sandi itu (diatur ulang setiap seeder dijalankan).
+- Bila dikosongkan, kata sandi acak dibuat untuk akun baru dan **ditampilkan sekali** di terminal. Catat saat itu juga.
+- Tidak ada kata sandi bawaan di kode karena repositori ini publik. Ganti kata sandi lewat halaman Profil setelah login pertama.
+- Seeder aman dijalankan berulang; akun dicari lewat email dan tidak digandakan.
+
+**Foto profil** disimpan di disk privat (`storage/app/private/avatars`) dan disajikan lewat rute `/avatar/{user}`
+yang hanya bisa dibuka pemilik dan admin, jadi tidak perlu `php artisan storage:link`. Batas 1 MB, format JPEG atau PNG.

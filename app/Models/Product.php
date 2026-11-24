@@ -23,7 +23,6 @@ class Product extends Model
 
 
     // Kunci badge yang dikenali kartu produk; label-nya ada di lang/*/foodtech.php.
-    public const BADGES = ['promo', 'discount', 'best_seller', 'new'];
 
     protected $casts = [
         'price'        => 'integer',
@@ -76,18 +75,6 @@ class Product extends Model
 
 
     // Label badge pojok kartu, atau null bila kosong / kunci tidak dikenal.
-    public function getBadgeLabelAttribute(): ?string
-    {
-        return in_array($this->badge, self::BADGES, true)
-            ? __('foodtech.badges.' . $this->badge)
-            : null;
-    }
-
-    // promo & discount tampil mencolok (hot); best_seller & new tampil lembut (soft).
-    public function getBadgeToneAttribute(): string
-    {
-        return in_array($this->badge, ['promo', 'discount'], true) ? 'hot' : 'soft';
-    }
 
     public function scopeActive($query)
     {

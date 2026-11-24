@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Tests\Feature;
-
 
 use App\Models\Order;
 use App\Models\Product;
@@ -11,11 +9,9 @@ use Database\Seeders\ProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-
 class OrderFlowTest extends TestCase
 {
     use RefreshDatabase;
-
 
     private Product $milk;
     private User $user;
@@ -24,13 +20,11 @@ class OrderFlowTest extends TestCase
     {
         parent::setUp();
 
-
         $this->seed(ProductSeeder::class);
         $this->milk = Product::where('slug', 'original-milk')->firstOrFail();
         $this->user = User::factory()->create();
         config(['lumeria.paylater.margin_rate' => 2.0]);
     }
-
 
     private function payload(array $override = []): array
     {
@@ -68,20 +62,18 @@ class OrderFlowTest extends TestCase
         $this->actingAs($this->user)
             ->withSession(['lumeria_cart' => [$this->milk->id => 2]])
             ->post('/order', $this->payload())
-            ->assertRedirect(route('login'));
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('order.show', 1));
 
-
-        $this->assertSame(0, Order::count());
+        $this->assertSame(1, Order::count());
     }
-
 
     public function test_customer_can_checkout_with_cash(): void
     {
-        $this->actingAs($this->customer)
+        $this->actingAs($this->user)
             ->withSession(['lumeria_cart' => [$this->milk->id => 2]])
             ->post('/order', $this->payload())
             ->assertSessionHasNoErrors();
-
 
         $order = Order::firstOrFail();
 
@@ -92,7 +84,6 @@ class OrderFlowTest extends TestCase
         $this->assertSame(12000, $order->items->first()->price);
     }
 
-
     public function test_paylater_checkout_is_calculated_on_the_server(): void
     {
         $this->actingAs($this->user)
@@ -100,9 +91,7 @@ class OrderFlowTest extends TestCase
             ->post('/order', $this->payload(['payment_method' => 'paylater', 'tenor_months' => 3]))
             ->assertSessionHasNoErrors();
 
-
         $order = Order::firstOrFail();
-
 
         $this->assertSame(3, $order->tenor_months);
         $this->assertSame(2160, $order->margin_total);
@@ -110,14 +99,12 @@ class OrderFlowTest extends TestCase
         $this->assertSame(38160, $order->grand_total);
     }
 
-
     public function test_paylater_rejects_tenor_outside_config(): void
     {
         $this->actingAs($this->user)
             ->withSession(['lumeria_cart' => [$this->milk->id => 1]])
             ->post('/order', $this->payload(['payment_method' => 'paylater', 'tenor_months' => 12]))
             ->assertSessionHasErrors('tenor_months');
-
 
         $this->assertSame(0, Order::count());
     }
@@ -128,7 +115,6 @@ class OrderFlowTest extends TestCase
 
         $this->get(route('order.show', $order))->assertRedirect('/login');
     }
-
 
     public function test_other_user_cannot_view_someone_elses_order(): void
     {

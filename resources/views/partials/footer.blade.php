@@ -36,10 +36,10 @@
                         <li><a href="{{ route('login') }}">{{ __('nav.login') }}</a></li>
                         <li><a href="{{ route('register') }}">{{ __('nav.register') }}</a></li>
                     @else
-                        <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
+                        <li><a href="{{ route('profile.edit') }}">{{ __('profile.nav_profile') }}</a></li>
                         <li><a href="{{ route('orders.index') }}">{{ __('foodtech.nav.my_orders') }}</a></li>
                         <li><a href="{{ route('dashboard') }}">{{ __('nav.dashboard') }}</a></li>
-                        <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
+                        <li><a href="{{ route('profile.edit') }}">{{ __('profile.nav_profile') }}</a></li>
                         @if ($user->isAdmin())
                             <li><a href="{{ route('admin.dashboard') }}">{{ __('foodtech.nav.admin') }}</a></li>
                             <li><a href="{{ route('admin.users.index') }}">{{ __('users.nav') }}</a></li>

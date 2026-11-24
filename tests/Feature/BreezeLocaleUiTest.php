@@ -21,8 +21,15 @@ class BreezeLocaleUiTest extends TestCase
 
     public function test_login_page_follows_locale(): void
     {
-        $this->withCookie('locale', 'id')->get('/login')->assertSee('Kata Sandi');
-        $this->withCookie('locale', 'en')->get('/login')->assertSee('Password');
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'id')
+            ->get('/login')
+            ->assertSee('Kata Sandi');
+
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/login')
+            ->assertSee('Password');
     }
 
     public function test_dashboard_has_switcher_and_link_to_public_home(): void

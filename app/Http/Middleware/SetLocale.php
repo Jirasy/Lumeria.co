@@ -15,7 +15,9 @@ class SetLocale
 
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $request->cookie('locale', self::DEFAULT);
+        $locale = $request->cookie('locale')
+            ?? $request->cookies->get('locale')
+            ?? self::DEFAULT;
 
         if (! in_array($locale, self::SUPPORTED, true)) {
             $locale = self::DEFAULT;

@@ -86,23 +86,31 @@ class AuthUiTest extends TestCase
 
     public function test_pages_follow_the_active_locale(): void
     {
-        $this->withCookie('locale', 'id')->get('/login')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'id')
+            ->get('/login')
             ->assertSee('Selamat datang kembali')
             ->assertSee('Belum punya akun?')
             ->assertSee('Kembali ke Beranda')
             ->assertDontSee('Welcome back');
 
-        $this->withCookie('locale', 'en')->get('/login')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/login')
             ->assertSee('Welcome back')
             ->assertSee('Back to Home')
             ->assertDontSee('Selamat datang kembali');
 
-        $this->withCookie('locale', 'id')->get('/register')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'id')
+            ->get('/register')
             ->assertSee('Buat akun Lumeria.co')
             ->assertSee('Minimal 8 karakter.')
             ->assertSee('Konfirmasi Kata Sandi');
 
-        $this->withCookie('locale', 'en')->get('/register')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/register')
             ->assertSee('Create your Lumeria.co account')
             ->assertSee('At least 8 characters.')
             ->assertSee('Confirm Password');
@@ -110,7 +118,9 @@ class AuthUiTest extends TestCase
 
     public function test_language_switcher_marks_the_active_language(): void
     {
-        $this->withCookie('locale', 'en')->get('/login')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/login')
             ->assertSee('lang-switch', false)
             ->assertSee(route('lang.switch', 'id'), false)
             ->assertSee(route('lang.switch', 'en'), false)
@@ -122,7 +132,8 @@ class AuthUiTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->withCookie('locale', 'en')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
             ->from('/login')
             ->followingRedirects()
             ->post('/login', ['email' => $user->email, 'password' => 'wrong-password'])
@@ -138,7 +149,8 @@ class AuthUiTest extends TestCase
 
     public function test_register_errors_are_shown_next_to_fields_and_password_is_not_refilled(): void
     {
-        $this->withCookie('locale', 'id')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'id')
             ->from('/register')
             ->followingRedirects()
             ->post('/register', [

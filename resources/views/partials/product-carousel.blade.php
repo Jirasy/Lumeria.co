@@ -5,12 +5,15 @@
 --}}
 @php $cid = $id ?? 'product-carousel'; @endphp
 <section class="ft-carousel" data-ft-carousel aria-labelledby="{{ $cid }}-title">
-    <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+    <div class="section-head">
         <div>
-            <h2 id="{{ $cid }}-title" class="h1 fw-bold mb-1">{{ __('foodtech.carousel.title') }}</h2>
-            <p class="text-muted mb-0">{{ __('foodtech.carousel.sub') }}</p>
+            <p class="eyebrow">{{ __('nav.products') }}</p>
+            <h2 id="{{ $cid }}-title" class="section-title">{{ __('foodtech.carousel.title') }}</h2>
+            <p class="section-sub">{{ __('foodtech.carousel.sub') }}</p>
         </div>
-        <a href="{{ route('products') }}" class="ft-more fw-semibold">{{ __('foodtech.carousel.all') }}</a>
+        <a href="{{ route('products') }}" class="link-arrow">
+            {{ __('foodtech.carousel.all') }}<x-icon name="arrow-right" :size="15" />
+        </a>
     </div>
 
     <div class="ft-track" data-ft-track tabindex="0" role="region" aria-roledescription="carousel"

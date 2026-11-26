@@ -17,6 +17,7 @@
     <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/lumeria.css') }}?v={{ is_file(public_path('css/lumeria.css')) ? filemtime(public_path('css/lumeria.css')) : 1 }}" rel="stylesheet">
     <link href="{{ asset('css/lumeria-foodtech.css') }}?v={{ is_file(public_path('css/lumeria-foodtech.css')) ? filemtime(public_path('css/lumeria-foodtech.css')) : 1 }}" rel="stylesheet">
+    <link href="{{ asset('css/lumeria-redesign.css') }}?v={{ is_file(public_path('css/lumeria-redesign.css')) ? filemtime(public_path('css/lumeria-redesign.css')) : 1 }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">

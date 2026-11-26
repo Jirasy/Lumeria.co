@@ -2,6 +2,11 @@
 
 
 return [
+    // URL publik tetap, dipakai saat aplikasi di belakang proxy yang menulis ulang
+    // header Host (mis. preview port). Kosongkan di produksi agar Laravel mengikuti
+    // host permintaan seperti biasa.
+    'public_url' => env('LUMERIA_PUBLIC_URL'),
+
     'paylater' => [
         'tenors'      => [1, 2, 3],
         'margin_rate' => 2.0, // persen per bulan, flat

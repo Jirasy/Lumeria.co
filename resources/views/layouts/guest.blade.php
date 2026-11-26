@@ -2,6 +2,7 @@
     Layout halaman autentikasi (masuk, daftar, lupa kata sandi, dan sejenisnya).
     Memakai aset yang sama dengan situs publik: Bootstrap lokal + token tema di public/css/lumeria.css
     dan komponen di public/css/lumeria-foodtech.css. Tidak memuat Vite, Tailwind, atau font dari luar.
+    <link href="{{ asset('css/lumeria-redesign.css') }}?v={{ is_file(public_path('css/lumeria-redesign.css')) ? filemtime(public_path('css/lumeria-redesign.css')) : 1 }}" rel="stylesheet">
 
     Slot opsional: <x-slot:title>Judul tab browser</x-slot:title>
 --}}

@@ -10,5 +10,15 @@
         <path d="M10.5 2.8 5.3 8l5.2 5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
     @elseif ($name === 'chevron-right')
         <path d="m5.5 2.8 5.2 5.2-5.2 5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    @elseif ($name === 'arrow-right')
+        <path d="M2.4 8h10.4M8.7 4.1 12.6 8l-3.9 3.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    @elseif ($name === 'check')
+        <path d="m2.9 8.4 2.7 2.7 5.9-6.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    @elseif ($name === 'eye')
+        <path d="M8 3.4c3 0 5.4 2 6.4 4.6-1 2.6-3.4 4.6-6.4 4.6S2.6 10.6 1.6 8C2.6 5.4 5 3.4 8 3.4z" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <circle cx="8" cy="8" r="1.9" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    @elseif ($name === 'eye-off')
+        <path d="M2.6 2.6 13.4 13.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M6.4 4.2A7 7 0 0 1 8 4c3 0 5.4 2 6.4 4.6-.5 1.2-1.2 2.3-2.2 3.1M4.6 5.5C3.3 6.4 2.3 7.5 1.6 8.6 2.6 11.2 5 13.2 8 13.2c1 0 1.9-.2 2.8-.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
     @endif
 </svg>

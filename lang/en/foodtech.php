@@ -87,6 +87,7 @@ return [
     'history' => [
         'title'    => 'My Orders',
         'subtitle' => 'Your order history and status.',
+        'count'    => ':count order|:count orders',
         'empty'    => 'No orders yet.',
         'order'    => 'Order',
         'date'     => 'Date',

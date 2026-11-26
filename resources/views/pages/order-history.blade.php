@@ -5,22 +5,36 @@
 @section('content')
     @php $rp = fn ($n) => 'Rp ' . number_format($n, 0, ',', '.'); @endphp
 
-    <section class="py-4 py-md-5">
+    <section class="order-page">
         <div class="container">
-            <h1 class="fw-bold">{{ __('foodtech.history.title') }}</h1>
-            <p class="lead text-muted">{{ __('foodtech.history.subtitle') }}</p>
+            <header class="page-head">
+                <p class="page-eyebrow">{{ __('foodtech.nav.my_orders') }}</p>
+                <div class="page-head-row">
+                    <div>
+                        <h1 class="page-title">{{ __('foodtech.history.title') }}</h1>
+                        <p class="page-sub">{{ __('foodtech.history.subtitle') }}</p>
+                    </div>
+                    @unless ($orders->isEmpty())
+                        <span class="order-chip">{{ trans_choice('foodtech.history.count', $orders->total()) }}</span>
+                    @endunless
+                </div>
+            </header>
 
             @if ($orders->isEmpty())
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <p class="text-muted">{{ __('foodtech.history.empty') }}</p>
-                        <a href="{{ route('products') }}" class="btn btn-lumeria">{{ __('order.browse') }}</a>
+                <div class="order-card">
+                    <div class="order-card-body">
+                        <div class="order-empty">
+                            <x-product-art slug="bola-teh" :size="96" />
+                            <h2 class="order-empty-title">{{ __('foodtech.history.empty') }}</h2>
+                            <p class="text-muted mb-3">{{ __('order.empty_text') }}</p>
+                            <a href="{{ route('products') }}" class="btn btn-lumeria">{{ __('order.browse') }}</a>
+                        </div>
                     </div>
                 </div>
             @else
-                <div class="card shadow-sm">
+                <div class="order-card">
                     <div class="table-responsive">
-                        <table class="table align-middle stack-table mb-0">
+                        <table class="table align-middle stack-table order-history-table mb-0">
                             <thead>
                                 <tr>
                                     <th scope="col">{{ __('foodtech.history.order') }}</th>
@@ -41,7 +55,9 @@
                                         <td data-label="{{ __('foodtech.history.payment') }}">{{ __('order.methods.' . $order->payment_method) }}</td>
                                         <td data-label="{{ __('foodtech.history.total') }}" class="text-sm-end fw-semibold">{{ $rp($order->grand_total) }}</td>
                                         <td data-label="{{ __('foodtech.history.status') }}">
-                                            {{ \Illuminate\Support\Facades\Lang::has('order.status.' . $order->status) ? __('order.status.' . $order->status) : $order->status }}
+                                            <span class="order-status" data-status="{{ $order->status }}">
+                                                {{ \Illuminate\Support\Facades\Lang::has('order.status.' . $order->status) ? __('order.status.' . $order->status) : $order->status }}
+                                            </span>
                                         </td>
                                         <td data-label="" class="text-sm-end">
                                             <a href="{{ route('order.show', $order) }}" class="btn btn-sm btn-outline-dark"

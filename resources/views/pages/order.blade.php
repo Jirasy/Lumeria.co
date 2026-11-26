@@ -9,42 +9,62 @@
         $rp = fn ($n) => 'Rp ' . number_format($n, 0, ',', '.');
         $rateText = rtrim(rtrim(number_format($marginRate, 2, '.', ''), '0'), '.');
         $method = old('payment_method', 'cash');
+        $itemCount = (int) $items->sum('quantity');
     @endphp
 
 
-    <section class="py-4 py-md-5">
+    <section class="order-page">
         <div class="container">
-            <h1 class="fw-bold">{{ __('order.title') }}</h1>
-            <p class="lead text-muted">{{ __('order.subtitle') }}</p>
+            <header class="page-head">
+                <p class="page-eyebrow">{{ __('nav.order') }}</p>
+                <h1 class="page-title">{{ __('order.title') }}</h1>
+                <p class="page-sub">{{ __('order.subtitle') }}</p>
+
+                <ol class="order-steps">
+                    <li class="order-step{{ $items->isEmpty() ? ' is-current' : ' is-done' }}">{{ __('order.steps.cart') }}</li>
+                    <li class="order-step{{ $items->isEmpty() ? '' : ' is-current' }}">{{ __('order.steps.details') }}</li>
+                    <li class="order-step">{{ __('order.steps.payment') }}</li>
+                </ol>
+            </header>
 
             @guest
                 {{-- Keranjang dan checkout hanya untuk pelanggan login; simulator Paylater tetap terbuka. --}}
                 @php $waGuest = \App\Support\StoreContact::whatsapp(__('foodtech.footer.wa_message')); @endphp
-                <div class="ft-note my-3">
-                    <h2 class="h5">{{ __('foodtech.guest_order.title') }}</h2>
-                    <p class="mb-3">{{ __('foodtech.guest_order.text') }}</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('login') }}" class="btn btn-lumeria">{{ __('nav.login') }}</a>
-                        <a href="{{ route('register') }}" class="btn btn-outline-dark">{{ __('nav.register') }}</a>
-                        @if ($waGuest)
-                            <a href="{{ $waGuest }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark">{{ __('foodtech.footer.chat_wa') }}</a>
-                        @endif
+                <div class="order-card order-guest-note">
+                    <div class="order-guest-body">
+                        <h2 class="order-card-title">{{ __('foodtech.guest_order.title') }}</h2>
+                        <p class="mb-3">{{ __('foodtech.guest_order.text') }}</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ route('login') }}" class="btn btn-lumeria">{{ __('nav.login') }}</a>
+                            <a href="{{ route('register') }}" class="btn btn-outline-dark">{{ __('nav.register') }}</a>
+                            @if ($waGuest)
+                                <a href="{{ $waGuest }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark">{{ __('foodtech.footer.chat_wa') }}</a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @endguest
 
 
-            <div class="row g-4 mt-1">
+            <div class="row g-4">
                 {{-- ===== Kolom kiri: keranjang + checkout ===== --}}
                 <div class="col-lg-7">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <h2 class="h4 mb-3">{{ __('order.cart_title') }}</h2>
+                    <div class="order-card">
+                        <div class="order-card-head">
+                            <h2 class="order-card-title">{{ __('order.cart_title') }}</h2>
+                            @unless ($items->isEmpty())
+                                <span class="order-chip">{{ trans_choice('order.item_count', $itemCount) }}</span>
+                            @endunless
+                        </div>
 
-
+                        <div class="order-card-body">
                             @if ($items->isEmpty())
-                                <p class="text-muted">{{ __('order.cart_empty') }}</p>
-                                <a href="{{ route('products') }}" class="btn btn-lumeria">{{ __('order.browse') }}</a>
+                                <div class="order-empty">
+                                    <x-product-art slug="original-milk" :size="96" />
+                                    <h3 class="order-empty-title">{{ __('order.empty_title') }}</h3>
+                                    <p class="text-muted mb-3">{{ __('order.cart_empty') }}</p>
+                                    <a href="{{ route('products') }}" class="btn btn-lumeria">{{ __('order.browse') }}</a>
+                                </div>
                             @else
                                 <div class="table-responsive">
                                     <table class="table align-middle stack-table mb-0">
@@ -61,7 +81,18 @@
                                             @foreach ($items as $row)
                                                 @php $p = $row['product']; @endphp
                                                 <tr>
-                                                    <td data-label="{{ __('order.product') }}" class="fw-semibold">{{ $p->name }}</td>
+                                                    <td data-label="{{ __('order.product') }}">
+                                                        <span class="order-line">
+                                                            <span class="order-thumb" aria-hidden="true">
+                                                                @if ($p->image)
+                                                                    <img src="{{ asset($p->image) }}" alt="">
+                                                                @else
+                                                                    <x-product-art :slug="$p->slug" :bare="true" :size="44" />
+                                                                @endif
+                                                            </span>
+                                                            <span class="order-line-name fw-semibold">{{ $p->name }}</span>
+                                                        </span>
+                                                    </td>
                                                     <td data-label="{{ __('order.price') }}" class="text-sm-end">{{ $rp($p->price) }}</td>
                                                     <td data-label="{{ __('order.qty') }}" style="min-width: 9rem">
                                                         <form method="POST" action="{{ route('cart.update', $p) }}" class="d-flex gap-1">
@@ -101,108 +132,147 @@
 
 
                     @unless ($items->isEmpty())
-                        <form method="POST" action="{{ route('order.store') }}" class="card shadow-sm">
+                        <form method="POST" action="{{ route('order.store') }}" class="order-card" id="checkout">
                             @csrf
-                            <div class="card-body">
-                                <h2 class="h4 mb-3">{{ __('order.checkout_title') }}</h2>
+                            <div class="order-card-head">
+                                <h2 class="order-card-title">{{ __('order.checkout_title') }}</h2>
+                                <p class="order-card-hint">{{ __('order.checkout_hint') }}</p>
+                            </div>
 
-
-                                <div class="mb-3">
-                                    <label for="customer_name" class="form-label">{{ __('order.name') }}</label>
-                                    <input id="customer_name" type="text" name="customer_name" required maxlength="100"
-                                           autocomplete="name"
-                                           value="{{ old('customer_name', auth()->user()?->name) }}"
-                                           class="form-control @error('customer_name') is-invalid @enderror">
-                                    @error('customer_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-
-
-                                <div class="mb-3">
-                                    <label for="customer_phone" class="form-label">{{ __('order.phone') }}</label>
-                                    <input id="customer_phone" type="tel" name="customer_phone" required maxlength="20"
-                                           inputmode="tel" autocomplete="tel"
-                                           value="{{ old('customer_phone') }}"
-                                           class="form-control @error('customer_phone') is-invalid @enderror">
-                                    @error('customer_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-
-
-                                <div class="mb-3">
-                                    <label for="customer_address" class="form-label">{{ __('order.address') }}</label>
-                                    <textarea id="customer_address" name="customer_address" rows="2" maxlength="500"
-                                              autocomplete="street-address"
-                                              class="form-control @error('customer_address') is-invalid @enderror">{{ old('customer_address') }}</textarea>
-                                    @error('customer_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-
-
-                                <fieldset class="mb-3">
-                                    <legend class="form-label fs-6">{{ __('order.payment_method') }}</legend>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_method"
-                                               id="pay-cash" value="cash" @checked($method === 'cash')>
-                                        <label class="form-check-label" for="pay-cash">{{ __('order.methods.cash') }}</label>
+                            <div class="order-card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="customer_name" class="form-label">{{ __('order.name') }}</label>
+                                        <input id="customer_name" type="text" name="customer_name" required maxlength="100"
+                                               autocomplete="name"
+                                               value="{{ old('customer_name', auth()->user()?->name) }}"
+                                               class="form-control @error('customer_name') is-invalid @enderror">
+                                        @error('customer_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_method"
-                                               id="pay-paylater" value="paylater" @checked($method === 'paylater')>
-                                        <label class="form-check-label" for="pay-paylater">{{ __('order.methods.paylater') }}</label>
+
+                                    <div class="col-md-6">
+                                        <label for="customer_phone" class="form-label">{{ __('order.phone') }}</label>
+                                        <input id="customer_phone" type="tel" name="customer_phone" required maxlength="20"
+                                               inputmode="tel" autocomplete="tel"
+                                               value="{{ old('customer_phone') }}"
+                                               class="form-control @error('customer_phone') is-invalid @enderror">
+                                        @error('customer_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="customer_address" class="form-label">{{ __('order.address') }}</label>
+                                        <textarea id="customer_address" name="customer_address" rows="2" maxlength="500"
+                                                  autocomplete="street-address"
+                                                  class="form-control @error('customer_address') is-invalid @enderror">{{ old('customer_address') }}</textarea>
+                                        @error('customer_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+
+                                <fieldset class="pay-fieldset mt-4">
+                                    <legend class="form-label fs-6">{{ __('order.payment_method') }}</legend>
+                                    <p class="order-card-hint mb-2">{{ __('order.payment_hint') }}</p>
+
+                                    <div class="pay-options">
+                                        <label class="pay-option" for="pay-cash">
+                                            <input class="form-check-input" type="radio" name="payment_method"
+                                                   id="pay-cash" value="cash" @checked($method === 'cash')>
+                                            <span class="pay-option-body">
+                                                <span class="pay-option-title">{{ __('order.methods.cash') }}</span>
+                                                <span class="pay-option-text">{{ __('order.cash_hint') }}</span>
+                                            </span>
+                                        </label>
+
+                                        <label class="pay-option" for="pay-paylater">
+                                            <input class="form-check-input" type="radio" name="payment_method"
+                                                   id="pay-paylater" value="paylater" @checked($method === 'paylater')>
+                                            <span class="pay-option-body">
+                                                <span class="pay-option-title">{{ __('order.methods.paylater') }}</span>
+                                                <span class="pay-option-text">{{ __('order.paylater_hint') }}</span>
+                                            </span>
+                                        </label>
                                     </div>
                                 </fieldset>
 
-
-                                <div id="paylater-box" class="border rounded p-3 mb-3 bg-light">
+                                <div id="paylater-box" class="order-paylater">
                                     <h3 class="h6">{{ __('order.paylater_title') }}</h3>
                                     @include('partials.plans-table', ['plans' => $plans, 'selectable' => true])
                                     <p class="small text-muted mt-2 mb-0">{{ __('order.rounding_note') }}</p>
                                 </div>
 
-
-                                <button type="submit" class="btn btn-lumeria btn-lg w-100">{{ __('order.place_order') }}</button>
+                                <div class="order-submit">
+                                    <div class="order-submit-total">
+                                        <span>{{ __('order.subtotal') }}</span>
+                                        <strong>{{ $rp($subtotal) }}</strong>
+                                    </div>
+                                    <button type="submit" class="btn btn-lumeria btn-lg">
+                                        {{ __('order.place_order') }}<x-icon name="arrow-right" :size="18" />
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     @endunless
                 </div>
 
 
-                {{-- ===== Kolom kanan: simulator + rumus ===== --}}
+                {{-- ===== Kolom kanan: ringkasan, simulator, rumus ===== --}}
                 <div class="col-lg-5">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <h2 class="h4 mb-3">{{ __('order.sim_title') }}</h2>
-
-
-                            <form method="GET" action="{{ route('order') }}" class="row g-2 mb-3">
-                                <div class="col">
-                                    <label for="amount" class="visually-hidden">{{ __('order.sim_amount') }}</label>
-                                    <input id="amount" type="number" name="amount" min="1000" max="100000000"
-                                           inputmode="numeric" placeholder="{{ __('order.sim_amount') }}"
-                                           value="{{ request('amount') }}" class="form-control">
-                                </div>
-                                <div class="col-auto">
-                                    <button type="submit" class="btn btn-lumeria">{{ __('order.sim_button') }}</button>
-                                </div>
-                            </form>
-
-
-                            @if ($simulation)
-                                <h3 class="h6">{{ __('order.sim_result', ['amount' => $rp($simulation['amount'])]) }}</h3>
-                                @include('partials.plans-table', ['plans' => $simulation['plans'], 'selectable' => false])
-                                <p class="small text-muted mt-2 mb-0">{{ __('order.rounding_note') }}</p>
-                            @endif
+                    <div class="order-aside">
+                        <div class="order-card">
+                            <div class="order-card-head">
+                                <h2 class="order-card-title">{{ __('order.summary_title') }}</h2>
+                            </div>
+                            <div class="order-card-body">
+                                <dl class="order-summary-rows">
+                                    <div class="order-summary-row">
+                                        <dt>{{ __('order.summary_items') }}</dt>
+                                        <dd>{{ $itemCount }}</dd>
+                                    </div>
+                                    <div class="order-summary-row order-summary-total">
+                                        <dt>{{ __('order.subtotal') }}</dt>
+                                        <dd>{{ $rp($subtotal) }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
-                    </div>
 
+                        <div class="order-card">
+                            <div class="order-card-head">
+                                <h2 class="order-card-title">{{ __('order.sim_title') }}</h2>
+                                <p class="order-card-hint">{{ __('order.sim_hint') }}</p>
+                            </div>
+                            <div class="order-card-body">
+                                <form method="GET" action="{{ route('order') }}" class="row g-2 mb-3">
+                                    <div class="col">
+                                        <label for="amount" class="visually-hidden">{{ __('order.sim_amount') }}</label>
+                                        <input id="amount" type="number" name="amount" min="1000" max="100000000"
+                                               inputmode="numeric" placeholder="{{ __('order.sim_amount') }}"
+                                               value="{{ request('amount') }}" class="form-control">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="submit" class="btn btn-lumeria">{{ __('order.sim_button') }}</button>
+                                    </div>
+                                </form>
 
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h2 class="h5">{{ __('order.formula_title') }}</h2>
-                            <ol class="ps-3 mb-2">
-                                <li>{{ __('order.formula_margin', ['rate' => $rateText]) }}</li>
-                                <li>{{ __('order.formula_installment') }}</li>
-                                <li>{{ __('order.formula_total') }}</li>
-                            </ol>
-                            <p class="small text-muted mb-0">{{ __('order.formula_fixed') }}</p>
+                                @if ($simulation)
+                                    <h3 class="h6">{{ __('order.sim_result', ['amount' => $rp($simulation['amount'])]) }}</h3>
+                                    @include('partials.plans-table', ['plans' => $simulation['plans'], 'selectable' => false])
+                                    <p class="small text-muted mt-2 mb-0">{{ __('order.rounding_note') }}</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="order-card">
+                            <div class="order-card-head">
+                                <h2 class="order-card-title">{{ __('order.formula_title') }}</h2>
+                            </div>
+                            <div class="order-card-body">
+                                <ol class="order-formula">
+                                    <li>{{ __('order.formula_margin', ['rate' => $rateText]) }}</li>
+                                    <li>{{ __('order.formula_installment') }}</li>
+                                    <li>{{ __('order.formula_total') }}</li>
+                                </ol>
+                                <p class="small text-muted mb-0">{{ __('order.formula_fixed') }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>

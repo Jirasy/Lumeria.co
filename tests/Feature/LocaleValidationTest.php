@@ -11,7 +11,9 @@ class LocaleValidationTest extends TestCase
 
     public function test_validation_messages_follow_indonesian_locale(): void
     {
-        $this->withCookie('locale', 'id')->post('/register', [])
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'id')
+            ->post('/register', [])
             ->assertSessionHasErrors('email');
 
         $this->assertStringNotContainsString('field is required', session('errors')->first('email'));
@@ -19,7 +21,9 @@ class LocaleValidationTest extends TestCase
 
     public function test_validation_messages_stay_english_in_english_locale(): void
     {
-        $this->withCookie('locale', 'en')->post('/register', [])
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->post('/register', [])
             ->assertSessionHasErrors('email');
 
         $this->assertStringContainsString('field is required', session('errors')->first('email'));

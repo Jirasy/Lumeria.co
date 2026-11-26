@@ -18,12 +18,14 @@ class LocaleTest extends TestCase
         $this->from('/login')
             ->get('/lang/en')
             ->assertRedirect('/login')
-            ->assertCookie('locale', 'en');
+            ->assertPlainCookie('locale', 'en');
     }
 
     public function test_locale_cookie_is_applied_to_requests(): void
     {
-        $this->withCookie('locale', 'en')->get('/login');
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/login');
 
         $this->assertSame('en', app()->getLocale());
     }
@@ -35,7 +37,9 @@ class LocaleTest extends TestCase
 
     public function test_tampered_cookie_falls_back_to_default(): void
     {
-        $this->withCookie('locale', 'xx')->get('/login');
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'xx')
+            ->get('/login');
 
         $this->assertSame('id', app()->getLocale());
     }

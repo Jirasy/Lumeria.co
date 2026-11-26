@@ -4,7 +4,7 @@
         ['orders.index', __('foodtech.nav.my_orders'), __('account.card_orders')],
         ['order',        __('nav.order'),              __('account.card_order')],
         ['products',     __('nav.products'),           __('account.card_products')],
-        ['profile.edit', __('Profile'),                __('account.card_profile')],
+        ['profile.edit', __('profile.nav_profile'),    __('account.card_profile')],
     ];
 
     if ($user->isAdmin()) {

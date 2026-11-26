@@ -22,7 +22,11 @@ class FooterAndResponsiveTest extends TestCase
 
     public function test_guest_footer_has_service_explore_account_and_payment_columns(): void
     {
-        $html = $this->withCookie('locale', 'id')->get('/products')->assertOk()->getContent();
+        $html = $this->disableCookieEncryption()
+            ->withCookie('locale', 'id')
+            ->get('/products')
+            ->assertOk()
+            ->getContent();
         $footer = $this->footer($html);
 
         foreach (['Layanan Pelanggan', 'Jelajahi', 'Akun', 'Pembayaran', 'Cara Memesan', 'Lacak Pesanan', 'Tunai', 'Paylater', 'Cicilan 1 sampai 3 bulan', 'Bahasa:'] as $text) {
@@ -40,7 +44,11 @@ class FooterAndResponsiveTest extends TestCase
     {
         config(['lumeria.paylater.tenors' => [2, 4, 6]]);
 
-        $footer = $this->footer($this->withCookie('locale', 'en')->get('/')->getContent());
+        $html = $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/')
+            ->getContent();
+        $footer = $this->footer($html);
 
         $this->assertStringContainsString('Customer Service', $footer);
         $this->assertStringContainsString('Payment', $footer);
@@ -69,7 +77,11 @@ class FooterAndResponsiveTest extends TestCase
         $this->assertStringNotContainsString('Ikuti Kami', $this->footer($this->get('/')->getContent()));
 
         config(['lumeria.contact.whatsapp' => '0812-3456-7890', 'lumeria.contact.instagram' => '@lumeria.co']);
-        $footer = $this->footer($this->withCookie('locale', 'id')->get('/')->getContent());
+        $html = $this->disableCookieEncryption()
+            ->withCookie('locale', 'id')
+            ->get('/')
+            ->getContent();
+        $footer = $this->footer($html);
 
         $this->assertStringContainsString('Ikuti Kami', $footer);
         $this->assertStringContainsString('https://wa.me/6281234567890', $footer);

@@ -38,7 +38,10 @@ class AccountUiTest extends TestCase
     {
         $user = User::factory()->create(['name' => 'Budi Santoso']);
 
-        $this->actingAs($user)->withCookie('locale', 'id')->get('/dashboard')
+        $this->actingAs($user)
+            ->disableCookieEncryption()
+            ->withCookie('locale', 'id')
+            ->get('/dashboard')
             ->assertOk()
             ->assertSee('Halo, Budi Santoso')
             ->assertSee(route('orders.index'), false)
@@ -47,7 +50,23 @@ class AccountUiTest extends TestCase
             ->assertSee(route('profile.edit'), false)
             ->assertDontSee(route('admin.dashboard'), false);
 
-        $this->actingAs($user)->withCookie('locale', 'en')->get('/dashboard')
+        $this->actingAs($user)
+            ->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Hello, Budi Santoso')
+            ->assertDontSee('Halo, Budi Santoso');
+
+        $this->actingAs($user)
+            ->get('/lang/en')
+            ->assertRedirect();
+
+        $this->actingAs($user)
+            ->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/dashboard')
+            ->assertOk()
             ->assertSee('Hello, Budi Santoso')
             ->assertDontSee('Halo, Budi Santoso');
     }
@@ -95,7 +114,9 @@ class AccountUiTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->withCookie('locale', 'en')
+        $this->actingAs($user)
+            ->disableCookieEncryption()
+            ->withCookie('locale', 'en')
             ->from('/profile')
             ->followingRedirects()
             ->put('/password', [
@@ -113,7 +134,9 @@ class AccountUiTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->withCookie('locale', 'en')
+        $this->actingAs($user)
+            ->disableCookieEncryption()
+            ->withCookie('locale', 'en')
             ->from('/profile')
             ->followingRedirects()
             ->delete('/profile', ['password' => 'wrong-password'])
@@ -127,7 +150,9 @@ class AccountUiTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->withCookie('locale', 'en')
+        $this->actingAs($user)
+            ->disableCookieEncryption()
+            ->withCookie('locale', 'en')
             ->from('/profile')
             ->followingRedirects()
             ->patch('/profile', ['name' => 'Nama Baru', 'email' => $user->email])

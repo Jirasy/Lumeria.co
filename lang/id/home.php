@@ -15,18 +15,32 @@ return [
 
     // Judul halaman, hero, dan tagline
     'title' => 'Beranda',
+    'hero_eyebrow' => 'Bola susu & dessert lumer',
     'hero_identity' => 'Camilan manis dan lembut yang cepat lumer.',
     'tagline' => 'Mood booster dalam satu gigitan',
     'cta_products' => 'Lihat Produk',
     'cta_order' => 'Pesan Sekarang',
+    'hero_points' => [
+        'Bahan pilihan dan rasa yang konsisten',
+        'Pesan langsung tanpa antre',
+        'Bayar tunai atau cicil',
+    ],
+
+    // Fakta singkat di bawah hero
+    'fact_products' => 'Varian produk',
+    'fact_signature' => 'Rasa signature',
+    'fact_tenor' => 'Bulan cicilan',
 
     // Produk andalan
+    'menu_eyebrow' => 'Menu andalan',
     'signature_title' => 'Bola Susu Signature',
     'signature_sub' => 'Tiga rasa andalan Lumeria.co yang lumer di setiap gigitan.',
 
     // Tentang kami
+    'about_eyebrow' => 'Tentang kami',
     'about_title' => 'Tentang Lumeria.co',
     'about_text' => 'Lumeria.co adalah usaha camilan bola susu dan dessert lumer yang manis dan lembut. Kami ingin menghadirkan jeda kecil yang menyenangkan di sela hari yang sibuk.',
+    'about_link' => 'Jelajahi menu',
 
     // Visi
     'vision_title' => 'Visi',
@@ -42,6 +56,7 @@ return [
     ],
 
     // Filosofi
+    'philosophy_eyebrow' => 'Filosofi kami',
     'philosophy_title' => 'Kecil, tapi berarti',
     'philosophy_text' => 'Sepotong camilan kecil bisa menjadi alasan seseorang tersenyum hari ini. Kami percaya hal-hal kecil yang dikerjakan dengan jujur dan sepenuh hati akan terasa besar artinya.',
 

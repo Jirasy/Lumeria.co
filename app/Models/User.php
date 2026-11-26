@@ -6,6 +6,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -88,13 +89,17 @@ class User extends Authenticatable
         return route('avatar.show', ['user' => $this->id, 'v' => $this->updated_at?->timestamp]);
     }
 
-    public function deleteAvatarFile(): void
+            public function deleteAvatarFile(): void
     {
         if ($this->avatar_path) {
             Storage::disk(self::AVATAR_DISK)->delete($this->avatar_path);
         }
     }
 
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
     /**
      * Get the attributes that should be cast.
      *

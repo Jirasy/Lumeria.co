@@ -33,6 +33,10 @@ class PageController extends Controller
     {
         return view('pages.economic');
     }
+    public function williamTanuwijaya(): View
+    {
+        return view('pages.william-tanuwijaya');
+    }
 
 
     public function team(): View

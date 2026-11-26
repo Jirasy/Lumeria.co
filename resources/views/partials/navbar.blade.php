@@ -20,9 +20,12 @@
         ['admin.users.index', 'users.nav',          'admin.users.*'],
         ['team',              'nav.team',           'team'],
         ['islamic',           'nav.islamic',        'islamic'],
+        ['sejarah.william',   'nav.sejarah',        'sejarah.*'],
+        ['quiz.index',        'nav.quiz',           'quiz.*'],
+        ['quiz.history',      'nav.quiz_history',   'quiz.history'],
         ['economic',          'nav.economic',       'economic'],
     ] : [];
-    $adminActive = request()->routeIs('admin.*', 'team', 'islamic', 'economic');
+    $adminActive = request()->routeIs('admin.*', 'team', 'islamic', 'sejarah.*', 'economic', 'quiz.*');
     $locale = app()->getLocale();
 @endphp
 <nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top" aria-label="{{ __('nav.menu') }}">

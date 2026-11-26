@@ -17,6 +17,7 @@
     // Format: [rute, label, pola rute aktif]
     $adminMenu = $user?->isAdmin() ? [
         ['admin.dashboard',   'foodtech.nav.admin', 'admin.dashboard'],
+        ['admin.products.index', 'products_admin.nav', 'admin.products.*'],
         ['admin.users.index', 'users.nav',          'admin.users.*'],
         ['team',              'nav.team',           'team'],
         ['islamic',           'nav.islamic',        'islamic'],

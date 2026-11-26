@@ -62,7 +62,7 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 **Peran.** Tamu hanya melihat (etalase, detail produk, info pemesanan) dan harus login atau daftar sebelum memesan.
 Pelanggan bisa memesan, melihat Pesanan Saya, dan mengatur profil. Admin juga mengelola pengguna (tambah, ubah, hapus),
-panel toko, halaman Our Team, dan materi. Peran tidak bisa diubah lewat form registrasi atau profil.
+panel toko, **kelola produk** (tambah, ubah, nonaktifkan, hapus, dengan foto), halaman Our Team, dan materi. Peran tidak bisa diubah lewat form registrasi atau profil.
 
 **Setelah menarik perubahan ini**, jalankan migrasi (menambah kolom profil di tabel users):
 
@@ -81,3 +81,11 @@ php artisan db:seed --class=AdminSeeder   # atau: php artisan db:seed (seluruh s
 
 **Foto profil** disimpan di disk privat (`storage/app/private/avatars`) dan disajikan lewat rute `/avatar/{user}`
 yang hanya bisa dibuka pemilik dan admin, jadi tidak perlu `php artisan storage:link`. Batas 1 MB, format JPEG atau PNG.
+
+**Foto produk** yang diunggah admin disimpan langsung di `public/images/products` (maks. 1 MB, JPEG/PNG/WebP, nama berkas acak),
+jadi juga tidak perlu `storage:link`. Folder itu di-ignore git: foto unggahan tidak ikut ter-commit dan tidak ikut terbawa saat `git pull`,
+jadi salin folder tersebut sendiri bila memindahkan situs. Produk tanpa foto memakai ilustrasi bawaan.
+Menghapus produk aman: pesanan lama menyimpan salinan nama dan harga. Untuk menyembunyikan saja, nonaktifkan produk.
+`php artisan db:seed` hanya membuat produk bawaan yang belum ada, jadi tidak menimpa suntingan admin.
+
+**Tampilan** memakai Bootstrap dan CSS di `public/`, jadi tidak ada langkah `npm` atau build aset.

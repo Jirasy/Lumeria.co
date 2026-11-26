@@ -15,13 +15,11 @@ git config user.name "Nama Kamu"
 git config user.email "email-yang-dipakai-di-github@contoh.com"
 
 composer install
-npm install
 cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite      # PowerShell: New-Item database/database.sqlite
 php artisan migrate
-php artisan db:seed --class=ProductSeeder
-npm run build
+php artisan db:seed                  # produk + 4 admin tim (aman diulang)
 php artisan test
 php artisan serve
 ```
@@ -76,14 +74,14 @@ Satu tanda kutip yang hilang membuat situs error. Pemilik repo menjalankan ini s
 
 ## 6. Error aneh setelah `git pull`
 
-Jalankan ini setelah pull yang mengubah `composer.lock`, `package.json`, atau folder `database/migrations`:
+Jalankan ini setelah pull yang mengubah `composer.lock` atau folder `database/migrations`:
 
 ```bash
 composer install
 php artisan migrate
-npm install
-npm run build
 ```
+
+Tampilan memakai Bootstrap dan CSS yang sudah ada di `public/`, jadi tidak ada langkah `npm` atau build aset.
 
 Kalau muncul error `Class "..." not found` saat menjalankan `php artisan`, bersihkan cache paket lalu coba lagi:
 

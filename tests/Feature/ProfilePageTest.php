@@ -254,7 +254,7 @@ class ProfilePageTest extends TestCase
 
     public function test_profile_and_users_language_files_have_the_same_keys_in_both_locales(): void
     {
-        foreach (['profile', 'users'] as $file) {
+        foreach (['profile', 'users', 'products_admin'] as $file) {
             $id = require lang_path("id/{$file}.php");
             $en = require lang_path("en/{$file}.php");
 

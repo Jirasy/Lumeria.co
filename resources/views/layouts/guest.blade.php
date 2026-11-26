@@ -27,7 +27,7 @@
                 <a href="{{ route('home') }}" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1">
                     <x-icon name="chevron-left" :size="14" />{{ __('auth.back_home') }}
                 </a>
-                <x-language-switcher bootstrap />
+                <x-language-switcher />
             </div>
         </header>
 

@@ -42,6 +42,7 @@
                         <li><a href="{{ route('profile.edit') }}">{{ __('profile.nav_profile') }}</a></li>
                         @if ($user->isAdmin())
                             <li><a href="{{ route('admin.dashboard') }}">{{ __('foodtech.nav.admin') }}</a></li>
+                            <li><a href="{{ route('admin.products.index') }}">{{ __('products_admin.nav') }}</a></li>
                             <li><a href="{{ route('admin.users.index') }}">{{ __('users.nav') }}</a></li>
                         @endif
                     @endguest

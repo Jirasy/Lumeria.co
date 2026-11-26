@@ -34,6 +34,8 @@ class RolePermissionMatrixTest extends TestCase
             'profil'           => ['/profile', self::LOGIN, self::OK, self::OK],
             'our team'         => ['/our-team', self::LOGIN, self::FORBIDDEN, self::OK],
             'panel admin'      => ['/admin', self::LOGIN, self::FORBIDDEN, self::OK],
+            'kelola produk'    => ['/admin/products', self::LOGIN, self::FORBIDDEN, self::OK],
+            'tambah produk'    => ['/admin/products/create', self::LOGIN, self::FORBIDDEN, self::OK],
             'daftar pengguna'  => ['/admin/users', self::LOGIN, self::FORBIDDEN, self::OK],
             'tambah pengguna'  => ['/admin/users/create', self::LOGIN, self::FORBIDDEN, self::OK],
             'nilai islam'      => ['/islamic-values', self::LOGIN, self::FORBIDDEN, self::OK],
@@ -79,10 +81,18 @@ class RolePermissionMatrixTest extends TestCase
             ->assertRedirect();
     }
 
-    public function test_only_admin_pages_expose_user_management_in_the_menu(): void
+    public function test_only_admin_pages_expose_management_links_in_the_menu(): void
     {
-        $this->get('/')->assertDontSee(route('admin.users.index'), false)->assertDontSee(route('team'), false);
-        $this->actingAs(User::factory()->create())->get('/')->assertDontSee(route('admin.users.index'), false)->assertDontSee(route('team'), false);
-        $this->actingAs(User::factory()->admin()->create())->get('/')->assertSee(route('admin.users.index'), false)->assertSee(route('team'), false);
+        $links = fn () => [route('admin.users.index'), route('admin.products.index'), route('team')];
+
+        foreach ($links() as $url) {
+            $this->get('/')->assertDontSee($url, false);
+            $this->actingAs(User::factory()->create())->get('/')->assertDontSee($url, false);
+        }
+
+        $this->actingAs(User::factory()->admin()->create());
+        foreach ($links() as $url) {
+            $this->get('/')->assertSee($url, false);
+        }
     }
 }

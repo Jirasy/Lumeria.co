@@ -102,10 +102,24 @@ class AdminSeederTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'aliful@lumeria.test']);
     }
 
-    public function test_the_main_database_seeder_runs_the_admin_seeder(): void
+    public function test_the_main_database_seeder_creates_products_and_the_four_admins_only(): void
     {
         $this->seed(DatabaseSeeder::class);
 
         $this->assertSame(4, User::where('role', User::ROLE_ADMIN)->count());
+        $this->assertSame(4, User::count(), 'Tidak ada akun lain (mis. akun uji dengan kata sandi yang diketahui publik)');
+        $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
+        $this->assertGreaterThan(0, \App\Models\Product::count());
+    }
+
+    public function test_the_main_database_seeder_can_be_run_repeatedly(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $products = \App\Models\Product::count();
+
+        $this->seed(DatabaseSeeder::class);
+
+        $this->assertSame(4, User::count());
+        $this->assertSame($products, \App\Models\Product::count());
     }
 }

@@ -1,0 +1,31 @@
+diff a/routes/web.php b/routes/web.php	(rejected hunks)
+@@ -2,6 +2,7 @@
+ 
+ 
+ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
++use App\Http\Controllers\Admin\ProductController as AdminProductController;
+ use App\Http\Controllers\Admin\UserController as AdminUserController;
+ use App\Http\Controllers\CartController;
+ use App\Http\Controllers\LocaleController;
+@@ -19,7 +20,7 @@
+ |--------------------------------------------------------------------------
+ | 1. TAMU      : etalase produk, detail produk, info pemesanan & simulasi Paylater (hanya melihat).
+ | 2. PELANGGAN : (group 'auth') keranjang, checkout, Pesanan Saya, profil.
+-| 3. ADMIN     : (group 'auth' + 'admin') panel toko, kelola pengguna (CRUD), Our Team,
++| 3. ADMIN     : (group 'auth' + 'admin') panel toko, kelola produk dan pengguna (CRUD), Our Team,
+ |                materi Nilai Islam / Diskusi Ekonomi.
+ */
+ 
+@@ -63,6 +64,12 @@
+ Route::middleware(['auth', 'admin'])->group(function () {
+     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+ 
++    // Kelola produk (CRUD): hanya admin.
++    Route::resource('admin/products', AdminProductController::class)
++        ->except('show')
++        ->names('admin.products')
++        ->parameters(['products' => 'product']);
++
+     // Kelola pengguna (CRUD): hanya admin.
+     Route::resource('admin/users', AdminUserController::class)
+         ->except('show')

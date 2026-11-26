@@ -64,10 +64,12 @@ class FooterAndResponsiveTest extends TestCase
         $this->assertStringContainsString(route('orders.index'), $customer);
         $this->assertStringNotContainsString(route('register'), $customer);
         $this->assertStringNotContainsString(route('admin.users.index'), $customer);
+        $this->assertStringNotContainsString(route('admin.products.index'), $customer);
         $this->assertStringNotContainsString(route('admin.dashboard'), $customer);
 
         $admin = $this->footer($this->actingAs(User::factory()->admin()->create())->get('/')->getContent());
         $this->assertStringContainsString(route('admin.users.index'), $admin);
+        $this->assertStringContainsString(route('admin.products.index'), $admin);
         $this->assertStringContainsString(route('admin.dashboard'), $admin);
     }
 
@@ -98,7 +100,7 @@ class FooterAndResponsiveTest extends TestCase
         $pages = [
             [null, '/'], [null, '/login'], [null, '/register'],
             [$customer, '/dashboard'], [$customer, '/profile'],
-            [$admin, '/admin'], [$admin, '/admin/users'],
+            [$admin, '/admin'], [$admin, '/admin/users'], [$admin, '/admin/products'], [$admin, '/admin/products/create'],
         ];
 
         foreach ($pages as [$user, $url]) {

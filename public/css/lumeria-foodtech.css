@@ -326,11 +326,13 @@
 .account-section-danger { border-color: var(--bs-danger-border-subtle); }
 
 /* Bidang formulir di kartu putih: batas tegas (kontras 3:1), sama dengan halaman autentikasi. */
-.account-section .form-control {
+.account-section .form-control,
+.account-section .form-select {
     border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
     background-color: var(--lumeria-card);
 }
-.account-section .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
+.account-section .form-control.is-invalid,
+.account-section .form-select.is-invalid { border-color: var(--bs-form-invalid-border-color); }
 .modal-content .form-control {
     border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
 }
@@ -385,6 +387,32 @@
 @media (min-width: 768px) {
     .profile-photo-col { border-left: 1px solid var(--lumeria-border); }
 }
+
+
+/* Kelola produk: miniatur di daftar dan pratinjau foto di form */
+.admin-thumb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: .65rem;
+    background: var(--lumeria-surface-soft);
+}
+.admin-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.product-photo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 160px;
+    height: 160px;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: var(--lumeria-surface-soft);
+    border: 1px solid var(--lumeria-border);
+}
+.product-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
 
 
 /* 8. Prefers-reduced-motion ------------------------------------------------ */

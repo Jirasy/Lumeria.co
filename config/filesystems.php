@@ -30,6 +30,17 @@ return [
 
     'disks' => [
 
+        // Foto produk yang diunggah admin. Disimpan langsung di public/images/products supaya bisa
+        // dipakai asset($product->image) tanpa php artisan storage:link. Isi folder ini tidak di-commit.
+        'products' => [
+            'driver' => 'local',
+            'root' => public_path('images/products'),
+            'url' => env('APP_URL', 'http://localhost').'/images/products',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

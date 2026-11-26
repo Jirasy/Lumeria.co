@@ -1,0 +1,9 @@
+diff a/resources/views/partials/footer.blade.php b/resources/views/partials/footer.blade.php	(rejected hunks)
+@@ -41,6 +41,7 @@
+                         <li><a href="{{ route('dashboard') }}">{{ __('nav.dashboard') }}</a></li>
+                         @if ($user->isAdmin())
+                             <li><a href="{{ route('admin.dashboard') }}">{{ __('foodtech.nav.admin') }}</a></li>
++                            <li><a href="{{ route('admin.products.index') }}">{{ __('products_admin.nav') }}</a></li>
+                             <li><a href="{{ route('admin.users.index') }}">{{ __('users.nav') }}</a></li>
+                         @endif
+                     @endguest

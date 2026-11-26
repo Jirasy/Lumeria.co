@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\LocaleController;
@@ -45,6 +46,7 @@ Route::middleware('auth')->group(function () {
 // ---------- 3. Admin ----------
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::resource('products', AdminProductController::class);
     Route::resource('users', AdminUserController::class);
 });
 

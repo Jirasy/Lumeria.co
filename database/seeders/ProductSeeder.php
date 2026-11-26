@@ -78,10 +78,12 @@ class ProductSeeder extends Seeder
         ];
 
 
-        // updateOrCreate memakai slug sebagai kunci, jadi seeder aman dijalankan
-        // berulang: data yang sudah ada diperbarui, bukan diduplikasi.
+        // firstOrCreate memakai slug sebagai kunci: produk yang belum ada dibuat, yang sudah ada
+        // DIBIARKAN apa adanya. Admin kini mengubah produk lewat panel (Kelola Produk), jadi
+        // menjalankan seeder lagi tidak boleh menimpa harga, deskripsi, atau badge hasil suntingan mereka.
+        // (Produk seed yang sudah dihapus admin akan dibuat ulang.)
         foreach ($products as $data) {
-            Product::updateOrCreate(['slug' => $data['slug']], $data);
+            Product::firstOrCreate(['slug' => $data['slug']], $data);
         }
     }
 }

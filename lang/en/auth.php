@@ -27,4 +27,24 @@ return [
     'have_account'      => 'Already have an account?',
     'back_home'         => 'Back to Home',
     'browse_products'   => 'Browse products',
+
+    // Brand panel and form details
+    'brand_sub'         => 'Sweet treats, made fresh',
+    'aside_title'       => 'Soft little treats that brighten your day.',
+    'aside_note'        => 'Made daily in the Lumeria kitchen',
+    'perk_order'        => 'Order in just a few minutes',
+    'perk_cart'         => 'Your cart saved to your account',
+    'perk_track'        => 'Follow every order status',
+
+    'mode_label'        => 'Choose log in or register',
+    'password_show'     => 'Show password',
+    'password_hide'     => 'Hide password',
+    'strength_label'    => 'Password strength',
+    'strength_empty'    => 'Not entered yet',
+    'strength_weak'     => 'Weak',
+    'strength_fair'     => 'Fair',
+    'strength_good'     => 'Strong',
+    'strength_strong'   => 'Very strong',
+    'match_ok'          => 'Passwords match',
+    'match_bad'         => 'Passwords do not match',
 ];

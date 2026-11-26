@@ -13,6 +13,8 @@
      6. Halaman autentikasi (masuk, daftar, lupa kata sandi)
      7. Area akun (dashboard dan profil)
      8. Prefers-reduced-motion
+     9. Beranda (hero, fakta singkat, tentang, filosofi)
+    10. Halaman pesanan (keranjang, checkout, riwayat, detail)
    ========================================================================== */
 
 
@@ -265,48 +267,400 @@
 
 
 /* 6. Halaman autentikasi (masuk, daftar, lupa kata sandi) ------------------ */
-/* Latar hangat yang sama dengan hero beranda; kartu putih dengan garis aksen kuning logo. */
+/* Dua panel: panel merek navy di kiri, formulir di kanan.
+   Di bawah 992px panel merek menyusut menjadi pita ringkas di atas formulir,
+   jadi tidak ada gulir mendatar dan formulir tetap menjadi fokus utama. */
 .auth-page {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, var(--lumeria-surface-soft) 0%, var(--lumeria-surface) 65%);
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--lumeria-surface);
 }
-.auth-page::before {
+.auth-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* ---- Panel merek ---- */
+.auth-aside {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: .9rem 1rem 1.15rem;
+    border-radius: 0 0 1.35rem 1.35rem;
+    color: var(--lumeria-on-primary);
+    background:
+        radial-gradient(115% 100% at 0% 0%, color-mix(in srgb, var(--lumeria-dark) 80%, #fff) 0%, transparent 62%),
+        linear-gradient(155deg, var(--lumeria) 0%, var(--lumeria-darker) 100%);
+}
+/* Cahaya emas lembut di sudut kanan atas */
+.auth-aside::before {
     content: "";
     position: absolute;
-    width: 28rem;
-    height: 28rem;
-    right: -8rem;
-    top: -10rem;
+    top: -9rem;
+    right: -9rem;
+    width: 22rem;
+    height: 22rem;
     border-radius: 50%;
-    background: radial-gradient(circle, var(--lumeria-tint), transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--lumeria-accent) 60%, transparent) 0%, transparent 68%);
+    opacity: .55;
+    pointer-events: none;
+    z-index: -1;
+}
+/* Titik halus sebagai tekstur, bukan gambar */
+.auth-aside::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(color-mix(in srgb, #fff 22%, transparent) 1px, transparent 1px);
+    background-size: 18px 18px;
+    opacity: .22;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.auth-aside-top {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+.auth-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .4rem .8rem;
+    border: 1px solid color-mix(in srgb, #fff 32%, transparent);
+    border-radius: 50rem;
+    color: var(--lumeria-on-primary);
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.auth-home-link:hover,
+.auth-home-link:focus-visible {
+    color: #fff;
+    background: color-mix(in srgb, #fff 16%, transparent);
+    border-color: color-mix(in srgb, #fff 55%, transparent);
+}
+
+/* Pengalih bahasa di atas latar navy */
+.auth-aside .lang-switch .btn {
+    --bs-btn-color: #fff;
+    --bs-btn-border-color: color-mix(in srgb, #fff 45%, transparent);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: color-mix(in srgb, #fff 16%, transparent);
+    --bs-btn-hover-border-color: color-mix(in srgb, #fff 65%, transparent);
+    --bs-btn-active-color: var(--lumeria);
+    --bs-btn-active-bg: #fff;
+    --bs-btn-active-border-color: #fff;
+    font-weight: 600;
+}
+
+.auth-aside-body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: .85rem;
+}
+
+.auth-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .8rem;
+    color: inherit;
+    text-decoration: none;
+}
+.auth-brand:hover { color: inherit; }
+.auth-brand-mark {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #fff;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #fff 22%, transparent);
+}
+.auth-brand-text { display: flex; flex-direction: column; }
+.auth-brand-name {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -.01em;
+}
+.auth-brand-sub {
+    margin-top: .15rem;
+    font-size: .72rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, #fff 74%, transparent);
+}
+
+/* Judul dan daftar keunggulan hanya tampil di layar lebar */
+.auth-aside-title {
+    display: none;
+    margin: .35rem 0 0;
+    max-width: 24ch;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.2rem;
+    line-height: 1.15;
+    color: #fff;
+}
+.auth-aside-lead {
+    display: none;
+    max-width: 32ch;
+    margin: 0;
+    font-size: 1rem;
+    color: color-mix(in srgb, #fff 82%, transparent);
+}
+
+.auth-perks {
+    display: none;
+    gap: .55rem;
+    margin: .5rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+.auth-perk {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: .93rem;
+    color: color-mix(in srgb, #fff 88%, transparent);
+}
+.auth-perk-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 50%;
+    color: var(--lumeria-accent);
+    background: color-mix(in srgb, #fff 16%, transparent);
+}
+
+.auth-aside-art {
+    display: none;
+    position: absolute;
+    right: -2.5rem;
+    bottom: -1.5rem;
+    z-index: 1;
+    width: 13rem;
+    height: 13rem;
     pointer-events: none;
 }
-.auth-page > header,
-.auth-page > main,
-.auth-page > footer { position: relative; }   /* di atas cahaya latar */
+.auth-ball {
+    position: absolute;
+    height: auto;
+    filter: drop-shadow(0 .6rem 1.1rem rgba(0, 0, 0, .35));
+}
+.auth-ball-1 { left: 0; top: 0; width: 47%; }
+.auth-ball-2 { right: 0; top: 24%; width: 34%; }
+.auth-ball-3 { left: 26%; bottom: 0; width: 40%; }
 
-/* Batas bidang input dan kotak centang dibuat lebih tegas agar terlihat jelas di kartu putih (kontras 3:1). */
+.auth-aside-note {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    font-size: .76rem;
+    color: color-mix(in srgb, #fff 68%, transparent);
+}
+
+/* ---- Panel formulir ---- */
+.auth-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+    background: linear-gradient(170deg, var(--lumeria-surface-soft) 0%, var(--lumeria-surface) 55%);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 27rem;
+    padding: 1.35rem 1.15rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 1.35rem;
+    background: var(--lumeria-card);
+    box-shadow: 0 1.5rem 3rem -1.5rem var(--lumeria-shadow);
+}
+
+/* Pil Masuk / Daftar */
+.auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .25rem;
+    margin-bottom: 1.35rem;
+    padding: .28rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 50rem;
+    background: var(--lumeria-surface-soft);
+}
+.auth-tab {
+    padding: .5rem .75rem;
+    border-radius: 50rem;
+    color: var(--lumeria-muted);
+    font-size: .92rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+.auth-tab:hover { color: var(--lumeria-ink); background: color-mix(in srgb, var(--lumeria-card) 70%, transparent); }
+.auth-tab.is-active {
+    color: var(--lumeria-on-primary);
+    background: var(--lumeria);
+    box-shadow: 0 .25rem .75rem var(--lumeria-shadow);
+}
+
+.auth-title {
+    margin: 0 0 .35rem;
+    font-size: clamp(1.4rem, 4.2vw, 1.75rem);
+    line-height: 1.2;
+}
+.auth-subtitle { margin: 0 0 1.35rem; color: var(--lumeria-muted); font-size: .95rem; }
+
+/* Bidang formulir di kartu putih: batas tegas (kontras 3:1) dan sudut lembut */
+.auth-card .form-label { margin-bottom: .35rem; font-size: .9rem; }
 .auth-card .form-control,
 .auth-card .form-check-input {
     --auth-field-border: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
     border-color: var(--auth-field-border);
     background-color: var(--lumeria-card);
 }
+.auth-card .form-control { border-radius: .85rem; }
+.auth-card .form-control-lg { padding: .7rem .95rem; font-size: 1rem; }
 .auth-card .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
 .auth-card .form-check-input:checked { background-color: var(--lumeria); border-color: var(--lumeria); }
 
-.auth-brand-name {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(1.6rem, 5vw, 2rem);
-    letter-spacing: -.01em;
+/* Cincin fokus tunggal: box-shadow menggantikan outline global agar tidak dobel saat kolom difokuskan */
+.auth-card .form-control:focus,
+.auth-card .form-control:focus-visible,
+.auth-pw-toggle:focus-visible { outline: none; }
+.auth-card .form-control:focus { border-color: var(--lumeria); box-shadow: 0 0 0 .22rem var(--lumeria-ring); }
+.auth-pw-toggle:focus-visible { box-shadow: 0 0 0 .22rem var(--lumeria-ring); }
+.auth-card .form-text { font-size: .82rem; color: var(--lumeria-muted); }
+.auth-card .invalid-feedback { font-size: .82rem; }
+
+/* Tombol tampilkan / sembunyikan kata sandi */
+.auth-input-group > .form-control { border-start-end-radius: 0; border-end-end-radius: 0; }
+.auth-pw-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: .85rem;
+    border: 1px solid var(--auth-field-border, color-mix(in srgb, var(--lumeria-muted) 80%, #fff));
+    border-inline-start: 0;
+    border-start-end-radius: .85rem;
+    border-end-end-radius: .85rem;
+    color: var(--lumeria-muted);
+    background: var(--lumeria-card);
+}
+.auth-pw-toggle:hover,
+.auth-pw-toggle:focus-visible { color: var(--lumeria); background: var(--lumeria-surface-soft); }
+.auth-pw-toggle[aria-pressed="true"] { color: var(--lumeria); }
+.auth-pw-icon[data-icon-hide] { display: none; }
+.auth-pw-toggle[aria-pressed="true"] .auth-pw-icon[data-icon-show] { display: none; }
+.auth-pw-toggle[aria-pressed="true"] .auth-pw-icon[data-icon-hide] { display: inline-flex; }
+
+.auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem .85rem;
+    margin-bottom: 1.25rem;
+    font-size: .9rem;
+}
+.auth-card .form-check-label { cursor: pointer; }
+.auth-link { font-weight: 600; text-decoration: none; }
+.auth-link:hover { text-decoration: underline; }
+
+.auth-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    width: 100%;
+    padding: .8rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.auth-submit .ft-icon { transition: transform .15s ease; }
+.auth-submit:hover .ft-icon { transform: translateX(2px); }
+
+.auth-alt { margin-top: 1.25rem; text-align: center; font-size: .92rem; color: var(--lumeria-muted); }
+.auth-alt a { font-weight: 600; }
+.auth-browse { margin-top: .25rem; font-size: .9rem; text-align: center; }
+.auth-footer { font-size: .78rem; color: var(--lumeria-muted); text-align: center; }
+
+/* Kekuatan kata sandi (daftar akun) */
+.pw-strength { margin: -.35rem 0 .9rem; }
+.pw-strength-track { display: flex; gap: .25rem; }
+.pw-strength-bar {
+    flex: 1 1 0;
+    height: .3rem;
+    border-radius: 50rem;
+    background: var(--lumeria-border);
+    transition: background-color .15s ease;
+}
+.pw-strength-text { margin: .35rem 0 0; font-size: .8rem; color: var(--lumeria-muted); }
+.pw-strength[data-level="1"] .pw-strength-bar { background: #b23a2e; }
+.pw-strength[data-level="2"] .pw-strength-bar:nth-child(-n + 2) { background: #b4761e; }
+.pw-strength[data-level="3"] .pw-strength-bar:nth-child(-n + 3) { background: #4b7a2f; }
+.pw-strength[data-level="4"] .pw-strength-bar { background: #1e6b45; }
+
+/* Kecocokan konfirmasi kata sandi */
+.pw-match { margin: -.45rem 0 .9rem; font-size: .82rem; font-weight: 600; }
+.pw-match:empty { display: none; }
+.pw-match[data-state="ok"] { color: #1e6b45; }
+.pw-match[data-state="bad"] { color: #b23a2e; }
+
+@media (min-width: 576px) {
+    .auth-card { padding: 1.9rem 1.75rem; }
+    .auth-aside { padding: 1.1rem 1.5rem 1.35rem; }
+    .auth-aside-lead { display: block; }
 }
 
-.auth-card {
-    --bs-card-border-radius: 1.5rem;
-    border: 1px solid var(--lumeria-border);
-    border-top: .35rem solid var(--lumeria-accent);
-    box-shadow: 0 .75rem 2rem var(--lumeria-shadow);
+/* ---- Layar lebar: dua panel penuh ---- */
+@media (min-width: 992px) {
+    .auth-shell { grid-template-columns: minmax(0, 5fr) minmax(0, 6.5fr); }
+    .auth-aside {
+        position: sticky;
+        top: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 1.75rem 2.25rem 2rem;
+        border-radius: 0;
+    }
+    .auth-aside-body { margin-block: auto; max-width: 26rem; }
+    .auth-aside-title { display: block; font-size: clamp(1.9rem, 2.4vw, 2.4rem); }
+    .auth-aside-lead { display: block; }
+    .auth-perks { display: grid; }
+    .auth-aside-art { display: block; width: 16rem; height: 15rem; right: -2.5rem; bottom: -1.25rem; }
+    .auth-main { padding: 2.5rem 2rem; }
+    .auth-card { max-width: 27.5rem; }
+}
+
+@media (min-width: 1200px) {
+    .auth-aside { padding-inline: 3rem; }
+    .auth-card { padding: 2.25rem 2.1rem; }
+}
+
+/* Layar pendek (telepon mendatar): ringkas panel merek agar formulir tetap terlihat */
+@media (max-height: 30rem) {
+    .auth-aside { gap: .6rem; padding-block: .6rem .7rem; }
+    .auth-aside-note { display: none; }
 }
 
 
@@ -425,4 +779,613 @@
     .account-card { transition: none; }
     .account-card:hover,
     .account-card:focus-within { transform: none; }
+    .auth-submit .ft-icon,
+    .pw-strength-bar { transition: none; }
+    .home-hero-card,
+    .pay-option,
+    .product-card { transition: none; }
+    .home-hero-card:hover { transform: none; }
+}
+
+
+/* 9. Beranda --------------------------------------------------------------- */
+.home-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 2.25rem 0 0;
+    background:
+        radial-gradient(120% 90% at 88% 0%, var(--lumeria-tint) 0%, transparent 55%),
+        linear-gradient(160deg, var(--lumeria-surface-soft) 0%, var(--lumeria-surface) 62%);
+}
+/* Titik halus sebagai tekstur, bukan gambar */
+.home-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(color-mix(in srgb, var(--lumeria-ink) 7%, transparent) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: .5;
+    pointer-events: none;
+}
+
+.home-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin: 0 0 .85rem;
+    padding: .3rem .8rem;
+    border: 1px solid color-mix(in srgb, var(--lumeria-gold) 60%, transparent);
+    border-radius: 50rem;
+    background: color-mix(in srgb, var(--lumeria-card) 72%, transparent);
+    color: var(--lumeria-dark);
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.home-eyebrow::before {
+    content: "";
+    width: .4rem;
+    height: .4rem;
+    border-radius: 50%;
+    background: var(--lumeria-accent);
+}
+
+.home-hero-title {
+    margin: 0 0 .85rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2.75rem, 8.5vw, 4.5rem);
+    font-weight: 700;
+    line-height: .98;
+    letter-spacing: -.03em;
+}
+.home-hero-lead {
+    max-width: 30rem;
+    margin: 0 0 .65rem;
+    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+    color: var(--lumeria-muted);
+}
+.home-hero-tagline {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+    font-style: italic;
+    color: var(--lumeria-dark);
+}
+
+.home-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem 1.35rem;
+    margin: 1.6rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: .92rem;
+    color: var(--lumeria-muted);
+}
+.home-points li { display: inline-flex; align-items: center; gap: .5rem; }
+.home-point-mark {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--lumeria-accent) 30%, var(--lumeria-card));
+    color: var(--lumeria-ink);
+}
+
+/* Hero memakai kelas .hero-art / .hero-ball dari lumeria.css; di sini hanya
+   penyempurnaan ukuran, posisi, dan bayangan agar komposisinya lebih hidup. */
+.home-hero .hero-art {
+    width: min(26rem, 100%);
+    aspect-ratio: 1 / 1;
+    margin-inline: auto;
+}
+.home-hero .hero-blob {
+    inset: 6%;
+    background: radial-gradient(circle at 32% 28%, #fff 0%,
+                color-mix(in srgb, var(--lumeria-accent) 48%, #fff) 62%, transparent 78%);
+    opacity: .85;
+}
+.home-hero .hero-ball {
+    filter: drop-shadow(0 .9rem 1.1rem color-mix(in srgb, var(--lumeria-ink) 24%, transparent));
+}
+.home-hero .hero-ball-1 { left: 6%; top: 13%; width: 47%; }
+.home-hero .hero-ball-2 { right: 5%; top: 3%; width: 34%; }
+.home-hero .hero-ball-3 { left: 20%; bottom: 7%; width: 40%; }
+
+.home-hero-card {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+    min-width: 9.5rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 1rem;
+    background: var(--lumeria-card);
+    box-shadow: 0 .9rem 2rem -1rem var(--lumeria-shadow);
+    color: var(--lumeria-ink);
+    text-decoration: none;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.home-hero-card:hover {
+    color: var(--lumeria-ink);
+    transform: translateY(-2px);
+    box-shadow: 0 1.2rem 2.2rem -1rem var(--lumeria-shadow);
+}
+.home-hero-card-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--lumeria-muted);
+}
+.home-hero-card-name { font-weight: 700; padding-right: 1.25rem; }
+.home-hero-card-price { font-size: .9rem; color: var(--lumeria-muted); }
+.home-hero-card-go { position: absolute; top: .7rem; right: .7rem; color: var(--lumeria-dark); }
+
+.home-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 2.5rem 0 0;
+    padding: 1.1rem 0 1.25rem;
+    list-style: none;
+    border-top: 1px solid color-mix(in srgb, var(--lumeria-gold) 45%, transparent);
+}
+.home-facts li { display: flex; flex-direction: column; gap: .05rem; }
+.home-facts strong {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.5rem;
+    line-height: 1.1;
+}
+.home-facts span { font-size: .85rem; color: var(--lumeria-muted); }
+
+.home-section { padding: 3rem 0 0; }
+.home-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.home-section-title {
+    margin: 0 0 .4rem;
+    font-size: clamp(1.65rem, 3.6vw, 2.25rem);
+    line-height: 1.1;
+}
+.home-section-sub { max-width: 42rem; margin: 0; color: var(--lumeria-muted); }
+.home-section-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.home-section-link:hover { text-decoration: underline; text-underline-offset: .25em; }
+
+.home-about {
+    margin-top: 3.5rem;
+    padding: 3rem 0;
+    border-top: 1px solid var(--lumeria-border);
+    border-bottom: 1px solid var(--lumeria-border);
+    background: var(--lumeria-card);
+}
+.home-about-text { max-width: 34rem; color: var(--lumeria-muted); }
+
+.home-value-card {
+    height: 100%;
+    padding: 1.5rem 1.4rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 1.25rem;
+    background: var(--lumeria-surface);
+}
+.home-value-card-accent {
+    background: var(--lumeria-surface-soft);
+    border-color: color-mix(in srgb, var(--lumeria-gold) 55%, transparent);
+}
+.home-value-title {
+    margin: 0 0 .75rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.35rem;
+    letter-spacing: -.01em;
+}
+
+.home-mission {
+    counter-reset: mission;
+    display: grid;
+    gap: .65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.home-mission li {
+    counter-increment: mission;
+    position: relative;
+    padding-left: 2rem;
+    font-size: .95rem;
+    color: var(--lumeria-muted);
+}
+.home-mission li::before {
+    content: counter(mission);
+    position: absolute;
+    left: 0;
+    top: .05rem;
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: var(--lumeria);
+    color: var(--lumeria-on-primary);
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.home-philosophy {
+    padding: 3.5rem 0;
+    background:
+        radial-gradient(90% 120% at 85% 0%, color-mix(in srgb, var(--lumeria-dark) 70%, transparent) 0%, transparent 60%),
+        linear-gradient(155deg, var(--lumeria) 0%, var(--lumeria-darker) 100%);
+    color: var(--lumeria-on-primary);
+}
+.home-philosophy-inner { max-width: 52rem; margin-inline: auto; text-align: center; }
+.home-eyebrow-light {
+    background: color-mix(in srgb, #fff 12%, transparent);
+    border-color: color-mix(in srgb, #fff 32%, transparent);
+    color: #fff;
+}
+.home-philosophy-mark {
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 4px color-mix(in srgb, #fff 20%, transparent);
+}
+.home-philosophy-title {
+    margin: 0 0 .85rem;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: #fff;
+}
+.home-philosophy-text {
+    margin: 0 auto;
+    max-width: 42rem;
+    font-size: clamp(1rem, 2.2vw, 1.15rem);
+    color: color-mix(in srgb, #fff 84%, transparent);
+}
+
+@media (min-width: 768px) {
+    .home-hero { padding-top: 3rem; }
+    .home-about { padding: 3.5rem 0; }
+}
+@media (min-width: 992px) {
+    .home-hero { padding-top: 4rem; }
+    .home-hero .hero-art { width: min(28rem, 100%); }
+    .home-hero-card { right: -0.5rem; bottom: 6%; }
+}
+@media (max-width: 575.98px) {
+    .home-hero .hero-art { width: min(19rem, 100%); }
+    .home-hero-card { min-width: 8.5rem; padding: .6rem .8rem; }
+    .home-facts { gap: .5rem; }
+    .home-facts strong { font-size: 1.25rem; }
+    .home-facts span { font-size: .78rem; }
+    .home-points { gap: .45rem 1rem; font-size: .88rem; }
+}
+
+
+/* 10. Halaman pesanan ------------------------------------------------------ */
+.order-page { padding: 2rem 0 3rem; }
+
+.page-head { margin-bottom: 1.75rem; }
+.page-eyebrow {
+    margin: 0 0 .5rem;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--lumeria-muted);
+}
+.page-title {
+    margin: 0 0 .45rem;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    line-height: 1.1;
+}
+.page-sub { max-width: 44rem; margin: 0; color: var(--lumeria-muted); }
+.page-head-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+}
+.page-head-row .page-sub { margin-bottom: 0; }
+.page-back {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    margin-bottom: .75rem;
+    font-size: .88rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.page-back:hover { text-decoration: underline; text-underline-offset: .25em; }
+
+.order-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: 1.35rem 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: order-step;
+}
+.order-step {
+    counter-increment: order-step;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem .85rem .35rem .35rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 50rem;
+    background: var(--lumeria-card);
+    color: var(--lumeria-muted);
+    font-size: .84rem;
+    font-weight: 600;
+}
+.order-step::before {
+    content: counter(order-step);
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: var(--lumeria-surface);
+    color: var(--lumeria-muted);
+    font-size: .75rem;
+    font-weight: 700;
+}
+.order-step.is-done {
+    border-color: color-mix(in srgb, var(--lumeria-ink) 28%, transparent);
+    color: var(--lumeria-ink);
+}
+.order-step.is-done::before { background: var(--lumeria); color: var(--lumeria-on-primary); }
+.order-step.is-current {
+    border-color: var(--lumeria);
+    color: var(--lumeria-ink);
+    box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--lumeria-accent) 32%, transparent);
+}
+.order-step.is-current::before { background: var(--lumeria-accent); color: var(--lumeria-on-accent); }
+
+.order-card {
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 1.25rem;
+    background: var(--lumeria-card);
+    box-shadow: 0 .35rem 1.25rem -.75rem var(--lumeria-shadow);
+    overflow: hidden;
+}
+.order-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .35rem 1rem;
+    padding: 1.05rem 1.25rem;
+    border-bottom: 1px solid var(--lumeria-border);
+}
+.order-card-title {
+    margin: 0;
+    font-family: var(--bs-body-font-family);
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+.order-card-hint {
+    width: 100%;
+    margin: 0;
+    font-size: .85rem;
+    color: var(--lumeria-muted);
+}
+.order-card-body { padding: 1.25rem; }
+.order-card .form-control { border-radius: .8rem; }
+.order-card .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
+.order-card .form-label { font-weight: 600; }
+
+.order-chip {
+    padding: .2rem .65rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 50rem;
+    background: var(--lumeria-surface);
+    color: var(--lumeria-muted);
+    font-size: .78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.order-line { display: flex; align-items: center; gap: .75rem; }
+.order-thumb {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    overflow: hidden;
+    border-radius: .7rem;
+    background: var(--lumeria-surface-soft);
+}
+.order-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.order-empty { padding: 1.25rem .5rem 1.5rem; text-align: center; }
+.order-empty .product-art {
+    width: 7.5rem;
+    height: 7.5rem;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+}
+.order-empty-title {
+    margin: 0 0 .35rem;
+    font-family: var(--bs-body-font-family);
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.order-guest-note { border-left: .35rem solid var(--lumeria-accent); }
+.order-guest-body { padding: 1.1rem 1.25rem; }
+
+.pay-fieldset { margin: 0; padding: 0; border: 0; }
+.pay-fieldset legend { float: none; width: auto; }
+.pay-options { display: grid; gap: .6rem; }
+.pay-option {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+    padding: .85rem .9rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: .9rem;
+    background: var(--lumeria-surface);
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.pay-option:hover { border-color: color-mix(in srgb, var(--lumeria-ink) 38%, transparent); }
+.pay-option:has(input:checked) {
+    border-color: var(--lumeria);
+    background: var(--lumeria-surface-soft);
+    box-shadow: inset 0 0 0 1px var(--lumeria);
+}
+.pay-option .form-check-input { flex: 0 0 auto; margin-top: .15rem; }
+.pay-option-body { display: flex; flex-direction: column; gap: .1rem; }
+.pay-option-title { font-weight: 700; }
+.pay-option-text { font-size: .82rem; color: var(--lumeria-muted); }
+
+.order-paylater {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: .9rem;
+    background: var(--lumeria-surface);
+}
+
+.order-submit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1.25rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--lumeria-border);
+}
+.order-submit-total { display: flex; flex-direction: column; }
+.order-submit-total span {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--lumeria-muted);
+}
+.order-submit-total strong {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+.order-submit .btn { display: inline-flex; align-items: center; gap: .5rem; }
+
+.order-aside { display: block; }
+.order-summary-rows { display: grid; gap: .55rem; margin: 0; }
+.order-summary-row { display: flex; justify-content: space-between; gap: 1rem; margin: 0; font-size: .95rem; }
+.order-summary-row dt { margin: 0; font-weight: 500; color: var(--lumeria-muted); }
+.order-summary-row dd { margin: 0; font-weight: 600; text-align: right; }
+.order-summary-total { padding-top: .65rem; border-top: 1px solid var(--lumeria-border); }
+.order-summary-total dt { color: var(--lumeria-ink); font-weight: 700; }
+.order-summary-total dd {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.35rem;
+}
+
+.order-formula { margin: 0 0 .75rem; padding-left: 1.15rem; font-size: .92rem; color: var(--lumeria-muted); }
+
+.order-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .75rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 50rem;
+    background: var(--lumeria-surface);
+    color: var(--lumeria-ink);
+    font-size: .8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.order-status[data-status="pending"] {
+    border-color: color-mix(in srgb, var(--lumeria-accent) 72%, transparent);
+    background: color-mix(in srgb, var(--lumeria-accent) 24%, #fff);
+}
+
+.order-history-table td, .order-history-table th { padding-block: .85rem; }
+
+.order-detail { max-width: 62rem; }
+.order-detail-date { margin: .35rem 0 0; font-size: .88rem; color: var(--lumeria-muted); }
+.order-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+}
+.order-detail-fact {
+    padding: .85rem 1rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: 1rem;
+    background: var(--lumeria-card);
+}
+.order-detail-fact span {
+    display: block;
+    margin-bottom: .15rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--lumeria-muted);
+}
+.order-detail-fact strong { font-size: 1.05rem; }
+
+.order-schedule { display: grid; gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.order-schedule li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .55rem .8rem;
+    border: 1px solid var(--lumeria-border);
+    border-radius: .7rem;
+    background: var(--lumeria-surface);
+    font-size: .92rem;
+}
+
+@media (min-width: 576px) {
+    .pay-options { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 768px) {
+    .order-page { padding: 2.75rem 0 3.5rem; }
+    .order-card-head { padding: 1.15rem 1.5rem; }
+    .order-card-body { padding: 1.5rem; }
+}
+@media (min-width: 992px) {
+    .order-aside { position: sticky; top: 5.75rem; }
+}
+@media (max-width: 575.98px) {
+    .order-steps { gap: .3rem; }
+    .order-step { gap: .35rem; padding: .28rem .55rem .28rem .28rem; font-size: .75rem; }
+    .order-step::before { width: 1.35rem; height: 1.35rem; font-size: .7rem; }
+    .order-submit .btn { width: 100%; justify-content: center; }
+    .order-card-body { padding: 1rem; }
 }

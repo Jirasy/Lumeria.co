@@ -9,6 +9,7 @@
         lg    true (bawaan) untuk input besar; false untuk input ukuran biasa
         horizontal  true untuk tata letak label di kiri, input di kanan (halaman profil)
         id    bila beda dari name (mis. dua form di satu halaman)
+        reveal  true untuk kolom kata sandi dengan tombol "tampilkan kata sandi"
 
     - Kata sandi tidak pernah diisi ulang (type="password" selalu kosong).
     - Saat ada error validasi di bag mana pun, hanya kolom error pertama dari bag ini yang mendapat fokus;
@@ -25,9 +26,11 @@
     'lg'       => true,
     'horizontal' => false,
     'required' => true,
+    'reveal'   => false,
 ])
 @php
     $id          = $id ?: $name;
+    $reveal      = $reveal && $type === 'password';
     $bagErrors   = $errors->getBag($bag);
     $hasError    = $bagErrors->has($name);
     $anyErrors   = collect($errors->getBags())->contains(fn ($b) => $b->any());
@@ -43,6 +46,9 @@
 <div class="mb-3">
     <label for="{{ $id }}" class="form-label fw-semibold">{{ $label }}</label>
 @endif
+    @if ($reveal)
+    <div class="input-group auth-input-group{{ $hasError ? ' has-validation' : '' }}">
+    @endif
     <input
         id="{{ $id }}"
         name="{{ $name }}"
@@ -54,15 +60,21 @@
         @if ($hasError) aria-invalid="true" @endif
         @if ($describedBy !== '') aria-describedby="{{ $describedBy }}" @endif
     >
+    @if ($reveal)
+        <button type="button" class="btn auth-pw-toggle" data-password-toggle data-target="{{ $id }}"
+                aria-controls="{{ $id }}" aria-pressed="false"
+                aria-label="{{ __('auth.password_show') }}" title="{{ __('auth.password_show') }}"
+                data-show-label="{{ __('auth.password_show') }}" data-hide-label="{{ __('auth.password_hide') }}">
+            <span class="auth-pw-icon" data-icon-show><x-icon name="eye" :size="18" /></span>
+            <span class="auth-pw-icon" data-icon-hide><x-icon name="eye-off" :size="18" /></span>
+        </button>
+    @endif
+    <x-auth.error :name="$name" :id="$id" :bag="$bag" />
+    @if ($reveal)
+    </div>
+    @endif
     @if ($hint)
         <div id="{{ $id }}-hint" class="form-text">{{ $hint }}</div>
-    @endif
-    @if ($hasError)
-        <div id="{{ $id }}-error" class="invalid-feedback">
-            @foreach ($bagErrors->get($name) as $message)
-                <div>{{ $message }}</div>
-            @endforeach
-        </div>
     @endif
 @if ($horizontal)
     </div>

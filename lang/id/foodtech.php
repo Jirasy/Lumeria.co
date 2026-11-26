@@ -89,6 +89,7 @@ return [
     'history' => [
         'title'    => 'Pesanan Saya',
         'subtitle' => 'Riwayat dan status pesananmu.',
+        'count'    => ':count pesanan|:count pesanan',
         'empty'    => 'Belum ada pesanan.',
         'order'    => 'Pesanan',
         'date'     => 'Tanggal',

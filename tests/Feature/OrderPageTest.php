@@ -101,6 +101,7 @@ class OrderPageTest extends TestCase
     public function test_order_page_is_available_in_english(): void
     {
         $this->actingAs(User::factory()->create())
+            ->disableCookieEncryption()
             ->withCookie('locale', 'en')
             ->get('/order')
             ->assertOk()
@@ -119,7 +120,6 @@ class OrderPageTest extends TestCase
             ->assertSee('Rp 12.720')
             ->assertSee('Cicilan ke-3');
     }
-
 
     public function test_guest_cannot_open_an_order_even_with_a_stale_session_marker(): void
     {

@@ -17,4 +17,24 @@ return [
     'have_account'      => 'Sudah punya akun?',
     'back_home'         => 'Kembali ke Beranda',
     'browse_products'   => 'Lihat produk',
+
+    // Panel merek dan detail formulir
+    'brand_sub'         => 'Camilan manis, dibuat segar',
+    'aside_title'       => 'Camilan lembut yang bikin harimu lebih ringan.',
+    'aside_note'        => 'Dibuat harian di dapur Lumeria',
+    'perk_order'        => 'Pesan dalam hitungan menit',
+    'perk_cart'         => 'Keranjang tersimpan di akunmu',
+    'perk_track'        => 'Pantau status pesananmu',
+
+    'mode_label'        => 'Pilih masuk atau daftar',
+    'password_show'     => 'Tampilkan kata sandi',
+    'password_hide'     => 'Sembunyikan kata sandi',
+    'strength_label'    => 'Kekuatan kata sandi',
+    'strength_empty'    => 'Belum diisi',
+    'strength_weak'     => 'Lemah',
+    'strength_fair'     => 'Cukup',
+    'strength_good'     => 'Kuat',
+    'strength_strong'   => 'Sangat kuat',
+    'match_ok'          => 'Kata sandi sudah cocok',
+    'match_bad'         => 'Kata sandi belum cocok',
 ];

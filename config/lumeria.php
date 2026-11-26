@@ -2,6 +2,11 @@
 
 
 return [
+    // URL publik tetap, dipakai saat aplikasi di belakang proxy yang menulis ulang
+    // header Host (mis. preview port). Kosongkan di produksi agar Laravel mengikuti
+    // host permintaan seperti biasa.
+    'public_url' => env('LUMERIA_PUBLIC_URL'),
+
     'paylater' => [
         'tenors'      => [1, 2, 3],
         'margin_rate' => 2.0, // persen per bulan, flat
@@ -18,11 +23,15 @@ return [
         'instagram' => env('LUMERIA_INSTAGRAM'), // '@username' atau URL profil
     ],
 
-    // Akun admin awal untuk seeder (php artisan db:seed). Dua-duanya wajib diisi agar akun dibuat.
+    // Akun admin untuk seeder (php artisan db:seed).
+    //  - AdminSeeder membuat 4 admin tim (Sanaya, Aliful, Jimny, Alfatih) dengan email <key>@<email_domain>.
+    //    Bila LUMERIA_ADMIN_PASSWORD kosong, kata sandi acak dibuat dan ditampilkan SEKALI di terminal.
+    //  - Admin tambahan tunggal dibuat DatabaseSeeder bila email dan password di bawah diisi.
     'admin' => [
-        'name'     => env('LUMERIA_ADMIN_NAME', 'Admin Lumeria'),
-        'email'    => env('LUMERIA_ADMIN_EMAIL'),
-        'password' => env('LUMERIA_ADMIN_PASSWORD'),
+        'name'         => env('LUMERIA_ADMIN_NAME', 'Admin Lumeria'),
+        'email'        => env('LUMERIA_ADMIN_EMAIL'),
+        'password'     => env('LUMERIA_ADMIN_PASSWORD'),
+        'email_domain' => env('LUMERIA_ADMIN_EMAIL_DOMAIN', 'lumeria.test'),
     ],
 
 
@@ -54,7 +63,7 @@ return [
         [
             'key' => 'jimny', 'name' => 'Jimny Al Ramadhan Syahnendi',
             'class' => null, 'hobby' => null, 'motto' => null,
-            'photo' => null, 'whatsapp' => null, 'instagram' => null, 'portfolio' => null,
+            'photo' => null, 'whatsapp' => '+62 895-7082-91000', 'instagram' => null, 'portfolio' => null,
         ],
         [
             'key' => 'alfatih', 'name' => 'Alfatih Mahesa Tora Suwigyo',

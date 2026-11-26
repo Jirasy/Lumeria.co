@@ -19,6 +19,7 @@ class PageController extends Controller
         return view('pages.home', [
             'signatureProducts' => $catalog->where('is_signature', true)->values(),
             'catalog'           => $catalog, // untuk carousel semua produk
+            'featured'          => $catalog->where('category', 'lumer_lainnya')->values(),
         ]);
     }
 

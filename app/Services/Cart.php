@@ -50,12 +50,20 @@ class Cart
 
     public function clear(): void
     {
+        if (! auth()->check()) {
+            return;
+        }
+
         session()->forget(self::KEY);
     }
 
     /** Harga selalu diambil dari database, tidak pernah dari request. */
     public function items(): Collection
     {
+        if (! auth()->check()) {
+            return collect();
+        }
+
         $raw = $this->raw();
 
         if (! $raw) {
@@ -80,12 +88,20 @@ class Cart
 
     public function subtotal(): int
     {
+        if (! auth()->check()) {
+            return 0;
+        }
+
         return (int) $this->items()->sum('line_total');
     }
 
     /** Untuk badge navbar: murah, tanpa query. */
     public function count(): int
     {
+        if (! auth()->check()) {
+            return 0;
+        }
+
         return array_sum($this->raw());
     }
 

@@ -1,11 +1,11 @@
 <?php
 
-
+use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\ForcePublicUrl;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\EnsureUserIsAdmin;
-use App\Http\Middleware\SetLocale;
 
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -15,13 +15,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-    $middleware->web(append: [
-        SetLocale::class,
-    ]);
+        // Situs berjalan di belakang proxy (preview lokal, hosting, atau CDN).
+        // Tanpa ini, asset() dan redirect memakai alamat internal proxy, bukan host publik.
+        $middleware->trustProxies(at: '*');
 
-    $middleware->alias([
-        'admin' => EnsureUserIsAdmin::class,
-    ]);
+        $middleware->web(append: [
+            ForcePublicUrl::class,
+            SetLocale::class,
+        ]);
+
+        $middleware->alias([
+            'admin' => EnsureUserIsAdmin::class,
+        ]);
+
+        $middleware->encryptCookies(except: [
+            'locale',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

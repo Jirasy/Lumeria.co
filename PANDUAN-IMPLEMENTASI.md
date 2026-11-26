@@ -74,7 +74,7 @@ php artisan tinker
 # Beri badge ke produk (promo | discount | best_seller | new, atau null untuk mencabut)
 >>> App\Models\Product::where('slug', 'bola-kopi')->update(['badge' => 'promo']);
 ```
-Jangan menjalankan `php artisan db:seed` penuh di database yang sudah berisi data: `DatabaseSeeder` membuat `test@example.com` dengan email unik, jadi akan gagal pada pemanggilan kedua. Opsi `LUMERIA_ADMIN_EMAIL` dan `LUMERIA_ADMIN_PASSWORD` di `.env` hanya untuk database baru (`migrate:fresh --seed`).
+`php artisan db:seed` aman dijalankan berulang: `ProductSeeder` hanya membuat produk yang belum ada (suntingan admin tidak ditimpa) dan `AdminSeeder` mencari akun lewat email (tidak menggandakan). Opsi `LUMERIA_ADMIN_EMAIL` dan `LUMERIA_ADMIN_PASSWORD` di `.env` membuat satu admin tambahan di luar keempat admin tim.
 
 ## 4. Dampak ke test yang sudah ada
 

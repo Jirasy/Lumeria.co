@@ -6,6 +6,16 @@
         <rect x="1.6" y="1.6" width="12.8" height="12.8" rx="3.6" fill="none" stroke="currentColor" stroke-width="1.4"/>
         <circle cx="8" cy="8" r="2.9" fill="none" stroke="currentColor" stroke-width="1.4"/>
         <circle cx="11.7" cy="4.3" r=".85"/>
+    @elseif ($name === 'arrow-right')
+        <path d="M3 8h9.4M9 4.6 12.4 8 9 11.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    @elseif ($name === 'check')
+        <path d="M3.2 8.5l3 3 6.6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    @elseif ($name === 'bag')
+        <path d="M3.9 5.4h8.2l.8 7.6a1.3 1.3 0 0 1-1.3 1.4H4.4a1.3 1.3 0 0 1-1.3-1.4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M6 5.4V4.1a2 2 0 0 1 4 0v1.3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    @elseif ($name === 'user')
+        <circle cx="8" cy="5.4" r="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M3.3 13.4c0-2.3 2.1-3.9 4.7-3.9s4.7 1.6 4.7 3.9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
     @elseif ($name === 'chevron-left')
         <path d="M10.5 2.8 5.3 8l5.2 5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
     @elseif ($name === 'chevron-right')

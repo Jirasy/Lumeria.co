@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+// Admin panel: user management
+return [
+    'nav'                    => 'Manage Users',
+    'admin_menu'             => 'Admin',
+    'title'                  => 'Manage Users',
+    'subtitle'               => 'Add, edit, and delete admin or customer accounts.',
+    'add'                    => 'Add User',
+    'create_title'           => 'Add User',
+    'edit_title'             => 'Edit User',
+    'search_label'           => 'Search name or email',
+    'search'                 => 'Search',
+    'reset'                  => 'Reset',
+    'all_roles'              => 'All roles',
+    'total'                  => ':count users',
+    'col_name'               => 'Name',
+    'col_email'              => 'Email',
+    'col_role'               => 'Role',
+    'col_joined'             => 'Joined',
+    'col_actions'            => 'Actions',
+    'role'                   => 'Role',
+    'role_admin'             => 'Admin',
+    'role_customer'          => 'Customer',
+    'role_self_help'         => 'You cannot change the role of your own account.',
+    'password_edit_hint'     => 'Leave blank to keep the current password.',
+    'you'                    => 'You',
+    'edit'                   => 'Edit',
+    'delete'                 => 'Delete',
+    'save'                   => 'Save',
+    'back'                   => 'Back to list',
+    'empty'                  => 'No matching users.',
+    'confirm_delete'         => 'Delete user :name? Their past orders are kept.',
+    'created'                => 'User :name was added.',
+    'updated'                => ':name was updated.',
+    'deleted'                => 'User :name was deleted.',
+    'cannot_delete_self'     => 'You cannot delete your own account.',
+    'last_admin_cannot_delete' => 'You are the last admin, so this account cannot be deleted. Make another user an admin first.',
+    'cannot_change_own_role' => 'You cannot change the role of your own account.',
+];

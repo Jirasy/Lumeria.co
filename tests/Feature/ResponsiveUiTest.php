@@ -41,6 +41,7 @@ class ResponsiveUiTest extends TestCase
         $id = Product::firstOrFail()->id;
 
 
+
         $this->actingAs(User::factory()->create())
             ->withSession(['lumeria_cart' => [$id => 2]])
             ->get('/products')
@@ -51,6 +52,7 @@ class ResponsiveUiTest extends TestCase
     public function test_floating_cart_button_is_hidden_on_the_order_page(): void
     {
         $id = Product::firstOrFail()->id;
+
 
 
         $this->actingAs(User::factory()->create())
@@ -69,6 +71,8 @@ class ResponsiveUiTest extends TestCase
     public function test_add_to_cart_without_referer_falls_back_to_products(): void
     {
         $id = Product::firstOrFail()->id;
+
+
 
 
         $this->actingAs(User::factory()->create())

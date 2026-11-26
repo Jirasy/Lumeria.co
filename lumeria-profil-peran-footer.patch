@@ -1,0 +1,2784 @@
+From 2963e4a96c53daaa6f6c082e99a42ad2a2ff9162 Mon Sep 17 00:00:00 2001
+From: Lumeria Dev <dev@lumeria.local>
+Date: Mon, 23 Nov 2026 05:40:58 +0000
+Subject: [PATCH 1/2] Profil bergaya marketplace, foto profil, kelola pengguna,
+ seeder 4 admin, footer baru
+
+- users: kolom phone, gender, birth_date, avatar_path (migrasi baru)
+- profil: menu samping, kartu Profil Saya, unggah foto privat (maks 1 MB, JPEG/PNG), foto di navbar menuju profil
+- hak akses: Our Team hanya admin; CRUD pengguna hanya admin (admin tidak bisa hapus/ubah peran diri sendiri; admin terakhir tidak bisa hapus akun)
+- AdminSeeder: 4 admin tim, kata sandi dari env atau acak sekali tampil, idempoten
+- footer terang bergaya marketplace: layanan, jelajahi, akun, pembayaran, ikuti kami
+- navbar: menu Admin dikelompokkan dalam satu dropdown
+- tests: 62 test baru (profil, pengguna, seeder, footer, matriks peran)
+---
+ .env.example                                  |   2 +
+ README.md                                     |  24 ++
+ app/Http/Controllers/Admin/UserController.php | 114 +++++++
+ app/Http/Controllers/ProfileController.php    |  42 ++-
+ app/Http/Requests/ProfileUpdateRequest.php    |  16 +
+ app/Models/User.php                           |  50 +++-
+ config/lumeria.php                            |  12 +-
+ ...0000_add_profile_fields_to_users_table.php |  29 ++
+ database/seeders/AdminSeeder.php              |  62 ++++
+ database/seeders/DatabaseSeeder.php           |   1 +
+ lang/en/foodtech.php                          |   9 +
+ lang/en/profile.php                           |  28 ++
+ lang/en/users.php                             |  42 +++
+ lang/en/validation.php                        |   6 +-
+ lang/id/foodtech.php                          |   9 +
+ lang/id/profile.php                           |  28 ++
+ lang/id/users.php                             |  42 +++
+ lang/id/validation.php                        |   2 +
+ public/css/lumeria-foodtech.css               | 120 +++++---
+ resources/views/admin/users/_form.blade.php   |  41 +++
+ resources/views/admin/users/create.blade.php  |  18 ++
+ resources/views/admin/users/edit.blade.php    |  18 ++
+ resources/views/admin/users/index.blade.php   | 103 +++++++
+ .../views/components/auth/field.blade.php     |  11 +
+ .../views/components/user-avatar.blade.php    |  14 +
+ resources/views/partials/footer.blade.php     |  90 ++++--
+ resources/views/partials/navbar.blade.php     |  33 +-
+ resources/views/profile/edit.blade.php        |  18 +-
+ .../views/profile/partials/sidebar.blade.php  |  20 ++
+ .../update-profile-information-form.blade.php | 148 +++++++--
+ routes/web.php                                |  21 +-
+ tests/Feature/AdminSeederTest.php             | 111 +++++++
+ tests/Feature/FooterAndResponsiveTest.php     | 106 +++++++
+ tests/Feature/ProfilePageTest.php             | 265 ++++++++++++++++
+ tests/Feature/RoleAccessTest.php              |   8 +-
+ tests/Feature/RolePermissionMatrixTest.php    |  88 ++++++
+ tests/Feature/StaticPagesTest.php             |  11 +-
+ tests/Feature/TeamPageTest.php                |   4 +-
+ tests/Feature/UserManagementTest.php          | 283 ++++++++++++++++++
+ 39 files changed, 1907 insertions(+), 142 deletions(-)
+ create mode 100644 app/Http/Controllers/Admin/UserController.php
+ create mode 100644 database/migrations/2026_11_22_100000_add_profile_fields_to_users_table.php
+ create mode 100644 database/seeders/AdminSeeder.php
+ create mode 100644 lang/en/profile.php
+ create mode 100644 lang/en/users.php
+ create mode 100644 lang/id/profile.php
+ create mode 100644 lang/id/users.php
+ create mode 100644 resources/views/admin/users/_form.blade.php
+ create mode 100644 resources/views/admin/users/create.blade.php
+ create mode 100644 resources/views/admin/users/edit.blade.php
+ create mode 100644 resources/views/admin/users/index.blade.php
+ create mode 100644 resources/views/components/user-avatar.blade.php
+ create mode 100644 resources/views/profile/partials/sidebar.blade.php
+ create mode 100644 tests/Feature/AdminSeederTest.php
+ create mode 100644 tests/Feature/FooterAndResponsiveTest.php
+ create mode 100644 tests/Feature/ProfilePageTest.php
+ create mode 100644 tests/Feature/RolePermissionMatrixTest.php
+ create mode 100644 tests/Feature/UserManagementTest.php
+
+diff --git a/.env.example b/.env.example
+index 5ebc59d..6efa231 100644
+--- a/.env.example
++++ b/.env.example
+@@ -87,3 +87,5 @@ LUMERIA_INSTAGRAM=
+ LUMERIA_ADMIN_NAME="Admin Lumeria"
+ LUMERIA_ADMIN_EMAIL=
+ LUMERIA_ADMIN_PASSWORD=
++# Domain email 4 admin tim dari AdminSeeder (sanaya@, aliful@, jimny@, alfatih@). Ganti dengan domain/email asli bila perlu.
++LUMERIA_ADMIN_EMAIL_DOMAIN=lumeria.test
+diff --git a/README.md b/README.md
+index 0165a77..89f25aa 100644
+--- a/README.md
++++ b/README.md
+@@ -57,3 +57,27 @@ ## Security Vulnerabilities
+ ## License
+ 
+ The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
++
++## Akun admin, peran, dan foto profil
++
++**Peran.** Tamu hanya melihat (etalase, detail produk, info pemesanan) dan harus login atau daftar sebelum memesan.
++Pelanggan bisa memesan, melihat Pesanan Saya, dan mengatur profil. Admin juga mengelola pengguna (tambah, ubah, hapus),
++panel toko, halaman Our Team, dan materi. Peran tidak bisa diubah lewat form registrasi atau profil.
++
++**Setelah menarik perubahan ini**, jalankan migrasi (menambah kolom profil di tabel users):
++
++```bash
++php artisan migrate
++php artisan db:seed --class=AdminSeeder   # atau: php artisan db:seed (seluruh seeder)
++```
++
++`AdminSeeder` membuat 4 admin tim: `sanaya@`, `aliful@`, `jimny@`, dan `alfatih@` diikuti `LUMERIA_ADMIN_EMAIL_DOMAIN`
++(bawaan `lumeria.test`; ganti di `.env` bila perlu). Nama lengkap diambil dari `config/lumeria.php`.
++
++- Isi `LUMERIA_ADMIN_PASSWORD` di `.env` agar keempat akun memakai kata sandi itu (diatur ulang setiap seeder dijalankan).
++- Bila dikosongkan, kata sandi acak dibuat untuk akun baru dan **ditampilkan sekali** di terminal. Catat saat itu juga.
++- Tidak ada kata sandi bawaan di kode karena repositori ini publik. Ganti kata sandi lewat halaman Profil setelah login pertama.
++- Seeder aman dijalankan berulang; akun dicari lewat email dan tidak digandakan.
++
++**Foto profil** disimpan di disk privat (`storage/app/private/avatars`) dan disajikan lewat rute `/avatar/{user}`
++yang hanya bisa dibuka pemilik dan admin, jadi tidak perlu `php artisan storage:link`. Batas 1 MB, format JPEG atau PNG.
+diff --git a/app/Http/Controllers/Admin/UserController.php b/app/Http/Controllers/Admin/UserController.php
+new file mode 100644
+index 0000000..21f498e
+--- /dev/null
++++ b/app/Http/Controllers/Admin/UserController.php
+@@ -0,0 +1,114 @@
++<?php
++
++namespace App\Http\Controllers\Admin;
++
++use App\Http\Controllers\Controller;
++use App\Models\User;
++use Illuminate\Http\RedirectResponse;
++use Illuminate\Http\Request;
++use Illuminate\Validation\Rule;
++use Illuminate\Validation\Rules\Password;
++use Illuminate\View\View;
++
++/**
++ * Kelola pengguna (CRUD). Seluruh rute ada di group middleware ['auth', 'admin'].
++ *
++ * Pengaman:
++ *  - admin tidak bisa menghapus akunnya sendiri;
++ *  - admin tidak bisa mengubah perannya sendiri (agar toko tidak pernah kehilangan admin terakhir).
++ */
++class UserController extends Controller
++{
++    private const PER_PAGE = 10;
++
++    public function index(Request $request): View
++    {
++        $search = trim((string) $request->query('q', ''));
++        $role   = $request->query('role');
++
++        $users = User::query()
++            ->when($search !== '', function ($q) use ($search) {
++                $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $search) . '%';
++                $q->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('email', 'like', $like));
++            })
++            ->when(in_array($role, User::ROLES, true), fn ($q) => $q->where('role', $role))
++            ->orderByRaw("role = ? desc", [User::ROLE_ADMIN])
++            ->orderBy('name')
++            ->paginate(self::PER_PAGE)
++            ->withQueryString();
++
++        return view('admin.users.index', [
++            'users'  => $users,
++            'search' => $search,
++            'role'   => in_array($role, User::ROLES, true) ? $role : '',
++        ]);
++    }
++
++    public function create(): View
++    {
++        return view('admin.users.create', ['user' => new User(['role' => User::ROLE_CUSTOMER])]);
++    }
++
++    public function store(Request $request): RedirectResponse
++    {
++        $data = $request->validate([
++            'name'     => ['required', 'string', 'max:255'],
++            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)],
++            'role'     => ['required', Rule::in(User::ROLES)],
++            'password' => ['required', 'confirmed', Password::defaults()],
++        ]);
++
++        $user = new User();
++        $user->fill(['name' => $data['name'], 'email' => $data['email'], 'password' => $data['password']]);
++        // Peran tidak mass-assignable; diisi eksplisit di sini (rute ini hanya bisa dibuka admin).
++        $user->forceFill(['role' => $data['role'], 'email_verified_at' => now()])->save();
++
++        return redirect()->route('admin.users.index')->with('status', __('users.created', ['name' => $user->name]));
++    }
++
++    public function edit(User $user): View
++    {
++        return view('admin.users.edit', ['user' => $user]);
++    }
++
++    public function update(Request $request, User $user): RedirectResponse
++    {
++        $data = $request->validate([
++            'name'     => ['required', 'string', 'max:255'],
++            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
++            'role'     => ['required', Rule::in(User::ROLES)],
++            'password' => ['nullable', 'confirmed', Password::defaults()],
++        ]);
++
++        if ($user->is($request->user()) && $data['role'] !== $user->role) {
++            return back()->withInput()->withErrors(['role' => __('users.cannot_change_own_role')]);
++        }
++
++        $user->fill(['name' => $data['name'], 'email' => $data['email']]);
++
++        if (! empty($data['password'])) {
++            $user->password = $data['password'];
++        }
++
++        if ($user->isDirty('email')) {
++            $user->email_verified_at = now();
++        }
++
++        $user->forceFill(['role' => $data['role']])->save();
++
++        return redirect()->route('admin.users.index')->with('status', __('users.updated', ['name' => $user->name]));
++    }
++
++    public function destroy(Request $request, User $user): RedirectResponse
++    {
++        if ($user->is($request->user())) {
++            return redirect()->route('admin.users.index')->with('error', __('users.cannot_delete_self'));
++        }
++
++        $name = $user->name;
++        $user->deleteAvatarFile();
++        $user->delete(); // pesanan lama tetap tersimpan (orders.user_id menjadi null)
++
++        return redirect()->route('admin.users.index')->with('status', __('users.deleted', ['name' => $name]));
++    }
++}
+diff --git a/app/Http/Controllers/ProfileController.php b/app/Http/Controllers/ProfileController.php
+index a48eb8d..718367a 100644
+--- a/app/Http/Controllers/ProfileController.php
++++ b/app/Http/Controllers/ProfileController.php
+@@ -3,11 +3,14 @@
+ namespace App\Http\Controllers;
+ 
+ use App\Http\Requests\ProfileUpdateRequest;
++use App\Models\User;
+ use Illuminate\Http\RedirectResponse;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Auth;
+ use Illuminate\Support\Facades\Redirect;
++use Illuminate\Support\Facades\Storage;
+ use Illuminate\View\View;
++use Symfony\Component\HttpFoundation\StreamedResponse;
+ 
+ class ProfileController extends Controller
+ {
+@@ -26,17 +29,42 @@ public function edit(Request $request): View
+      */
+     public function update(ProfileUpdateRequest $request): RedirectResponse
+     {
+-        $request->user()->fill($request->validated());
++        $user = $request->user();
++
++        $user->fill($request->safe()->except(['avatar', 'remove_avatar']));
++
++        if ($user->isDirty('email')) {
++            $user->email_verified_at = null;
++        }
+ 
+-        if ($request->user()->isDirty('email')) {
+-            $request->user()->email_verified_at = null;
++        if ($request->hasFile('avatar')) {
++            $newPath = $request->file('avatar')->store('avatars', User::AVATAR_DISK);
++            $user->deleteAvatarFile();
++            $user->avatar_path = $newPath;
++        } elseif ($request->boolean('remove_avatar')) {
++            $user->deleteAvatarFile();
++            $user->avatar_path = null;
+         }
+ 
+-        $request->user()->save();
++        $user->save();
+ 
+         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+     }
+ 
++    /**
++     * Sajikan foto profil. Hanya pemilik foto dan admin yang boleh melihatnya.
++     */
++    public function avatar(Request $request, User $user): StreamedResponse
++    {
++        abort_unless($request->user()->is($user) || $request->user()->isAdmin(), 403);
++        abort_unless($user->hasAvatar(), 404);
++
++        return Storage::disk(User::AVATAR_DISK)->response($user->avatar_path, null, [
++            'Cache-Control'          => 'private, max-age=86400',
++            'X-Content-Type-Options' => 'nosniff',
++        ]);
++    }
++
+     /**
+      * Delete the user's account.
+      */
+@@ -48,8 +76,14 @@ public function destroy(Request $request): RedirectResponse
+ 
+         $user = $request->user();
+ 
++        // Toko tidak boleh kehilangan admin terakhir.
++        if ($user->isAdmin() && ! User::where('role', User::ROLE_ADMIN)->whereKeyNot($user->getKey())->exists()) {
++            return back()->withErrors(['password' => __('users.last_admin_cannot_delete')], 'userDeletion');
++        }
++
+         Auth::logout();
+ 
++        $user->deleteAvatarFile();
+         $user->delete();
+ 
+         $request->session()->invalidate();
+diff --git a/app/Http/Requests/ProfileUpdateRequest.php b/app/Http/Requests/ProfileUpdateRequest.php
+index e2202dd..bbc8721 100644
+--- a/app/Http/Requests/ProfileUpdateRequest.php
++++ b/app/Http/Requests/ProfileUpdateRequest.php
+@@ -9,6 +9,16 @@
+ 
+ class ProfileUpdateRequest extends FormRequest
+ {
++    /**
++     * Nomor telepon boleh ditulis dengan spasi, strip, titik, atau kurung; disimpan tanpa pemisah.
++     */
++    protected function prepareForValidation(): void
++    {
++        if (is_string($this->phone)) {
++            $this->merge(['phone' => preg_replace('/[\s\-\.\(\)]+/', '', $this->phone)]);
++        }
++    }
++
+     /**
+      * Get the validation rules that apply to the request.
+      *
+@@ -26,6 +36,12 @@ public function rules(): array
+                 'max:255',
+                 Rule::unique(User::class)->ignore($this->user()->id),
+             ],
++            'phone'      => ['nullable', 'string', 'regex:/^\+?[0-9]{8,15}$/'],
++            'gender'     => ['nullable', Rule::in(User::GENDERS)],
++            'birth_date' => ['nullable', 'date', 'before:today', 'after:1900-01-01'],
++            // Maksimal 1 MB, hanya JPEG/PNG (SVG sengaja ditolak).
++            'avatar'        => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:' . User::AVATAR_MAX_KB],
++            'remove_avatar' => ['nullable', 'boolean'],
+         ];
+     }
+ }
+diff --git a/app/Models/User.php b/app/Models/User.php
+index cd12af0..8693e0b 100644
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -9,6 +9,8 @@
+ use Illuminate\Database\Eloquent\Factories\HasFactory;
+ use Illuminate\Foundation\Auth\User as Authenticatable;
+ use Illuminate\Notifications\Notifiable;
++use Illuminate\Support\Facades\Storage;
++use Illuminate\Support\Str;
+ 
+ 
+ class User extends Authenticatable
+@@ -19,6 +21,13 @@ class User extends Authenticatable
+     public const ROLE_CUSTOMER = 'customer';
+     public const ROLE_ADMIN    = 'admin';
+ 
++    public const ROLES   = [self::ROLE_CUSTOMER, self::ROLE_ADMIN];
++    public const GENDERS = ['male', 'female', 'other'];
++
++    /** Disk dan batas ukuran foto profil (KB). */
++    public const AVATAR_DISK   = 'local';
++    public const AVATAR_MAX_KB = 1024;
++
+ 
+     /**
+      * The attributes that are mass assignable.
+@@ -28,6 +37,9 @@ class User extends Authenticatable
+     protected $fillable = [
+         'name',
+         'email',
++        'phone',
++        'gender',
++        'birth_date',
+         'password',
+     ];
+ 
+@@ -43,13 +55,46 @@ class User extends Authenticatable
+     ];
+ 
+ 
+-    // Sengaja TIDAK masuk $fillable: peran hanya boleh diubah lewat seeder/tinker,
+-    // supaya form registrasi tidak bisa dipakai untuk menjadikan diri sendiri admin.
++    // Sengaja TIDAK masuk $fillable: peran hanya boleh diubah lewat seeder, tinker, atau
++    // panel Kelola Pengguna (admin), supaya form registrasi dan profil tidak bisa dipakai
++    // untuk menjadikan diri sendiri admin. avatar_path juga hanya diisi oleh ProfileController.
+     public function isAdmin(): bool
+     {
+         return $this->role === self::ROLE_ADMIN;
+     }
+ 
++    /** Dua huruf awal nama untuk avatar cadangan. */
++    public function initials(): string
++    {
++        $parts = preg_split('/\s+/', trim((string) $this->name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
++        $first = $parts[0] ?? '?';
++        $last  = count($parts) > 1 ? $parts[count($parts) - 1] : '';
++
++        return Str::upper(Str::substr($first, 0, 1) . Str::substr($last, 0, 1));
++    }
++
++    public function hasAvatar(): bool
++    {
++        return $this->avatar_path && Storage::disk(self::AVATAR_DISK)->exists($this->avatar_path);
++    }
++
++    /** URL foto profil (rute terautentikasi), atau null bila belum ada foto. */
++    public function avatarUrl(): ?string
++    {
++        if (! $this->hasAvatar()) {
++            return null;
++        }
++
++        return route('avatar.show', ['user' => $this->id, 'v' => $this->updated_at?->timestamp]);
++    }
++
++    public function deleteAvatarFile(): void
++    {
++        if ($this->avatar_path) {
++            Storage::disk(self::AVATAR_DISK)->delete($this->avatar_path);
++        }
++    }
++
+     /**
+      * Get the attributes that should be cast.
+      *
+@@ -59,6 +104,7 @@ protected function casts(): array
+     {
+         return [
+             'email_verified_at' => 'datetime',
++            'birth_date' => 'date',
+             'password' => 'hashed',
+         ];
+     }
+diff --git a/config/lumeria.php b/config/lumeria.php
+index 9f393b1..c979a04 100644
+--- a/config/lumeria.php
++++ b/config/lumeria.php
+@@ -18,11 +18,15 @@
+         'instagram' => env('LUMERIA_INSTAGRAM'), // '@username' atau URL profil
+     ],
+ 
+-    // Akun admin awal untuk seeder (php artisan db:seed). Dua-duanya wajib diisi agar akun dibuat.
++    // Akun admin untuk seeder (php artisan db:seed).
++    //  - AdminSeeder membuat 4 admin tim (Sanaya, Aliful, Jimny, Alfatih) dengan email <key>@<email_domain>.
++    //    Bila LUMERIA_ADMIN_PASSWORD kosong, kata sandi acak dibuat dan ditampilkan SEKALI di terminal.
++    //  - Admin tambahan tunggal dibuat DatabaseSeeder bila email dan password di bawah diisi.
+     'admin' => [
+-        'name'     => env('LUMERIA_ADMIN_NAME', 'Admin Lumeria'),
+-        'email'    => env('LUMERIA_ADMIN_EMAIL'),
+-        'password' => env('LUMERIA_ADMIN_PASSWORD'),
++        'name'         => env('LUMERIA_ADMIN_NAME', 'Admin Lumeria'),
++        'email'        => env('LUMERIA_ADMIN_EMAIL'),
++        'password'     => env('LUMERIA_ADMIN_PASSWORD'),
++        'email_domain' => env('LUMERIA_ADMIN_EMAIL_DOMAIN', 'lumeria.test'),
+     ],
+ 
+ 
+diff --git a/database/migrations/2026_11_22_100000_add_profile_fields_to_users_table.php b/database/migrations/2026_11_22_100000_add_profile_fields_to_users_table.php
+new file mode 100644
+index 0000000..39d77fb
+--- /dev/null
++++ b/database/migrations/2026_11_22_100000_add_profile_fields_to_users_table.php
+@@ -0,0 +1,29 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    /**
++     * Kolom profil opsional: nomor telepon, jenis kelamin, tanggal lahir, dan foto profil.
++     * Foto disimpan di disk privat (storage/app/private/avatars) dan disajikan lewat rute avatar.show.
++     */
++    public function up(): void
++    {
++        Schema::table('users', function (Blueprint $table) {
++            $table->string('phone', 20)->nullable()->after('email');
++            $table->string('gender', 10)->nullable()->after('phone');   // male | female | other
++            $table->date('birth_date')->nullable()->after('gender');
++            $table->string('avatar_path')->nullable()->after('birth_date');
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('users', function (Blueprint $table) {
++            $table->dropColumn(['phone', 'gender', 'birth_date', 'avatar_path']);
++        });
++    }
++};
+diff --git a/database/seeders/AdminSeeder.php b/database/seeders/AdminSeeder.php
+new file mode 100644
+index 0000000..eabb075
+--- /dev/null
++++ b/database/seeders/AdminSeeder.php
+@@ -0,0 +1,62 @@
++<?php
++
++namespace Database\Seeders;
++
++use App\Models\User;
++use Illuminate\Database\Seeder;
++use Illuminate\Support\Str;
++
++/**
++ * Empat akun admin tim Lumeria.co. Nama lengkap diambil dari config('lumeria.team'),
++ * email berbentuk <key>@<LUMERIA_ADMIN_EMAIL_DOMAIN> (bawaan: lumeria.test).
++ *
++ * Kata sandi:
++ *  - LUMERIA_ADMIN_PASSWORD terisi : dipakai untuk keempat akun (dan diatur ulang setiap seeder dijalankan).
++ *  - kosong                        : akun baru mendapat kata sandi acak yang ditampilkan SEKALI di terminal;
++ *                                    akun yang sudah ada tidak diubah kata sandinya.
++ * Tidak ada kata sandi bawaan di kode, karena repositori ini publik.
++ *
++ * Aman dijalankan berulang kali: akun dicari lewat email, tidak digandakan.
++ */
++class AdminSeeder extends Seeder
++{
++    /** Key anggota tim (lihat config/lumeria.php) yang menjadi admin. */
++    public const ADMIN_KEYS = ['sanaya', 'aliful', 'jimny', 'alfatih'];
++
++    public function run(): void
++    {
++        $domain   = config('lumeria.admin.email_domain') ?: 'lumeria.test';
++        $shared   = config('lumeria.admin.password');
++        $team     = collect(config('lumeria.team'));
++        $generated = [];
++
++        foreach (self::ADMIN_KEYS as $key) {
++            $email = "{$key}@{$domain}";
++            $user  = User::firstOrNew(['email' => $email]);
++            $isNew = ! $user->exists;
++
++            $attributes = [
++                'name'              => $team->firstWhere('key', $key)['name'] ?? Str::headline($key),
++                'role'              => User::ROLE_ADMIN,
++                'email_verified_at' => $user->email_verified_at ?? now(),
++            ];
++
++            if ($shared) {
++                $attributes['password'] = $shared;
++            } elseif ($isNew) {
++                $attributes['password'] = $generated[$email] = Str::password(16, symbols: false);
++            }
++
++            // Peran tidak mass-assignable, jadi diisi eksplisit di seeder.
++            $user->forceFill($attributes)->save();
++        }
++
++        if ($generated !== []) {
++            $this->command?->warn('Kata sandi acak untuk admin baru (catat sekarang, tidak ditampilkan lagi):');
++            $this->command?->table(
++                ['Email', 'Kata sandi'],
++                collect($generated)->map(fn ($password, $email) => [$email, $password])->values()->all(),
++            );
++        }
++    }
++}
+diff --git a/database/seeders/DatabaseSeeder.php b/database/seeders/DatabaseSeeder.php
+index d1cad88..e2e0503 100644
+--- a/database/seeders/DatabaseSeeder.php
++++ b/database/seeders/DatabaseSeeder.php
+@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
+     public function run(): void
+     {
+        $this->call(ProductSeeder::class);
++       $this->call(AdminSeeder::class);
+ 
+ 
+         User::factory()->create([
+diff --git a/lang/en/foodtech.php b/lang/en/foodtech.php
+index 7ab93d2..94609bd 100644
+--- a/lang/en/foodtech.php
++++ b/lang/en/foodtech.php
+@@ -68,6 +68,15 @@
+         'chat_wa'    => 'Chat on WhatsApp',
+         'instagram'  => 'Instagram',
+         'wa_message' => 'Hello Lumeria.co, I would like to ask something.',
++        'customer_service' => 'Customer Service',
++        'how_to_order'     => 'How to Order',
++        'track_order'      => 'Track Order',
++        'contact_us'       => 'Contact Us',
++        'payment'          => 'Payment',
++        'pay_cash'         => 'Cash',
++        'pay_paylater'     => 'Paylater',
++        'pay_note'         => 'Installments of :min to :max months',
++        'follow'           => 'Follow Us',
+     ],
+ 
+     'guest_order' => [
+diff --git a/lang/en/profile.php b/lang/en/profile.php
+new file mode 100644
+index 0000000..d94b433
+--- /dev/null
++++ b/lang/en/profile.php
+@@ -0,0 +1,28 @@
++<?php
++
++declare(strict_types=1);
++
++// User profile page
++return [
++    'title'          => 'My Profile',
++    'subtitle'       => 'Manage your profile information to control, protect, and secure your account.',
++    'my_account'     => 'My Account',
++    'nav_profile'    => 'Profile',
++    'nav_password'   => 'Change Password',
++    'nav_delete'     => 'Delete Account',
++    'edit_profile'   => 'Edit Profile',
++    'phone'          => 'Phone Number',
++    'phone_hint'     => 'Example: 081234567890. Optional.',
++    'gender'         => 'Gender',
++    'male'           => 'Male',
++    'female'         => 'Female',
++    'other'          => 'Other',
++    'birth_date'     => 'Date of Birth',
++    'photo'          => 'Profile photo',
++    'choose_image'   => 'Choose Image',
++    'image_max'      => 'Image size: max. 1 MB',
++    'image_format'   => 'Image format: .JPEG, .PNG',
++    'image_too_big'  => 'The image is larger than 1 MB. Please choose a smaller one.',
++    'remove_photo'   => 'Remove profile photo',
++    'open_profile'   => 'Open profile',
++];
+diff --git a/lang/en/users.php b/lang/en/users.php
+new file mode 100644
+index 0000000..69d700a
+--- /dev/null
++++ b/lang/en/users.php
+@@ -0,0 +1,42 @@
++<?php
++
++declare(strict_types=1);
++
++// Admin panel: user management
++return [
++    'nav'                    => 'Manage Users',
++    'admin_menu'             => 'Admin',
++    'title'                  => 'Manage Users',
++    'subtitle'               => 'Add, edit, and delete admin or customer accounts.',
++    'add'                    => 'Add User',
++    'create_title'           => 'Add User',
++    'edit_title'             => 'Edit User',
++    'search_label'           => 'Search name or email',
++    'search'                 => 'Search',
++    'reset'                  => 'Reset',
++    'all_roles'              => 'All roles',
++    'total'                  => ':count users',
++    'col_name'               => 'Name',
++    'col_email'              => 'Email',
++    'col_role'               => 'Role',
++    'col_joined'             => 'Joined',
++    'col_actions'            => 'Actions',
++    'role'                   => 'Role',
++    'role_admin'             => 'Admin',
++    'role_customer'          => 'Customer',
++    'role_self_help'         => 'You cannot change the role of your own account.',
++    'password_edit_hint'     => 'Leave blank to keep the current password.',
++    'you'                    => 'You',
++    'edit'                   => 'Edit',
++    'delete'                 => 'Delete',
++    'save'                   => 'Save',
++    'back'                   => 'Back to list',
++    'empty'                  => 'No matching users.',
++    'confirm_delete'         => 'Delete user :name? Their past orders are kept.',
++    'created'                => 'User :name was added.',
++    'updated'                => ':name was updated.',
++    'deleted'                => 'User :name was deleted.',
++    'cannot_delete_self'     => 'You cannot delete your own account.',
++    'last_admin_cannot_delete' => 'You are the last admin, so this account cannot be deleted. Make another user an admin first.',
++    'cannot_change_own_role' => 'You cannot change the role of your own account.',
++];
+diff --git a/lang/en/validation.php b/lang/en/validation.php
+index 63ec29a..46f6a62 100644
+--- a/lang/en/validation.php
++++ b/lang/en/validation.php
+@@ -195,6 +195,10 @@
+     |
+     */
+ 
+-    'attributes' => [],
++    'attributes' => [
++        'avatar'     => 'profile photo',
++        'birth_date' => 'date of birth',
++        'phone'      => 'phone number',
++    ],
+ 
+ ];
+diff --git a/lang/id/foodtech.php b/lang/id/foodtech.php
+index b9a516c..48a2be8 100644
+--- a/lang/id/foodtech.php
++++ b/lang/id/foodtech.php
+@@ -70,6 +70,15 @@
+         'chat_wa'    => 'Chat lewat WhatsApp',
+         'instagram'  => 'Instagram',
+         'wa_message' => 'Halo Lumeria.co, saya ingin bertanya.',
++        'customer_service' => 'Layanan Pelanggan',
++        'how_to_order'     => 'Cara Memesan',
++        'track_order'      => 'Lacak Pesanan',
++        'contact_us'       => 'Hubungi Kami',
++        'payment'          => 'Pembayaran',
++        'pay_cash'         => 'Tunai',
++        'pay_paylater'     => 'Paylater',
++        'pay_note'         => 'Cicilan :min sampai :max bulan',
++        'follow'           => 'Ikuti Kami',
+     ],
+ 
+     'guest_order' => [
+diff --git a/lang/id/profile.php b/lang/id/profile.php
+new file mode 100644
+index 0000000..e2a58f7
+--- /dev/null
++++ b/lang/id/profile.php
+@@ -0,0 +1,28 @@
++<?php
++
++declare(strict_types=1);
++
++// Halaman profil pengguna
++return [
++    'title'          => 'Profil Saya',
++    'subtitle'       => 'Kelola informasi profil Anda untuk mengontrol, melindungi, dan mengamankan akun.',
++    'my_account'     => 'Akun Saya',
++    'nav_profile'    => 'Profil',
++    'nav_password'   => 'Ubah Kata Sandi',
++    'nav_delete'     => 'Hapus Akun',
++    'edit_profile'   => 'Ubah Profil',
++    'phone'          => 'Nomor Telepon',
++    'phone_hint'     => 'Contoh: 081234567890. Boleh dikosongkan.',
++    'gender'         => 'Jenis Kelamin',
++    'male'           => 'Laki-laki',
++    'female'         => 'Perempuan',
++    'other'          => 'Lainnya',
++    'birth_date'     => 'Tanggal Lahir',
++    'photo'          => 'Foto profil',
++    'choose_image'   => 'Pilih Gambar',
++    'image_max'      => 'Ukuran gambar: maks. 1 MB',
++    'image_format'   => 'Format gambar: .JPEG, .PNG',
++    'image_too_big'  => 'Ukuran gambar melebihi 1 MB. Pilih gambar yang lebih kecil.',
++    'remove_photo'   => 'Hapus foto profil',
++    'open_profile'   => 'Buka profil',
++];
+diff --git a/lang/id/users.php b/lang/id/users.php
+new file mode 100644
+index 0000000..aeb62bb
+--- /dev/null
++++ b/lang/id/users.php
+@@ -0,0 +1,42 @@
++<?php
++
++declare(strict_types=1);
++
++// Panel admin: kelola pengguna
++return [
++    'nav'                    => 'Kelola Pengguna',
++    'admin_menu'             => 'Admin',
++    'title'                  => 'Kelola Pengguna',
++    'subtitle'               => 'Tambah, ubah, dan hapus akun admin atau pelanggan.',
++    'add'                    => 'Tambah Pengguna',
++    'create_title'           => 'Tambah Pengguna',
++    'edit_title'             => 'Ubah Pengguna',
++    'search_label'           => 'Cari nama atau email',
++    'search'                 => 'Cari',
++    'reset'                  => 'Atur ulang',
++    'all_roles'              => 'Semua peran',
++    'total'                  => ':count pengguna',
++    'col_name'               => 'Nama',
++    'col_email'              => 'Email',
++    'col_role'               => 'Peran',
++    'col_joined'             => 'Terdaftar',
++    'col_actions'            => 'Aksi',
++    'role'                   => 'Peran',
++    'role_admin'             => 'Admin',
++    'role_customer'          => 'Pelanggan',
++    'role_self_help'         => 'Peran akun Anda sendiri tidak dapat diubah.',
++    'password_edit_hint'     => 'Kosongkan jika tidak ingin mengubah kata sandi.',
++    'you'                    => 'Anda',
++    'edit'                   => 'Ubah',
++    'delete'                 => 'Hapus',
++    'save'                   => 'Simpan',
++    'back'                   => 'Kembali ke daftar',
++    'empty'                  => 'Tidak ada pengguna yang cocok.',
++    'confirm_delete'         => 'Hapus pengguna :name? Pesanan lamanya tetap tersimpan.',
++    'created'                => 'Pengguna :name berhasil ditambahkan.',
++    'updated'                => 'Data :name berhasil diperbarui.',
++    'deleted'                => 'Pengguna :name dihapus.',
++    'cannot_delete_self'     => 'Anda tidak dapat menghapus akun Anda sendiri.',
++    'last_admin_cannot_delete' => 'Anda admin terakhir, jadi akun ini tidak dapat dihapus. Jadikan pengguna lain admin terlebih dahulu.',
++    'cannot_change_own_role' => 'Anda tidak dapat mengubah peran akun Anda sendiri.',
++];
+diff --git a/lang/id/validation.php b/lang/id/validation.php
+index b21bcb6..14200d9 100644
+--- a/lang/id/validation.php
++++ b/lang/id/validation.php
+@@ -160,6 +160,8 @@
+         'address'                  => 'alamat',
+         'affiliate_url'            => 'URL afiliasi',
+         'age'                      => 'usia',
++        'avatar'                   => 'foto profil',
++        'birth_date'               => 'tanggal lahir',
+         'amount'                   => 'jumlah',
+         'announcement'             => 'pengumuman',
+         'area'                     => 'daerah',
+diff --git a/public/css/lumeria-foodtech.css b/public/css/lumeria-foodtech.css
+index 2faddb4..9544157 100644
+--- a/public/css/lumeria-foodtech.css
++++ b/public/css/lumeria-foodtech.css
+@@ -9,7 +9,7 @@
+      2. Carousel produk
+      3. Kartu Event & Catering
+      4. Halaman detail produk dan catatan tamu
+-     5. Footer gelap
++     5. Footer terang bergaya marketplace
+      6. Halaman autentikasi (masuk, daftar, lupa kata sandi)
+      7. Area akun (dashboard dan profil)
+      8. Prefers-reduced-motion
+@@ -221,52 +221,47 @@ .ft-note {
+ }
+ 
+ 
+-/* 5. Footer gelap ---------------------------------------------------------- */
++/* 5. Footer terang bergaya marketplace ------------------------------------- */
+ .ft-footer {
+     margin-top: 4rem;
+-    padding: 2.5rem 0 1.5rem;
+-    background: var(--lumeria-ink);
+-    color: var(--lumeria-surface);
+-}
+-.ft-footer a { color: inherit; text-decoration: none; }
+-.ft-footer a:hover { color: var(--lumeria-accent); text-decoration: underline; text-underline-offset: .25em; }
+-.ft-footer a:focus-visible { outline: 3px solid var(--lumeria-accent); outline-offset: 3px; border-radius: .25rem; }
+-
+-.ft-social { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 2rem; }
+-.ft-social a {
+-    display: grid;
+-    place-items: center;
+-    width: 2.75rem;
+-    height: 2.75rem;
+-    border: 1.5px solid color-mix(in srgb, var(--lumeria-surface) 45%, transparent);
+-    border-radius: 50%;
++    padding: 2.5rem 0 1.25rem;
++    background: var(--lumeria-card);
++    border-top: .25rem solid var(--lumeria-accent);
++    color: var(--lumeria-ink);
+ }
+-.ft-social a:hover { background: var(--lumeria-accent); border-color: var(--lumeria-accent); color: var(--lumeria-on-accent); text-decoration: none; }
++.ft-footer a { color: var(--lumeria-muted); text-decoration: none; }
++.ft-footer a:hover { color: var(--lumeria-ink); text-decoration: underline; text-underline-offset: .25em; }
++.ft-footer a:focus-visible { outline: 3px solid var(--lumeria); outline-offset: 3px; border-radius: .25rem; }
+ 
+-.ft-footer-brand { margin: 0 0 .25rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; font-weight: 700; }
+-.ft-footer-muted { color: color-mix(in srgb, var(--lumeria-surface) 75%, transparent); }
+-.ft-footer-title { margin: 0 0 1rem; font-size: 1.15rem; font-weight: 800; color: var(--lumeria-surface); }
+-.ft-footer ul { display: grid; gap: .7rem; margin: 0; padding: 0; list-style: none; }
++.ft-footer-title { margin: 0 0 1rem; font-family: var(--bs-body-font-family); font-size: .95rem; font-weight: 800; color: var(--lumeria-ink); }
++.ft-footer ul { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; font-size: .92rem; }
++.ft-footer-note { margin: .75rem 0 0; font-size: .85rem; color: var(--lumeria-muted); }
+ 
+-.ft-btn-accent {
+-    display: inline-flex;
+-    align-items: center;
+-    border: 0;
+-    border-radius: 50rem;
+-    background: var(--lumeria-accent);
+-    color: var(--lumeria-on-accent);
++/* Ubin metode pembayaran (teks saja, tanpa logo pihak ketiga) */
++.ft-footer .ft-pay-list { display: flex; flex-wrap: wrap; gap: .5rem; }
++.ft-pay {
++    padding: .35rem .8rem;
++    border: 1px solid var(--lumeria-border);
++    border-radius: .5rem;
++    background: var(--lumeria-surface);
++    color: var(--lumeria-ink);
+     font-weight: 700;
+-    padding: .6rem 1.25rem;
++    font-size: .85rem;
+ }
+-.ft-footer a.ft-btn-accent:hover { background: var(--lumeria-surface); color: var(--lumeria-ink); text-decoration: none; }
++
++.ft-follow a { display: inline-flex; align-items: center; gap: .6rem; }
++.ft-follow svg { flex: 0 0 auto; }
+ 
+ .ft-copy {
+-    margin-top: 2.5rem;
+-    padding-top: 1.25rem;
+-    border-top: 1px solid color-mix(in srgb, var(--lumeria-surface) 20%, transparent);
+-    font-size: .9rem;
+-    color: color-mix(in srgb, var(--lumeria-surface) 75%, transparent);
++    margin-top: 2.25rem;
++    padding-top: 1.1rem;
++    border-top: 1px solid var(--lumeria-border);
++    font-size: .88rem;
++    color: var(--lumeria-muted);
+ }
++.ft-lang a { margin-inline-start: .6rem; padding-inline-start: .6rem; border-inline-start: 1px solid var(--lumeria-border); }
++.ft-lang a:first-of-type { border-inline-start: 0; padding-inline-start: 0; margin-inline-start: .25rem; }
++.ft-lang a[aria-current] { color: var(--lumeria-ink); font-weight: 700; }
+ 
+ 
+ /* 6. Halaman autentikasi (masuk, daftar, lupa kata sandi) ------------------ */
+@@ -339,8 +334,59 @@ .account-section .form-control.is-invalid { border-color: var(--bs-form-invalid-
+ .modal-content .form-control {
+     border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
+ }
++/* Radio dan kotak centang: batas tegas di kartu putih dan modal */
++.account-section .form-check-input,
++.modal-content .form-check-input {
++    border-color: color-mix(in srgb, var(--lumeria-muted) 80%, #fff);
++    background-color: var(--lumeria-card);
++}
++.account-section .form-check-input:checked,
++.modal-content .form-check-input:checked { background-color: var(--lumeria); border-color: var(--lumeria); }
+ .modal-content .form-control.is-invalid { border-color: var(--bs-form-invalid-border-color); }
+ 
++/* Foto profil bulat dan inisial cadangan (navbar, profil, daftar pengguna) */
++.user-avatar { object-fit: cover; flex: 0 0 auto; }
++.user-avatar-initials {
++    display: inline-flex;
++    align-items: center;
++    justify-content: center;
++    background: var(--lumeria);
++    color: var(--lumeria-on-primary);
++    font-weight: 700;
++    line-height: 1;
++    letter-spacing: .02em;
++    user-select: none;
++}
++.nav-avatar { border-radius: 50rem; }
++.nav-avatar:focus-visible { outline: 3px solid var(--lumeria-accent); outline-offset: 3px; }
++.min-w-0 { min-width: 0; }
++
++/* Halaman profil bergaya marketplace: menu samping + kartu Profil Saya */
++.account-section { scroll-margin-top: 5.5rem; }
++.profile-nav { display: flex; gap: .25rem; margin: 0; padding: 0; list-style: none; overflow-x: auto; }
++.profile-nav a {
++    display: block;
++    padding: .5rem .85rem;
++    border-radius: 50rem;
++    white-space: nowrap;
++    color: var(--lumeria-ink);
++    text-decoration: none;
++}
++.profile-nav a:hover { background: var(--lumeria-tint); }
++.profile-nav a:focus-visible { outline: 3px solid var(--lumeria); outline-offset: 2px; }
++.profile-file:focus-visible + label { outline: 3px solid var(--lumeria); outline-offset: 3px; }
++@media (min-width: 992px) {
++    .profile-side { position: sticky; top: 5.5rem; }
++    .profile-nav { flex-direction: column; overflow: visible; }
++    .profile-nav a { padding: .45rem .25rem; border-radius: .5rem; white-space: normal; }
++    .profile-nav a:hover { background: transparent; color: var(--lumeria); text-decoration: underline; text-underline-offset: .25em; }
++    .profile-nav-main { margin-top: .75rem; }
++}
++@media (min-width: 768px) {
++    .profile-photo-col { border-left: 1px solid var(--lumeria-border); }
++}
++
++
+ /* 8. Prefers-reduced-motion ------------------------------------------------ */
+ @media (prefers-reduced-motion: no-preference) {
+     .ft-track { scroll-behavior: smooth; }
+diff --git a/resources/views/admin/users/_form.blade.php b/resources/views/admin/users/_form.blade.php
+new file mode 100644
+index 0000000..1028cd0
+--- /dev/null
++++ b/resources/views/admin/users/_form.blade.php
+@@ -0,0 +1,41 @@
++{{-- Form tambah/ubah pengguna. Variabel: $user, $action, $method ('post' | 'put') --}}
++@php($isSelf = $user->exists && $user->is(auth()->user()))
++<form method="post" action="{{ $action }}" novalidate>
++    @csrf
++    @if ($method !== 'post') @method($method) @endif
++
++    <x-auth.field name="name" type="text" :label="__('Name')" :value="old('name', $user->name)" autocomplete="off" :lg="false" />
++
++    <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email', $user->email)" autocomplete="off" :lg="false" />
++
++    <div class="mb-3">
++        <label for="role" class="form-label fw-semibold">{{ __('users.role') }}</label>
++        <select id="role" name="role" class="form-select{{ $errors->has('role') ? ' is-invalid' : '' }}"
++                @disabled($isSelf) aria-describedby="role-help{{ $errors->has('role') ? ' role-error' : '' }}">
++            @foreach (\App\Models\User::ROLES as $r)
++                <option value="{{ $r }}" @selected(old('role', $user->role) === $r)>{{ __('users.role_' . $r) }}</option>
++            @endforeach
++        </select>
++        @if ($isSelf)
++            {{-- Select yang dinonaktifkan tidak terkirim; kirim nilai peran saat ini lewat input tersembunyi. --}}
++            <input type="hidden" name="role" value="{{ $user->role }}">
++            <div id="role-help" class="form-text">{{ __('users.role_self_help') }}</div>
++        @else
++            <span id="role-help" class="visually-hidden">{{ __('users.role') }}</span>
++        @endif
++        @error('role')
++            <div id="role-error" class="invalid-feedback">{{ $message }}</div>
++        @enderror
++    </div>
++
++    <x-auth.field name="password" type="password" :label="__('Password')" :required="! $user->exists"
++        :hint="$user->exists ? __('users.password_edit_hint') : __('auth.password_hint')" autocomplete="new-password" :lg="false" />
++
++    <x-auth.field name="password_confirmation" type="password" :label="__('Confirm Password')" :required="! $user->exists"
++        autocomplete="new-password" :lg="false" />
++
++    <div class="d-flex flex-wrap gap-2 mt-4">
++        <button type="submit" class="btn btn-lumeria px-4">{{ __('users.save') }}</button>
++        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-dark">{{ __('Cancel') }}</a>
++    </div>
++</form>
+diff --git a/resources/views/admin/users/create.blade.php b/resources/views/admin/users/create.blade.php
+new file mode 100644
+index 0000000..fd0b185
+--- /dev/null
++++ b/resources/views/admin/users/create.blade.php
+@@ -0,0 +1,18 @@
++<x-app-layout>
++    <x-slot:title>{{ __('users.create_title') }}</x-slot:title>
++
++    <x-slot:header>
++        <a href="{{ route('admin.users.index') }}" class="small">{{ __('users.back') }}</a>
++        <h1 class="h2 fw-bold mt-1 mb-0">{{ __('users.create_title') }}</h1>
++    </x-slot:header>
++
++    <div class="row">
++        <div class="col-lg-7 col-xl-6">
++            <div class="card account-section">
++                <div class="card-body p-4">
++                    @include('admin.users._form', ['action' => route('admin.users.store'), 'method' => 'post'])
++                </div>
++            </div>
++        </div>
++    </div>
++</x-app-layout>
+diff --git a/resources/views/admin/users/edit.blade.php b/resources/views/admin/users/edit.blade.php
+new file mode 100644
+index 0000000..921a544
+--- /dev/null
++++ b/resources/views/admin/users/edit.blade.php
+@@ -0,0 +1,18 @@
++<x-app-layout>
++    <x-slot:title>{{ __('users.edit_title') }}</x-slot:title>
++
++    <x-slot:header>
++        <a href="{{ route('admin.users.index') }}" class="small">{{ __('users.back') }}</a>
++        <h1 class="h2 fw-bold mt-1 mb-0">{{ __('users.edit_title') }}</h1>
++    </x-slot:header>
++
++    <div class="row">
++        <div class="col-lg-7 col-xl-6">
++            <div class="card account-section">
++                <div class="card-body p-4">
++                    @include('admin.users._form', ['action' => route('admin.users.update', $user), 'method' => 'put'])
++                </div>
++            </div>
++        </div>
++    </div>
++</x-app-layout>
+diff --git a/resources/views/admin/users/index.blade.php b/resources/views/admin/users/index.blade.php
+new file mode 100644
+index 0000000..b80e68d
+--- /dev/null
++++ b/resources/views/admin/users/index.blade.php
+@@ -0,0 +1,103 @@
++<x-app-layout>
++    <x-slot:title>{{ __('users.title') }}</x-slot:title>
++
++    <x-slot:header>
++        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
++            <div>
++                <h1 class="h2 fw-bold mb-1">{{ __('users.title') }}</h1>
++                <p class="text-muted mb-0">{{ __('users.subtitle') }}</p>
++            </div>
++            <a href="{{ route('admin.users.create') }}" class="btn btn-lumeria">{{ __('users.add') }}</a>
++        </div>
++    </x-slot:header>
++
++    @if (session('status'))
++        <div class="alert alert-success" role="status">{{ session('status') }}</div>
++    @endif
++    @if (session('error'))
++        <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
++    @endif
++
++    <div class="card account-section">
++        <div class="card-body p-3 p-md-4">
++            <form method="get" action="{{ route('admin.users.index') }}" class="row g-2 align-items-end mb-4">
++                <div class="col-12 col-md">
++                    <label for="q" class="form-label fw-semibold">{{ __('users.search_label') }}</label>
++                    <input id="q" name="q" type="search" value="{{ $search }}" class="form-control">
++                </div>
++                <div class="col-12 col-sm-6 col-md-3">
++                    <label for="role" class="form-label fw-semibold">{{ __('users.role') }}</label>
++                    <select id="role" name="role" class="form-select">
++                        <option value="">{{ __('users.all_roles') }}</option>
++                        @foreach (\App\Models\User::ROLES as $r)
++                            <option value="{{ $r }}" @selected($role === $r)>{{ __('users.role_' . $r) }}</option>
++                        @endforeach
++                    </select>
++                </div>
++                <div class="col-12 col-sm-6 col-md-auto d-flex gap-2">
++                    <button type="submit" class="btn btn-lumeria flex-fill">{{ __('users.search') }}</button>
++                    @if ($search !== '' || $role !== '')
++                        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-dark">{{ __('users.reset') }}</a>
++                    @endif
++                </div>
++            </form>
++
++            <p class="text-muted small mb-2">{{ __('users.total', ['count' => $users->total()]) }}</p>
++
++            @if ($users->isEmpty())
++                <p class="mb-0">{{ __('users.empty') }}</p>
++            @else
++                <div class="table-responsive">
++                    <table class="table align-middle stack-table mb-0">
++                        <thead>
++                            <tr>
++                                <th scope="col">{{ __('users.col_name') }}</th>
++                                <th scope="col">{{ __('users.col_email') }}</th>
++                                <th scope="col">{{ __('users.col_role') }}</th>
++                                <th scope="col">{{ __('users.col_joined') }}</th>
++                                <th scope="col"><span class="visually-hidden">{{ __('users.col_actions') }}</span></th>
++                            </tr>
++                        </thead>
++                        <tbody>
++                            @foreach ($users as $u)
++                                <tr>
++                                    <td data-label="{{ __('users.col_name') }}">
++                                        <span class="d-inline-flex align-items-center gap-2">
++                                            <x-user-avatar :user="$u" :size="32" class="flex-shrink-0" />
++                                            <span class="fw-semibold">{{ $u->name }}</span>
++                                            @if ($u->is(auth()->user()))
++                                                <span class="badge text-bg-secondary">{{ __('users.you') }}</span>
++                                            @endif
++                                        </span>
++                                    </td>
++                                    <td data-label="{{ __('users.col_email') }}" class="text-break">{{ $u->email }}</td>
++                                    <td data-label="{{ __('users.col_role') }}">
++                                        <span class="badge {{ $u->isAdmin() ? 'text-bg-dark' : 'text-bg-light border' }}">{{ __('users.role_' . $u->role) }}</span>
++                                    </td>
++                                    <td data-label="{{ __('users.col_joined') }}">{{ $u->created_at?->translatedFormat('d M Y') }}</td>
++                                    <td data-label="" class="text-md-end">
++                                        <div class="d-inline-flex gap-2">
++                                            <a href="{{ route('admin.users.edit', $u) }}" class="btn btn-sm btn-outline-dark">{{ __('users.edit') }}</a>
++                                            @unless ($u->is(auth()->user()))
++                                                <form method="post" action="{{ route('admin.users.destroy', $u) }}"
++                                                      onsubmit="return confirm(@js(__('users.confirm_delete', ['name' => $u->name])));">
++                                                    @csrf
++                                                    @method('delete')
++                                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('users.delete') }}</button>
++                                                </form>
++                                            @endunless
++                                        </div>
++                                    </td>
++                                </tr>
++                            @endforeach
++                        </tbody>
++                    </table>
++                </div>
++
++                <div class="mt-4">
++                    {{ $users->links('pagination::bootstrap-5') }}
++                </div>
++            @endif
++        </div>
++    </div>
++</x-app-layout>
+diff --git a/resources/views/components/auth/field.blade.php b/resources/views/components/auth/field.blade.php
+index 21477aa..46d12b0 100644
+--- a/resources/views/components/auth/field.blade.php
++++ b/resources/views/components/auth/field.blade.php
+@@ -7,6 +7,7 @@
+     Props:
+         bag   nama error bag Laravel (bawaan "default"; profil memakai "updatePassword" dan "userDeletion")
+         lg    true (bawaan) untuk input besar; false untuk input ukuran biasa
++        horizontal  true untuk tata letak label di kiri, input di kanan (halaman profil)
+         id    bila beda dari name (mis. dua form di satu halaman)
+ 
+     - Kata sandi tidak pernah diisi ulang (type="password" selalu kosong).
+@@ -22,6 +23,7 @@
+     'id'       => null,
+     'bag'      => 'default',
+     'lg'       => true,
++    'horizontal' => false,
+     'required' => true,
+ ])
+ @php
+@@ -33,8 +35,14 @@
+     $focus       = $anyErrors ? $firstError : $attributes->has('autofocus');
+     $describedBy = trim(($hint ? $id . '-hint ' : '') . ($hasError ? $id . '-error' : ''));
+ @endphp
++@if ($horizontal)
++<div class="row mb-3">
++    <label for="{{ $id }}" class="col-sm-3 col-form-label text-sm-end fw-semibold">{{ $label }}</label>
++    <div class="col-sm-9">
++@else
+ <div class="mb-3">
+     <label for="{{ $id }}" class="form-label fw-semibold">{{ $label }}</label>
++@endif
+     <input
+         id="{{ $id }}"
+         name="{{ $name }}"
+@@ -56,4 +64,7 @@
+             @endforeach
+         </div>
+     @endif
++@if ($horizontal)
++    </div>
++@endif
+ </div>
+diff --git a/resources/views/components/user-avatar.blade.php b/resources/views/components/user-avatar.blade.php
+new file mode 100644
+index 0000000..2b768c7
+--- /dev/null
++++ b/resources/views/components/user-avatar.blade.php
+@@ -0,0 +1,14 @@
++{{--
++    Foto profil bulat; bila belum ada foto, tampil inisial nama. Dekoratif (alt kosong): nama sudah ada
++    di teks atau aria-label tautan di sekitarnya.
++    <x-user-avatar :user="$user" :size="36" />
++--}}
++@props(['user', 'size' => 36])
++@php($url = $user->avatarUrl())
++@if ($url)
++    <img src="{{ $url }}" alt="" width="{{ $size }}" height="{{ $size }}"
++         {{ $attributes->merge(['class' => 'user-avatar rounded-circle']) }} style="width: {{ $size }}px; height: {{ $size }}px;">
++@else
++    <span {{ $attributes->merge(['class' => 'user-avatar user-avatar-initials rounded-circle']) }}
++          style="width: {{ $size }}px; height: {{ $size }}px; font-size: {{ round($size * 0.38) }}px;" aria-hidden="true">{{ $user->initials() }}</span>
++@endif
+diff --git a/resources/views/partials/footer.blade.php b/resources/views/partials/footer.blade.php
+index 3e0858f..8cf2c58 100644
+--- a/resources/views/partials/footer.blade.php
++++ b/resources/views/partials/footer.blade.php
+@@ -1,36 +1,26 @@
+-{{-- Footer gelap: ikon sosial (WhatsApp wajib), kelompok tautan menurut peran, hak cipta. --}}
++{{-- Footer terang bergaya marketplace: kolom layanan, jelajahi, akun, pembayaran, dan ikuti kami. --}}
+ @php
+-    $user = auth()->user();
+-    $wa   = \App\Support\StoreContact::whatsapp(__('foodtech.footer.wa_message'));
+-    $ig   = \App\Support\StoreContact::instagram();
++    $user   = auth()->user();
++    $wa     = \App\Support\StoreContact::whatsapp(__('foodtech.footer.wa_message'));
++    $ig     = \App\Support\StoreContact::instagram();
++    $tenors = config('lumeria.paylater.tenors', [1, 2, 3]);
++    $locale = app()->getLocale();
+ @endphp
+ <footer class="ft-footer">
+     <div class="container">
+-        <div class="ft-social" role="group" aria-label="{{ __('foodtech.footer.social') }}">
+-            @if ($wa)
+-                <a href="{{ $wa }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('foodtech.footer.whatsapp') }}">
+-                    <x-icon name="whatsapp" :size="22" />
+-                </a>
+-            @endif
+-            @if ($ig)
+-                <a href="{{ $ig['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('foodtech.footer.instagram') }}">
+-                    <x-icon name="instagram" :size="22" />
+-                </a>
+-            @endif
+-        </div>
+-
+-        <div class="row g-4">
+-            <div class="col-12 col-lg-5">
+-                <p class="ft-footer-brand">{{ __('common.brand') }}</p>
+-                <p class="ft-footer-muted mb-3">{{ __('home.tagline') }}</p>
+-                @if ($wa)
+-                    <a href="{{ $wa }}" target="_blank" rel="noopener noreferrer" class="btn ft-btn-accent">
+-                        <x-icon name="whatsapp" :size="18" class="me-2" />{{ __('foodtech.footer.chat_wa') }}
+-                    </a>
+-                @endif
++        <div class="row g-4 g-xl-5">
++            <div class="col-6 col-md-4 col-xl">
++                <h2 class="ft-footer-title">{{ __('foodtech.footer.customer_service') }}</h2>
++                <ul>
++                    <li><a href="{{ route('order') }}">{{ __('foodtech.footer.how_to_order') }}</a></li>
++                    <li><a href="{{ $user ? route('orders.index') : route('login') }}">{{ __('foodtech.footer.track_order') }}</a></li>
++                    @if ($wa)
++                        <li><a href="{{ $wa }}" target="_blank" rel="noopener noreferrer">{{ __('foodtech.footer.contact_us') }}</a></li>
++                    @endif
++                </ul>
+             </div>
+ 
+-            <div class="col-6 col-lg-3">
++            <div class="col-6 col-md-4 col-xl">
+                 <h2 class="ft-footer-title">{{ __('foodtech.footer.explore') }}</h2>
+                 <ul>
+                     <li><a href="{{ route('home') }}">{{ __('nav.home') }}</a></li>
+@@ -39,24 +29,64 @@
+                 </ul>
+             </div>
+ 
+-            <div class="col-6 col-lg-4">
++            <div class="col-6 col-md-4 col-xl">
+                 <h2 class="ft-footer-title">{{ __('foodtech.footer.account') }}</h2>
+                 <ul>
+                     @guest
+                         <li><a href="{{ route('login') }}">{{ __('nav.login') }}</a></li>
+                         <li><a href="{{ route('register') }}">{{ __('nav.register') }}</a></li>
+                     @else
++                        <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
+                         <li><a href="{{ route('orders.index') }}">{{ __('foodtech.nav.my_orders') }}</a></li>
+                         <li><a href="{{ route('dashboard') }}">{{ __('nav.dashboard') }}</a></li>
+-                        <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
+                         @if ($user->isAdmin())
+                             <li><a href="{{ route('admin.dashboard') }}">{{ __('foodtech.nav.admin') }}</a></li>
++                            <li><a href="{{ route('admin.users.index') }}">{{ __('users.nav') }}</a></li>
+                         @endif
+                     @endguest
+                 </ul>
+             </div>
++
++            <div class="col-6 col-md-6 col-xl">
++                <h2 class="ft-footer-title">{{ __('foodtech.footer.payment') }}</h2>
++                <ul class="ft-pay-list">
++                    <li class="ft-pay">{{ __('foodtech.footer.pay_cash') }}</li>
++                    <li class="ft-pay">{{ __('foodtech.footer.pay_paylater') }}</li>
++                </ul>
++                <p class="ft-footer-note">{{ __('foodtech.footer.pay_note', ['min' => min($tenors), 'max' => max($tenors)]) }}</p>
++            </div>
++
++            @if ($wa || $ig)
++                <div class="col-12 col-md-6 col-xl">
++                    <h2 class="ft-footer-title">{{ __('foodtech.footer.follow') }}</h2>
++                    <ul class="ft-follow" aria-label="{{ __('foodtech.footer.social') }}">
++                        @if ($wa)
++                            <li>
++                                <a href="{{ $wa }}" target="_blank" rel="noopener noreferrer">
++                                    <x-icon name="whatsapp" :size="20" />{{ __('foodtech.footer.whatsapp') }}
++                                </a>
++                            </li>
++                        @endif
++                        @if ($ig)
++                            <li>
++                                <a href="{{ $ig['url'] }}" target="_blank" rel="noopener noreferrer">
++                                    <x-icon name="instagram" :size="20" />{{ __('foodtech.footer.instagram') }}
++                                </a>
++                            </li>
++                        @endif
++                    </ul>
++                </div>
++            @endif
+         </div>
+ 
+-        <div class="ft-copy">&copy; {{ date('Y') }} {{ __('common.brand') }}. {{ __('common.footer_rights') }}</div>
++        <div class="ft-copy d-flex flex-wrap justify-content-between align-items-center gap-2">
++            <span>&copy; {{ date('Y') }} {{ __('common.brand') }}. {{ __('common.footer_rights') }}</span>
++            <span class="ft-lang">
++                {{ __('common.language') }}:
++                @foreach (['id' => 'Indonesia', 'en' => 'English'] as $code => $label)
++                    <a href="{{ route('lang.switch', $code) }}"@if ($locale === $code) aria-current="true"@endif>{{ $label }}</a>
++                @endforeach
++            </span>
++        </div>
+     </div>
+ </footer>
+diff --git a/resources/views/partials/navbar.blade.php b/resources/views/partials/navbar.blade.php
+index 8b964c3..4c96501 100644
+--- a/resources/views/partials/navbar.blade.php
++++ b/resources/views/partials/navbar.blade.php
+@@ -11,16 +11,18 @@
+ 
+     if ($user) {
+         $links[] = ['orders.index', 'foodtech.nav.my_orders'];
+-        $links[] = ['team', 'nav.team'];
+     }
+ 
+-    if ($user?->isAdmin()) {
+-        $links[] = ['admin.dashboard', 'foodtech.nav.admin'];
+-    }
+-
+-    // Materi khusus admin (Nilai Islam dan Diskusi Ekonomi)
+-    $materials = $user?->isAdmin() ? [['islamic', 'nav.islamic'], ['economic', 'nav.economic']] : [];
+-    $materialsActive = request()->routeIs('islamic', 'economic');
++    // Menu admin dikelompokkan dalam satu dropdown agar bilah navigasi tidak penuh.
++    // Format: [rute, label, pola rute aktif]
++    $adminMenu = $user?->isAdmin() ? [
++        ['admin.dashboard',   'foodtech.nav.admin', 'admin.dashboard'],
++        ['admin.users.index', 'users.nav',          'admin.users.*'],
++        ['team',              'nav.team',           'team'],
++        ['islamic',           'nav.islamic',        'islamic'],
++        ['economic',          'nav.economic',       'economic'],
++    ] : [];
++    $adminActive = request()->routeIs('admin.*', 'team', 'islamic', 'economic');
+     $locale = app()->getLocale();
+ @endphp
+ <nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top" aria-label="{{ __('nav.menu') }}">
+@@ -62,13 +64,13 @@ class="rounded-circle"
+                     </li>
+                 @endforeach
+ 
+-                @if ($materials)
++                @if ($adminMenu)
+                     <li class="nav-item dropdown">
+-                        <a class="nav-link dropdown-toggle{{ $materialsActive ? ' active fw-semibold' : '' }}" href="#" role="button"
+-                           data-bs-toggle="dropdown" aria-expanded="false">{{ __('foodtech.nav.materials') }}</a>
++                        <a class="nav-link dropdown-toggle{{ $adminActive ? ' active fw-semibold' : '' }}" href="#" role="button"
++                           data-bs-toggle="dropdown" aria-expanded="false">{{ __('users.admin_menu') }}</a>
+                         <ul class="dropdown-menu">
+-                            @foreach ($materials as [$route, $label])
+-                                <li><a class="dropdown-item{{ request()->routeIs($route) ? ' active' : '' }}" href="{{ route($route) }}">{{ __($label) }}</a></li>
++                            @foreach ($adminMenu as [$route, $label, $pattern])
++                                <li><a class="dropdown-item{{ request()->routeIs($pattern) ? ' active' : '' }}" href="{{ route($route) }}">{{ __($label) }}</a></li>
+                             @endforeach
+                         </ul>
+                     </li>
+@@ -86,6 +88,11 @@ class="btn btn-outline-dark{{ $locale === $code ? ' active' : '' }}"@if ($locale
+ 
+ 
+                 @auth
++                    <a href="{{ route('profile.edit') }}" class="nav-avatar d-inline-flex align-items-center gap-2 text-decoration-none"
++                       aria-label="{{ __('profile.open_profile') }}: {{ $user->name }}"@if (request()->routeIs('profile.edit')) aria-current="page"@endif>
++                        <x-user-avatar :user="$user" :size="36" />
++                        <span class="d-xl-none fw-semibold text-dark">{{ $user->name }}</span>
++                    </a>
+                     <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-dark">{{ __('nav.dashboard') }}</a>
+                     <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                         @csrf
+diff --git a/resources/views/profile/edit.blade.php b/resources/views/profile/edit.blade.php
+index 11ce354..835d2c6 100644
+--- a/resources/views/profile/edit.blade.php
++++ b/resources/views/profile/edit.blade.php
+@@ -1,25 +1,25 @@
+ <x-app-layout>
+-    <x-slot:title>{{ __('Profile') }}</x-slot:title>
++    <x-slot:title>{{ __('profile.title') }}</x-slot:title>
+ 
+-    <x-slot:header>
+-        <h1 class="h2 fw-bold mb-0">{{ __('Profile') }}</h1>
+-    </x-slot:header>
++    <div class="row g-4">
++        <aside class="col-lg-3">
++            @include('profile.partials.sidebar')
++        </aside>
+ 
+-    <div class="row">
+-        <div class="col-lg-8 col-xl-7 d-grid gap-4">
+-            <div class="card account-section">
++        <div class="col-lg-9 d-grid gap-4">
++            <div id="profil" class="card account-section">
+                 <div class="card-body p-4">
+                     @include('profile.partials.update-profile-information-form')
+                 </div>
+             </div>
+ 
+-            <div class="card account-section">
++            <div id="kata-sandi" class="card account-section">
+                 <div class="card-body p-4">
+                     @include('profile.partials.update-password-form')
+                 </div>
+             </div>
+ 
+-            <div class="card account-section account-section-danger">
++            <div id="hapus-akun" class="card account-section account-section-danger">
+                 <div class="card-body p-4">
+                     @include('profile.partials.delete-user-form')
+                 </div>
+diff --git a/resources/views/profile/partials/sidebar.blade.php b/resources/views/profile/partials/sidebar.blade.php
+new file mode 100644
+index 0000000..df914a0
+--- /dev/null
++++ b/resources/views/profile/partials/sidebar.blade.php
+@@ -0,0 +1,20 @@
++{{-- Menu samping profil: identitas singkat pengguna + tautan ke bagian halaman dan ke Pesanan Saya. --}}
++<div class="profile-side">
++    <div class="d-flex align-items-center gap-3 pb-3 mb-3 border-bottom">
++        <x-user-avatar :user="$user" :size="56" class="flex-shrink-0" />
++        <div class="min-w-0">
++            <div class="fw-bold text-truncate">{{ $user->name }}</div>
++            <a href="#profil" class="small text-muted">{{ __('profile.edit_profile') }}</a>
++        </div>
++    </div>
++
++    <nav aria-label="{{ __('profile.my_account') }}">
++        <p class="fw-bold mb-1">{{ __('profile.my_account') }}</p>
++        <ul class="profile-nav">
++            <li><a href="#profil">{{ __('profile.nav_profile') }}</a></li>
++            <li><a href="#kata-sandi">{{ __('profile.nav_password') }}</a></li>
++            <li><a href="#hapus-akun">{{ __('profile.nav_delete') }}</a></li>
++            <li class="profile-nav-main"><a href="{{ route('orders.index') }}" class="fw-bold">{{ __('foodtech.nav.my_orders') }}</a></li>
++        </ul>
++    </nav>
++</div>
+diff --git a/resources/views/profile/partials/update-profile-information-form.blade.php b/resources/views/profile/partials/update-profile-information-form.blade.php
+index 6f3a03e..c661e28 100644
+--- a/resources/views/profile/partials/update-profile-information-form.blade.php
++++ b/resources/views/profile/partials/update-profile-information-form.blade.php
+@@ -1,40 +1,144 @@
+ <section aria-labelledby="profile-information-title">
+-    <h2 id="profile-information-title" class="h5 fw-bold mb-1">{{ __('Profile Information') }}</h2>
+-    <p class="text-muted mb-4">{{ __("Update your account's profile information and email address.") }}</p>
++    <h2 id="profile-information-title" class="h4 fw-bold mb-1">{{ __('profile.title') }}</h2>
++    <p class="text-muted pb-3 mb-4 border-bottom">{{ __('profile.subtitle') }}</p>
+ 
+     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
+         @csrf
+     </form>
+ 
+-    <form method="post" action="{{ route('profile.update') }}" novalidate>
++    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" novalidate>
+         @csrf
+         @method('patch')
+ 
+-        <x-auth.field name="name" type="text" :label="__('Name')" :value="old('name', $user->name)" autocomplete="name" :lg="false" />
++        <div class="row g-4">
++            {{-- Foto profil: di atas pada layar kecil, di kanan pada layar sedang ke atas --}}
++            <div class="col-md-4 order-first order-md-last profile-photo-col text-center">
++                <div id="avatar-preview" class="d-inline-block mb-3">
++                    <x-user-avatar :user="$user" :size="100" />
++                </div>
+ 
+-        <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email', $user->email)" autocomplete="username" :lg="false" />
++                <div>
++                    <input id="avatar" name="avatar" type="file" class="visually-hidden profile-file"
++                           accept="image/png,image/jpeg" data-max-bytes="{{ \App\Models\User::AVATAR_MAX_KB * 1024 }}"
++                           data-too-big="{{ __('profile.image_too_big') }}"
++                           aria-describedby="avatar-help{{ $errors->has('avatar') ? ' avatar-error' : '' }}"
++                           @if ($errors->has('avatar')) aria-invalid="true" @endif>
++                    <label for="avatar" class="btn btn-outline-dark">{{ __('profile.choose_image') }}</label>
++                </div>
+ 
+-        @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
+-            <div class="alert alert-warning" role="status">
+-                {{ __('Your email address is unverified.') }}
+-                <button type="submit" form="send-verification" class="btn btn-link p-0 align-baseline">
+-                    {{ __('Click here to re-send the verification email.') }}
+-                </button>
+-            </div>
++                <p id="avatar-help" class="text-muted small mt-3 mb-0">
++                    {{ __('profile.image_max') }}<br>{{ __('profile.image_format') }}
++                </p>
+ 
+-            @if (session('status') === 'verification-link-sent')
+-                <div class="alert alert-success" role="status">
+-                    {{ __('A new verification link has been sent to your email address.') }}
++                <div id="avatar-error" class="text-danger small mt-2" @if (! $errors->has('avatar')) hidden @endif>
++                    @foreach ($errors->get('avatar') as $message)
++                        <div>{{ $message }}</div>
++                    @endforeach
+                 </div>
+-            @endif
+-        @endif
+ 
+-        <div class="d-flex flex-wrap align-items-center gap-3">
+-            <button type="submit" class="btn btn-lumeria">{{ __('Save') }}</button>
++                @if ($user->hasAvatar())
++                    <div class="form-check d-inline-block text-start mt-3">
++                        <input class="form-check-input" type="checkbox" id="remove_avatar" name="remove_avatar" value="1">
++                        <label class="form-check-label" for="remove_avatar">{{ __('profile.remove_photo') }}</label>
++                    </div>
++                @endif
++            </div>
++
++            <div class="col-md-8">
++                <x-auth.field name="name" type="text" :label="__('Name')" :value="old('name', $user->name)" autocomplete="name" :lg="false" :horizontal="true" />
++
++                <x-auth.field name="email" type="email" :label="__('Email')" :value="old('email', $user->email)" autocomplete="username" :lg="false" :horizontal="true" />
++
++                @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
++                    <div class="row mb-3">
++                        <div class="col-sm-9 offset-sm-3">
++                            <div class="alert alert-warning mb-0" role="status">
++                                {{ __('Your email address is unverified.') }}
++                                <button type="submit" form="send-verification" class="btn btn-link p-0 align-baseline">
++                                    {{ __('Click here to re-send the verification email.') }}
++                                </button>
++                            </div>
++                            @if (session('status') === 'verification-link-sent')
++                                <div class="alert alert-success mt-2 mb-0" role="status">
++                                    {{ __('A new verification link has been sent to your email address.') }}
++                                </div>
++                            @endif
++                        </div>
++                    </div>
++                @endif
++
++                <x-auth.field name="phone" type="tel" :label="__('profile.phone')" :value="old('phone', $user->phone)" :hint="__('profile.phone_hint')"
++                    autocomplete="tel" inputmode="tel" :required="false" :lg="false" :horizontal="true" />
++
++                <fieldset class="row mb-3">
++                    <legend class="col-sm-3 col-form-label text-sm-end fw-semibold pt-0 fs-6">{{ __('profile.gender') }}</legend>
++                    <div class="col-sm-9">
++                        <div class="d-flex flex-wrap gap-3">
++                            @foreach (\App\Models\User::GENDERS as $gender)
++                                <div class="form-check">
++                                    <input class="form-check-input{{ $errors->has('gender') ? ' is-invalid' : '' }}" type="radio" name="gender"
++                                           id="gender_{{ $gender }}" value="{{ $gender }}" @checked(old('gender', $user->gender) === $gender)>
++                                    <label class="form-check-label" for="gender_{{ $gender }}">{{ __('profile.' . $gender) }}</label>
++                                </div>
++                            @endforeach
++                        </div>
++                        @error('gender')
++                            <div class="text-danger small mt-1">{{ $message }}</div>
++                        @enderror
++                    </div>
++                </fieldset>
+ 
+-            @if (session('status') === 'profile-updated')
+-                <span class="text-success-emphasis fw-semibold" role="status">{{ __('Saved.') }}</span>
+-            @endif
++                <x-auth.field name="birth_date" type="date" :label="__('profile.birth_date')"
++                    :value="old('birth_date', $user->birth_date?->toDateString())" max="{{ now()->subDay()->toDateString() }}"
++                    autocomplete="bday" :required="false" :lg="false" :horizontal="true" />
++
++                <div class="row">
++                    <div class="col-sm-9 offset-sm-3 d-flex flex-wrap align-items-center gap-3">
++                        <button type="submit" class="btn btn-lumeria px-4">{{ __('Save') }}</button>
++
++                        @if (session('status') === 'profile-updated')
++                            <span class="text-success-emphasis fw-semibold" role="status">{{ __('Saved.') }}</span>
++                        @endif
++                    </div>
++                </div>
++            </div>
+         </div>
+     </form>
+ </section>
++
++@push('scripts')
++    <script>
++        (function () {
++            var input = document.getElementById('avatar');
++            var holder = document.getElementById('avatar-preview');
++            var error = document.getElementById('avatar-error');
++            if (!input || !holder) { return; }
++
++            input.addEventListener('change', function () {
++                var file = input.files && input.files[0];
++                if (!file) { return; }
++
++                // Batas 1 MB juga dicek di server; ini hanya agar pesan muncul lebih cepat.
++                if (file.size > Number(input.dataset.maxBytes)) {
++                    input.value = '';
++                    error.textContent = input.dataset.tooBig;
++                    error.hidden = false;
++                    return;
++                }
++
++                error.hidden = true;
++                error.textContent = '';
++
++                var img = document.createElement('img');
++                img.src = URL.createObjectURL(file);
++                img.alt = '';
++                img.width = 100;
++                img.height = 100;
++                img.className = 'user-avatar rounded-circle';
++                img.style.width = '100px';
++                img.style.height = '100px';
++                holder.replaceChildren(img);
++            });
++        })();
++    </script>
++@endpush
+diff --git a/routes/web.php b/routes/web.php
+index a8bc115..3f81cce 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -2,6 +2,7 @@
+ 
+ 
+ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
++use App\Http\Controllers\Admin\UserController as AdminUserController;
+ use App\Http\Controllers\CartController;
+ use App\Http\Controllers\LocaleController;
+ use App\Http\Controllers\OrderController;
+@@ -16,9 +17,10 @@
+ |--------------------------------------------------------------------------
+ | Tiga perspektif (arahan Pak CEO)
+ |--------------------------------------------------------------------------
+-| 1. TAMU      : etalase produk, detail produk, info pemesanan & simulasi Paylater.
+-| 2. PELANGGAN : (group 'auth') keranjang, checkout, Pesanan Saya, profil, Our Team.
+-| 3. ADMIN     : (group 'auth' + 'admin') panel toko dan materi Nilai Islam / Diskusi Ekonomi.
++| 1. TAMU      : etalase produk, detail produk, info pemesanan & simulasi Paylater (hanya melihat).
++| 2. PELANGGAN : (group 'auth') keranjang, checkout, Pesanan Saya, profil.
++| 3. ADMIN     : (group 'auth' + 'admin') panel toko, kelola pengguna (CRUD), Our Team,
++|                materi Nilai Islam / Diskusi Ekonomi.
+ */
+ 
+ 
+@@ -44,6 +46,7 @@
+     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
++    Route::get('/avatar/{user}', [ProfileController::class, 'avatar'])->name('avatar.show')->whereNumber('user');
+ 
+     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+     Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update')->whereNumber('product');
+@@ -53,9 +56,6 @@
+     // Detail pesanan: tamu diarahkan ke login; pemilik dan admin boleh, pengguna lain 403 (lihat OrderController::show).
+     Route::get('/order/{order}', [OrderController::class, 'show'])->name('order.show')->whereNumber('order');
+     Route::get('/orders', [OrderController::class, 'history'])->name('orders.index');
+-
+-    // Our Team: disembunyikan dari tamu. Untuk membatasi ke admin saja, pindahkan baris ini ke group admin di bawah.
+-    Route::get('/our-team', [PageController::class, 'team'])->name('team');
+ });
+ 
+ 
+@@ -63,6 +63,15 @@
+ Route::middleware(['auth', 'admin'])->group(function () {
+     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+ 
++    // Kelola pengguna (CRUD): hanya admin.
++    Route::resource('admin/users', AdminUserController::class)
++        ->except('show')
++        ->names('admin.users')
++        ->parameters(['users' => 'user']);
++
++    // Our Team: hanya admin.
++    Route::get('/our-team', [PageController::class, 'team'])->name('team');
++
+     // Bagian khusus / materi keagamaan dan diskusi. URL tetap sama seperti sebelumnya.
+     Route::get('/islamic-values', [PageController::class, 'islamic'])->name('islamic');
+     Route::get('/economic-discussion', [PageController::class, 'economic'])->name('economic');
+diff --git a/tests/Feature/AdminSeederTest.php b/tests/Feature/AdminSeederTest.php
+new file mode 100644
+index 0000000..25c5f27
+--- /dev/null
++++ b/tests/Feature/AdminSeederTest.php
+@@ -0,0 +1,111 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\User;
++use Database\Seeders\AdminSeeder;
++use Database\Seeders\DatabaseSeeder;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Facades\Hash;
++use Tests\TestCase;
++
++class AdminSeederTest extends TestCase
++{
++    use RefreshDatabase;
++
++    protected function setUp(): void
++    {
++        parent::setUp();
++
++        config(['lumeria.admin.password' => null, 'lumeria.admin.email_domain' => 'lumeria.test']);
++    }
++
++    public function test_it_creates_the_four_team_admins_with_full_names_from_the_team_config(): void
++    {
++        $this->seed(AdminSeeder::class);
++
++        $admins = User::where('role', User::ROLE_ADMIN)->orderBy('email')->get();
++        $this->assertCount(4, $admins);
++
++        $this->assertSame(
++            ['alfatih@lumeria.test', 'aliful@lumeria.test', 'jimny@lumeria.test', 'sanaya@lumeria.test'],
++            $admins->pluck('email')->all(),
++        );
++
++        $names = $admins->pluck('name')->all();
++        foreach (config('lumeria.team') as $member) {
++            $this->assertContains($member['name'], $names);
++        }
++
++        $this->assertTrue($admins->every(fn (User $u) => $u->email_verified_at !== null));
++    }
++
++    public function test_it_is_idempotent(): void
++    {
++        $this->seed(AdminSeeder::class);
++        $this->seed(AdminSeeder::class);
++
++        $this->assertSame(4, User::count());
++    }
++
++    public function test_configured_password_is_used_and_reset_on_rerun(): void
++    {
++        config(['lumeria.admin.password' => 'sandi-dari-env-123']);
++        $this->seed(AdminSeeder::class);
++
++        foreach (AdminSeeder::ADMIN_KEYS as $key) {
++            $this->assertTrue(Hash::check('sandi-dari-env-123', User::where('email', "{$key}@lumeria.test")->firstOrFail()->password));
++        }
++
++        config(['lumeria.admin.password' => 'sandi-baru-456']);
++        $this->seed(AdminSeeder::class);
++
++        $this->assertTrue(Hash::check('sandi-baru-456', User::where('email', 'sanaya@lumeria.test')->firstOrFail()->password));
++    }
++
++    public function test_without_configured_password_random_unique_passwords_are_generated_and_not_rotated(): void
++    {
++        $this->seed(AdminSeeder::class);
++        $hashes = User::where('role', 'admin')->pluck('password', 'email');
++
++        $this->assertCount(4, $hashes->unique(), 'Setiap admin mendapat kata sandi acak yang berbeda');
++        foreach (['password', 'admin', '12345678', 'lumeria', 'sanaya'] as $weak) {
++            $this->assertFalse(Hash::check($weak, $hashes['sanaya@lumeria.test']), "Tidak boleh memakai kata sandi bawaan '{$weak}'");
++        }
++
++        $this->seed(AdminSeeder::class);
++        $this->assertSame($hashes->all(), User::where('role', 'admin')->pluck('password', 'email')->all(), 'Menjalankan ulang tidak mengganti kata sandi yang sudah ada');
++    }
++
++    public function test_it_promotes_an_existing_account_with_the_same_email_and_leaves_others_alone(): void
++    {
++        $existing = User::factory()->create(['email' => 'jimny@lumeria.test', 'name' => 'Lama']);
++        $other    = User::factory()->create(['email' => 'pelanggan@example.com']);
++        $oldHash  = $existing->password;
++
++        $this->seed(AdminSeeder::class);
++
++        $existing->refresh();
++        $this->assertTrue($existing->isAdmin());
++        $this->assertSame('Jimny Al Ramadhan Syahnendi', $existing->name);
++        $this->assertSame($oldHash, $existing->password);
++        $this->assertSame(User::ROLE_CUSTOMER, $other->fresh()->role);
++    }
++
++    public function test_email_domain_can_be_configured(): void
++    {
++        config(['lumeria.admin.email_domain' => 'tim.example.org']);
++
++        $this->seed(AdminSeeder::class);
++
++        $this->assertDatabaseHas('users', ['email' => 'aliful@tim.example.org', 'role' => 'admin']);
++        $this->assertDatabaseMissing('users', ['email' => 'aliful@lumeria.test']);
++    }
++
++    public function test_the_main_database_seeder_runs_the_admin_seeder(): void
++    {
++        $this->seed(DatabaseSeeder::class);
++
++        $this->assertSame(4, User::where('role', User::ROLE_ADMIN)->count());
++    }
++}
+diff --git a/tests/Feature/FooterAndResponsiveTest.php b/tests/Feature/FooterAndResponsiveTest.php
+new file mode 100644
+index 0000000..92a846d
+--- /dev/null
++++ b/tests/Feature/FooterAndResponsiveTest.php
+@@ -0,0 +1,106 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\User;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Tests\TestCase;
++
++/**
++ * Footer bergaya marketplace dan dasar tata letak responsif di semua layout.
++ */
++class FooterAndResponsiveTest extends TestCase
++{
++    use RefreshDatabase;
++
++    private function footer(string $html): string
++    {
++        preg_match('#<footer class="ft-footer">.*?</footer>#s', $html, $m);
++
++        return $m[0] ?? '';
++    }
++
++    public function test_guest_footer_has_service_explore_account_and_payment_columns(): void
++    {
++        $html = $this->withCookie('locale', 'id')->get('/products')->assertOk()->getContent();
++        $footer = $this->footer($html);
++
++        foreach (['Layanan Pelanggan', 'Jelajahi', 'Akun', 'Pembayaran', 'Cara Memesan', 'Lacak Pesanan', 'Tunai', 'Paylater', 'Cicilan 1 sampai 3 bulan', 'Bahasa:'] as $text) {
++            $this->assertStringContainsString($text, $footer);
++        }
++
++        foreach ([route('order'), route('login'), route('register'), route('home'), route('products'), route('lang.switch', 'en')] as $url) {
++            $this->assertStringContainsString($url, $footer);
++        }
++
++        $this->assertStringNotContainsString('<img', $footer, 'Metode pembayaran berupa teks, tanpa logo pihak ketiga');
++    }
++
++    public function test_footer_follows_the_locale_and_the_configured_tenors(): void
++    {
++        config(['lumeria.paylater.tenors' => [2, 4, 6]]);
++
++        $footer = $this->footer($this->withCookie('locale', 'en')->get('/')->getContent());
++
++        $this->assertStringContainsString('Customer Service', $footer);
++        $this->assertStringContainsString('Payment', $footer);
++        $this->assertStringContainsString('Installments of 2 to 6 months', $footer);
++        $this->assertStringContainsString('Language:', $footer);
++        $this->assertStringNotContainsString('Layanan Pelanggan', $footer);
++    }
++
++    public function test_footer_account_links_follow_the_role(): void
++    {
++        $customer = $this->footer($this->actingAs(User::factory()->create())->get('/')->getContent());
++        $this->assertStringContainsString(route('profile.edit'), $customer);
++        $this->assertStringContainsString(route('orders.index'), $customer);
++        $this->assertStringNotContainsString(route('register'), $customer);
++        $this->assertStringNotContainsString(route('admin.users.index'), $customer);
++        $this->assertStringNotContainsString(route('admin.dashboard'), $customer);
++
++        $admin = $this->footer($this->actingAs(User::factory()->admin()->create())->get('/')->getContent());
++        $this->assertStringContainsString(route('admin.users.index'), $admin);
++        $this->assertStringContainsString(route('admin.dashboard'), $admin);
++    }
++
++    public function test_follow_us_column_only_appears_when_a_contact_is_configured(): void
++    {
++        config(['lumeria.contact.whatsapp' => null, 'lumeria.contact.instagram' => null]);
++        $this->assertStringNotContainsString('Ikuti Kami', $this->footer($this->get('/')->getContent()));
++
++        config(['lumeria.contact.whatsapp' => '0812-3456-7890', 'lumeria.contact.instagram' => '@lumeria.co']);
++        $footer = $this->footer($this->withCookie('locale', 'id')->get('/')->getContent());
++
++        $this->assertStringContainsString('Ikuti Kami', $footer);
++        $this->assertStringContainsString('https://wa.me/6281234567890', $footer);
++        $this->assertStringContainsString('https://www.instagram.com/lumeria.co/', $footer);
++        $this->assertStringContainsString('Hubungi Kami', $footer);
++        $this->assertSame(substr_count($footer, 'target="_blank"'), substr_count($footer, 'rel="noopener noreferrer"'));
++    }
++
++    public function test_every_layout_declares_the_viewport_for_mobile(): void
++    {
++        $customer = User::factory()->create();
++        $admin    = User::factory()->admin()->create();
++
++        $pages = [
++            [null, '/'], [null, '/login'], [null, '/register'],
++            [$customer, '/dashboard'], [$customer, '/profile'],
++            [$admin, '/admin'], [$admin, '/admin/users'],
++        ];
++
++        foreach ($pages as [$user, $url]) {
++            $response = $user ? $this->actingAs($user)->get($url) : $this->get($url);
++            $response->assertOk()->assertSee('<meta name="viewport" content="width=device-width, initial-scale=1">', false);
++        }
++    }
++
++    public function test_wide_content_uses_responsive_containers(): void
++    {
++        $this->actingAs(User::factory()->admin()->create());
++
++        $this->get('/admin/users')->assertSee('table-responsive', false)->assertSee('stack-table', false);
++        $this->get('/admin')->assertSee('table-responsive', false);
++        $this->get('/profile')->assertSee('order-first order-md-last', false);
++    }
++}
+diff --git a/tests/Feature/ProfilePageTest.php b/tests/Feature/ProfilePageTest.php
+new file mode 100644
+index 0000000..63fec6d
+--- /dev/null
++++ b/tests/Feature/ProfilePageTest.php
+@@ -0,0 +1,265 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\User;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Http\UploadedFile;
++use Illuminate\Support\Facades\Storage;
++use Tests\TestCase;
++
++/**
++ * Halaman profil bergaya marketplace: menu samping, kolom tambahan, unggah foto, dan foto di navbar.
++ */
++class ProfilePageTest extends TestCase
++{
++    use RefreshDatabase;
++
++    /** PNG 1x1 yang valid, tanpa butuh ekstensi GD. */
++    private function png(string $name = 'foto.png', int $paddingKb = 0): UploadedFile
++    {
++        $bytes = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
++
++        return UploadedFile::fake()->createWithContent($name, $bytes . str_repeat("\0", $paddingKb * 1024));
++    }
++
++    /**
++     * File sungguhan di disk. UploadedFile::fake() menebak tipe dari NAMA file, sedangkan aplikasi membaca ISI file,
++     * jadi pemeriksaan tipe harus diuji dengan file nyata.
++     */
++    private function realFile(string $name, string $content): UploadedFile
++    {
++        $path = tempnam(sys_get_temp_dir(), 'lum');
++        file_put_contents($path, $content);
++
++        return new UploadedFile($path, $name, null, null, true);
++    }
++
++    private function save(User $user, array $extra = [])
++    {
++        return $this->actingAs($user)->from('/profile')->patch('/profile', array_merge([
++            'name'  => $user->name,
++            'email' => $user->email,
++        ], $extra));
++    }
++
++    public function test_profile_page_has_sidebar_and_marketplace_style_form(): void
++    {
++        $user = User::factory()->create(['gender' => 'male', 'phone' => '081234567890', 'birth_date' => '2008-05-17']);
++
++        $html = $this->actingAs($user)->withCookie('locale', 'id')->get('/profile')->assertOk()->getContent();
++
++        foreach (['Profil Saya', 'Akun Saya', 'Ubah Kata Sandi', 'Pilih Gambar', 'Ukuran gambar: maks. 1 MB', 'Format gambar: .JPEG, .PNG', 'Nomor Telepon', 'Jenis Kelamin', 'Tanggal Lahir'] as $text) {
++            $this->assertStringContainsString($text, $html);
++        }
++
++        foreach (['href="#profil"', 'href="#kata-sandi"', 'href="#hapus-akun"', 'enctype="multipart/form-data"', route('orders.index')] as $needle) {
++            $this->assertStringContainsString($needle, $html);
++        }
++
++        $this->assertStringContainsString('value="081234567890"', $html);
++        $this->assertStringContainsString('value="2008-05-17"', $html);
++        $this->assertMatchesRegularExpression('/id="gender_male"[^>]*checked/', $html);
++        $this->assertStringContainsString('<label for="phone"', $html);
++        $this->assertStringContainsString('<label for="birth_date"', $html);
++        $this->assertStringContainsString('accept="image/png,image/jpeg"', $html);
++    }
++
++    public function test_extra_profile_fields_are_saved_and_phone_is_normalised(): void
++    {
++        $user = User::factory()->create();
++
++        $this->save($user, ['phone' => '0812-3456 7890', 'gender' => 'female', 'birth_date' => '2008-05-17'])
++            ->assertSessionHasNoErrors()
++            ->assertRedirect('/profile');
++
++        $user->refresh();
++        $this->assertSame('081234567890', $user->phone);
++        $this->assertSame('female', $user->gender);
++        $this->assertSame('2008-05-17', $user->birth_date->toDateString());
++    }
++
++    public function test_invalid_extra_fields_are_rejected(): void
++    {
++        $user = User::factory()->create();
++
++        $this->save($user, ['phone' => 'abc', 'gender' => 'robot', 'birth_date' => now()->addDay()->toDateString()])
++            ->assertSessionHasErrors(['phone', 'gender', 'birth_date']);
++
++        $this->save($user, ['phone' => '12345'])->assertSessionHasErrors('phone');
++    }
++
++    public function test_role_cannot_be_changed_through_the_profile_form(): void
++    {
++        $user = User::factory()->create();
++
++        $this->save($user, ['role' => 'admin', 'avatar_path' => 'x/y.png'])->assertSessionHasNoErrors();
++
++        $user->refresh();
++        $this->assertSame(User::ROLE_CUSTOMER, $user->role);
++        $this->assertNull($user->avatar_path);
++    }
++
++    public function test_avatar_is_stored_privately_and_navbar_links_the_photo_to_the_profile(): void
++    {
++        Storage::fake('local');
++        $user = User::factory()->create();
++
++        $this->save($user, ['avatar' => $this->png()])->assertSessionHasNoErrors();
++
++        $user->refresh();
++        $this->assertNotNull($user->avatar_path);
++        Storage::disk('local')->assertExists($user->avatar_path);
++
++        $this->actingAs($user)->get('/')
++            ->assertOk()
++            ->assertSee('class="nav-avatar', false)
++            ->assertSee('href="' . route('profile.edit') . '"', false)
++            ->assertSee('/avatar/' . $user->id, false)
++            ->assertDontSee('storage/avatars', false);
++    }
++
++    public function test_navbar_shows_initials_when_there_is_no_photo(): void
++    {
++        $user = User::factory()->create(['name' => 'Budi Santoso']);
++
++        $this->actingAs($user)->get('/products')
++            ->assertOk()
++            ->assertSee('user-avatar-initials', false)
++            ->assertSee('>BS<', false)
++            ->assertSee('href="' . route('profile.edit') . '"', false);
++
++        $this->get('/logout');
++    }
++
++    public function test_guest_navbar_has_no_avatar(): void
++    {
++        $this->get('/')->assertOk()->assertDontSee('nav-avatar', false);
++    }
++
++    public function test_replacing_the_avatar_deletes_the_old_file(): void
++    {
++        Storage::fake('local');
++        $user = User::factory()->create();
++
++        $this->save($user, ['avatar' => $this->png('a.png')]);
++        $old = $user->fresh()->avatar_path;
++
++        $this->save($user->fresh(), ['avatar' => $this->png('b.png')]);
++        $new = $user->fresh()->avatar_path;
++
++        $this->assertNotSame($old, $new);
++        Storage::disk('local')->assertMissing($old);
++        Storage::disk('local')->assertExists($new);
++    }
++
++    public function test_avatar_over_one_megabyte_or_wrong_type_is_rejected(): void
++    {
++        Storage::fake('local');
++        $user = User::factory()->create();
++        $png  = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
++
++        $bad = [
++            'terlalu besar (1,5 MB)'      => $this->realFile('besar.png', $png . str_repeat("\0", 1536 * 1024)),
++            'teks bernama .png'           => $this->realFile('catatan.png', 'ini bukan gambar'),
++            'SVG berisi skrip'            => $this->realFile('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
++            'SVG menyamar sebagai .png'   => $this->realFile('logo.png', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
++            'PDF'                         => $this->realFile('dokumen.pdf', "%PDF-1.4\n%%EOF"),
++            'PHP menyamar sebagai .jpg'   => $this->realFile('shell.jpg', '<?php echo 1;'),
++        ];
++
++        foreach ($bad as $label => $file) {
++            $this->save($user, ['avatar' => $file]);
++            $errors = session('errors');
++            $this->assertTrue($errors && $errors->has('avatar'), "Seharusnya ditolak: {$label}");
++        }
++
++        // Gambar sungguhan di bawah 1 MB tetap diterima.
++        $this->save($user, ['avatar' => $this->realFile('ok.png', $png)])->assertSessionHasNoErrors();
++
++        $this->assertCount(1, Storage::disk('local')->allFiles());
++    }
++
++    public function test_avatar_can_be_removed(): void
++    {
++        Storage::fake('local');
++        $user = User::factory()->create();
++        $this->save($user, ['avatar' => $this->png()]);
++        $path = $user->fresh()->avatar_path;
++
++        $this->save($user->fresh(), ['remove_avatar' => '1'])->assertSessionHasNoErrors();
++
++        $this->assertNull($user->fresh()->avatar_path);
++        Storage::disk('local')->assertMissing($path);
++    }
++
++    public function test_only_the_owner_and_admins_can_open_an_avatar(): void
++    {
++        Storage::fake('local');
++        $owner = User::factory()->create();
++        $this->save($owner, ['avatar' => $this->png()]);
++        $owner->refresh();
++
++        $this->actingAs($owner)->get(route('avatar.show', $owner))
++            ->assertOk()
++            ->assertHeader('X-Content-Type-Options', 'nosniff');
++
++        $this->actingAs(User::factory()->admin()->create())->get(route('avatar.show', $owner))->assertOk();
++        $this->actingAs(User::factory()->create())->get(route('avatar.show', $owner))->assertForbidden();
++    }
++
++    public function test_guest_is_sent_to_login_for_avatar_and_missing_avatar_is_404(): void
++    {
++        $user = User::factory()->create();
++
++        $this->get(route('avatar.show', $user))->assertRedirect(route('login'));
++        $this->actingAs($user)->get(route('avatar.show', $user))->assertNotFound();
++    }
++
++    public function test_deleting_the_account_removes_the_avatar_file(): void
++    {
++        Storage::fake('local');
++        $user = User::factory()->create();
++        $this->save($user, ['avatar' => $this->png()]);
++        $path = $user->fresh()->avatar_path;
++
++        $this->actingAs($user->fresh())->delete('/profile', ['password' => 'password'])->assertRedirect('/');
++
++        Storage::disk('local')->assertMissing($path);
++        $this->assertModelMissing($user);
++    }
++
++    public function test_the_last_admin_cannot_delete_their_own_account_from_the_profile(): void
++    {
++        $admin = User::factory()->admin()->create();
++
++        $this->actingAs($admin)->from('/profile')
++            ->delete('/profile', ['password' => 'password'])
++            ->assertSessionHasErrorsIn('userDeletion', 'password')
++            ->assertRedirect('/profile');
++
++        $this->assertModelExists($admin);
++        $this->assertAuthenticatedAs($admin);
++    }
++
++    public function test_an_admin_can_delete_their_own_account_when_another_admin_exists(): void
++    {
++        $admin = User::factory()->admin()->create();
++        User::factory()->admin()->create();
++
++        $this->actingAs($admin)->delete('/profile', ['password' => 'password'])->assertRedirect('/');
++
++        $this->assertModelMissing($admin);
++    }
++
++    public function test_profile_and_users_language_files_have_the_same_keys_in_both_locales(): void
++    {
++        foreach (['profile', 'users'] as $file) {
++            $id = require lang_path("id/{$file}.php");
++            $en = require lang_path("en/{$file}.php");
++
++            $this->assertSame([], array_diff(array_keys($id), array_keys($en)), "{$file}: key ada di id saja");
++            $this->assertSame([], array_diff(array_keys($en), array_keys($id)), "{$file}: key ada di en saja");
++        }
++    }
++}
+diff --git a/tests/Feature/RoleAccessTest.php b/tests/Feature/RoleAccessTest.php
+index 35aa9dd..da57160 100644
+--- a/tests/Feature/RoleAccessTest.php
++++ b/tests/Feature/RoleAccessTest.php
+@@ -114,25 +114,25 @@ public function test_guest_is_sent_to_login_for_order_detail_and_checkout(): voi
+ 
+     // ---------- Pelanggan ----------
+ 
+-    public function test_customer_gets_orders_and_team_menu_but_not_admin_menu(): void
++    public function test_customer_gets_orders_menu_but_not_team_or_admin_menu(): void
+     {
+         $this->actingAs(User::factory()->create())
+             ->get('/')
+             ->assertOk()
+             ->assertSee(route('orders.index'), false)
+             ->assertSee('Pesanan Saya')
+-            ->assertSee(route('team'), false)
++            ->assertDontSee(route('team'), false)
+             ->assertDontSee(route('islamic'), false)
+             ->assertDontSee(route('admin.dashboard'), false);
+     }
+ 
+ 
+-    public function test_customer_can_open_team_but_is_forbidden_from_admin_pages(): void
++    public function test_customer_is_forbidden_from_team_and_admin_pages(): void
+     {
+         $this->actingAs(User::factory()->create());
+ 
+ 
+-        $this->get('/our-team')->assertOk();
++        $this->get('/our-team')->assertForbidden();
+         $this->get('/islamic-values')->assertForbidden();
+         $this->get('/economic-discussion')->assertForbidden();
+         $this->get('/admin')->assertForbidden();
+diff --git a/tests/Feature/RolePermissionMatrixTest.php b/tests/Feature/RolePermissionMatrixTest.php
+new file mode 100644
+index 0000000..c31ba06
+--- /dev/null
++++ b/tests/Feature/RolePermissionMatrixTest.php
+@@ -0,0 +1,88 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\Product;
++use App\Models\User;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Tests\TestCase;
++
++/**
++ * Ringkasan hak akses tiga peran dalam satu tabel:
++ *  - Tamu      : hanya melihat (etalase, detail produk, info pemesanan); tidak bisa memesan.
++ *  - Pelanggan : melihat dan memesan, Pesanan Saya, profil.
++ *  - Admin     : semua di atas + panel, kelola pengguna (CRUD), Our Team, materi.
++ */
++class RolePermissionMatrixTest extends TestCase
++{
++    use RefreshDatabase;
++
++    private const OK = 200;
++    private const LOGIN = 'login';
++    private const FORBIDDEN = 403;
++
++    /** @return array<string, array{0: string, 1: mixed, 2: mixed, 3: mixed}> [url, tamu, pelanggan, admin] */
++    public static function pages(): array
++    {
++        return [
++            'beranda'          => ['/', self::OK, self::OK, self::OK],
++            'produk'           => ['/products', self::OK, self::OK, self::OK],
++            'info pemesanan'   => ['/order', self::OK, self::OK, self::OK],
++            'login'            => ['/login', self::OK, 302, 302],
++            'pesanan saya'     => ['/orders', self::LOGIN, self::OK, self::OK],
++            'dashboard'        => ['/dashboard', self::LOGIN, self::OK, self::OK],
++            'profil'           => ['/profile', self::LOGIN, self::OK, self::OK],
++            'our team'         => ['/our-team', self::LOGIN, self::FORBIDDEN, self::OK],
++            'panel admin'      => ['/admin', self::LOGIN, self::FORBIDDEN, self::OK],
++            'daftar pengguna'  => ['/admin/users', self::LOGIN, self::FORBIDDEN, self::OK],
++            'tambah pengguna'  => ['/admin/users/create', self::LOGIN, self::FORBIDDEN, self::OK],
++            'nilai islam'      => ['/islamic-values', self::LOGIN, self::FORBIDDEN, self::OK],
++            'diskusi ekonomi'  => ['/economic-discussion', self::LOGIN, self::FORBIDDEN, self::OK],
++        ];
++    }
++
++    /** @dataProvider pages */
++    #[\PHPUnit\Framework\Attributes\DataProvider('pages')]
++    public function test_access_by_role(string $url, mixed $guest, mixed $customer, mixed $admin): void
++    {
++        $check = function ($response, mixed $expected) use ($url) {
++            $expected === self::LOGIN
++                ? $response->assertRedirect(route('login'))
++                : $response->assertStatus($expected);
++        };
++
++        $check($this->get($url), $guest);
++        $check($this->actingAs(User::factory()->create())->get($url), $customer);
++        $check($this->actingAs(User::factory()->admin()->create())->get($url), $admin);
++    }
++
++    public function test_guest_can_view_a_product_but_cannot_order(): void
++    {
++        $this->seed(\Database\Seeders\ProductSeeder::class);
++        $product = Product::first();
++
++        $this->get(route('products.show', $product))->assertOk();
++
++        $this->post(route('cart.add'), ['product_id' => $product->id, 'quantity' => 1])->assertRedirect(route('login'));
++        $this->post(route('order.store'), [])->assertRedirect(route('login'));
++        $this->assertDatabaseCount('orders', 0);
++    }
++
++    public function test_customer_can_add_to_cart_after_logging_in(): void
++    {
++        $this->seed(\Database\Seeders\ProductSeeder::class);
++        $product = Product::first();
++
++        $this->actingAs(User::factory()->create())
++            ->post(route('cart.add'), ['product_id' => $product->id, 'quantity' => 1])
++            ->assertSessionHasNoErrors()
++            ->assertRedirect();
++    }
++
++    public function test_only_admin_pages_expose_user_management_in_the_menu(): void
++    {
++        $this->get('/')->assertDontSee(route('admin.users.index'), false)->assertDontSee(route('team'), false);
++        $this->actingAs(User::factory()->create())->get('/')->assertDontSee(route('admin.users.index'), false)->assertDontSee(route('team'), false);
++        $this->actingAs(User::factory()->admin()->create())->get('/')->assertSee(route('admin.users.index'), false)->assertSee(route('team'), false);
++    }
++}
+diff --git a/tests/Feature/StaticPagesTest.php b/tests/Feature/StaticPagesTest.php
+index 9015db4..3b65a09 100644
+--- a/tests/Feature/StaticPagesTest.php
++++ b/tests/Feature/StaticPagesTest.php
+@@ -14,18 +14,13 @@ class StaticPagesTest extends TestCase
+     use RefreshDatabase;
+ 
+ 
+-    // Halaman materi (Nilai Islam, Diskusi Ekonomi) hanya untuk admin; Our Team untuk pengguna login.
++    // Halaman materi (Nilai Islam, Diskusi Ekonomi) dan Our Team hanya untuk admin.
+     private function admin(): static
+     {
+         return $this->actingAs(User::factory()->admin()->create());
+     }
+ 
+ 
+-    private function customer(): static
+-    {
+-        return $this->actingAs(User::factory()->create());
+-    }
+-
+ 
+     public function test_islamic_page_renders_in_indonesian(): void
+     {
+@@ -67,7 +62,7 @@ public function test_economic_discussion_keeps_discussion_text_structure_in_both
+ 
+     public function test_team_page_lists_four_founders_with_roles(): void
+     {
+-        $this->customer();
++        $this->admin();
+ 
+         $this->get('/our-team')
+             ->assertOk()
+@@ -85,7 +80,7 @@ public function test_team_page_lists_four_founders_with_roles(): void
+ 
+     public function test_optional_bio_fields_only_show_when_filled(): void
+     {
+-        $this->customer();
++        $this->admin();
+ 
+         config(['lumeria.team' => [[
+             'key' => 'sanaya', 'name' => 'Tester Satu',
+diff --git a/tests/Feature/TeamPageTest.php b/tests/Feature/TeamPageTest.php
+index 0ddfd5f..fe904f8 100644
+--- a/tests/Feature/TeamPageTest.php
++++ b/tests/Feature/TeamPageTest.php
+@@ -15,12 +15,12 @@ class TeamPageTest extends TestCase
+     use RefreshDatabase;
+ 
+ 
+-    // Our Team hanya untuk pengguna login (tamu diarahkan ke login; lihat RoleAccessTest).
++    // Our Team hanya untuk admin (tamu ke login, pelanggan 403; lihat RoleAccessTest).
+     protected function setUp(): void
+     {
+         parent::setUp();
+ 
+-        $this->actingAs(User::factory()->create());
++        $this->actingAs(User::factory()->admin()->create());
+     }
+ 
+ 
+diff --git a/tests/Feature/UserManagementTest.php b/tests/Feature/UserManagementTest.php
+new file mode 100644
+index 0000000..3ce3dc6
+--- /dev/null
++++ b/tests/Feature/UserManagementTest.php
+@@ -0,0 +1,283 @@
++<?php
++
++namespace Tests\Feature;
++
++use App\Models\Order;
++use App\Models\User;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Facades\Hash;
++use Tests\TestCase;
++
++/**
++ * Kelola pengguna (CRUD) hanya untuk admin.
++ */
++class UserManagementTest extends TestCase
++{
++    use RefreshDatabase;
++
++    private function admin(): User
++    {
++        return User::factory()->admin()->create(['name' => 'Admin Utama']);
++    }
++
++    private function newUserData(array $overrides = []): array
++    {
++        return array_merge([
++            'name'                  => 'Pengguna Baru',
++            'email'                 => 'baru@example.com',
++            'role'                  => 'customer',
++            'password'              => 'sandi-rahasia-123',
++            'password_confirmation' => 'sandi-rahasia-123',
++        ], $overrides);
++    }
++
++    // ---------- Hak akses ----------
++
++    public function test_guest_is_sent_to_login_for_every_user_admin_route(): void
++    {
++        $target = User::factory()->create();
++
++        $this->get(route('admin.users.index'))->assertRedirect(route('login'));
++        $this->get(route('admin.users.create'))->assertRedirect(route('login'));
++        $this->post(route('admin.users.store'), $this->newUserData())->assertRedirect(route('login'));
++        $this->get(route('admin.users.edit', $target))->assertRedirect(route('login'));
++        $this->put(route('admin.users.update', $target), $this->newUserData())->assertRedirect(route('login'));
++        $this->delete(route('admin.users.destroy', $target))->assertRedirect(route('login'));
++    }
++
++    public function test_customer_is_forbidden_from_every_user_admin_route(): void
++    {
++        $customer = User::factory()->create();
++        $target   = User::factory()->create();
++        $this->actingAs($customer);
++
++        $this->get(route('admin.users.index'))->assertForbidden();
++        $this->get(route('admin.users.create'))->assertForbidden();
++        $this->post(route('admin.users.store'), $this->newUserData())->assertForbidden();
++        $this->get(route('admin.users.edit', $target))->assertForbidden();
++        $this->put(route('admin.users.update', $target), $this->newUserData(['role' => 'admin']))->assertForbidden();
++        $this->delete(route('admin.users.destroy', $target))->assertForbidden();
++
++        $this->assertDatabaseMissing('users', ['email' => 'baru@example.com']);
++        $this->assertModelExists($target);
++        $this->assertSame(User::ROLE_CUSTOMER, $customer->fresh()->role);
++    }
++
++    public function test_customer_does_not_see_user_management_links(): void
++    {
++        $this->actingAs(User::factory()->create())->get('/')
++            ->assertOk()
++            ->assertDontSee(route('admin.users.index'), false);
++
++        $this->actingAs($this->admin())->get('/')
++            ->assertOk()
++            ->assertSee(route('admin.users.index'), false);
++    }
++
++    // ---------- Daftar ----------
++
++    public function test_admin_sees_the_user_list(): void
++    {
++        $admin = $this->admin();
++        User::factory()->create(['name' => 'Siti Pelanggan', 'email' => 'siti@example.com']);
++
++        $this->actingAs($admin)->withCookie('locale', 'id')->get(route('admin.users.index'))
++            ->assertOk()
++            ->assertSee('Kelola Pengguna')
++            ->assertSee('Siti Pelanggan')
++            ->assertSee('siti@example.com')
++            ->assertSee('Admin Utama')
++            ->assertSee('table-responsive', false);
++    }
++
++    public function test_list_can_be_searched_and_filtered_by_role(): void
++    {
++        $admin = $this->admin();
++        User::factory()->create(['name' => 'Budi Kurniawan', 'email' => 'budi@example.com']);
++        User::factory()->create(['name' => 'Citra Lestari', 'email' => 'citra@example.com']);
++
++        $this->actingAs($admin)->get(route('admin.users.index', ['q' => 'budi']))
++            ->assertSee('Budi Kurniawan')
++            ->assertDontSee('Citra Lestari');
++
++        $this->get(route('admin.users.index', ['q' => 'citra@example']))
++            ->assertSee('Citra Lestari')
++            ->assertDontSee('Budi Kurniawan');
++
++        $this->get(route('admin.users.index', ['role' => 'admin']))
++            ->assertSee('Admin Utama')
++            ->assertDontSee('Budi Kurniawan');
++
++        $this->get(route('admin.users.index', ['role' => 'customer']))
++            ->assertSee('Budi Kurniawan')
++            ->assertDontSee('admin-utama');
++    }
++
++    public function test_search_treats_percent_and_underscore_literally(): void
++    {
++        $admin = $this->admin();
++        User::factory()->create(['name' => 'Dewi Anggraini']);
++
++        $this->actingAs($admin)->get(route('admin.users.index', ['q' => '%']))
++            ->assertDontSee('Dewi Anggraini')
++            ->assertSee(__('users.empty'));
++    }
++
++    public function test_list_is_paginated(): void
++    {
++        $admin = $this->admin();
++        User::factory()->count(14)->create();
++
++        $this->actingAs($admin)->get(route('admin.users.index'))->assertOk()->assertSee('page=2', false);
++        $this->get(route('admin.users.index', ['page' => 2]))->assertOk();
++    }
++
++    // ---------- Tambah ----------
++
++    public function test_admin_can_create_a_customer_and_an_admin(): void
++    {
++        $this->actingAs($this->admin());
++
++        $this->post(route('admin.users.store'), $this->newUserData())
++            ->assertRedirect(route('admin.users.index'))
++            ->assertSessionHas('status');
++
++        $customer = User::where('email', 'baru@example.com')->firstOrFail();
++        $this->assertSame(User::ROLE_CUSTOMER, $customer->role);
++        $this->assertTrue(Hash::check('sandi-rahasia-123', $customer->password));
++        $this->assertNotSame('sandi-rahasia-123', $customer->getRawOriginal('password'));
++        $this->assertNotNull($customer->email_verified_at);
++
++        $this->post(route('admin.users.store'), $this->newUserData(['email' => 'admin2@example.com', 'role' => 'admin']))
++            ->assertRedirect(route('admin.users.index'));
++
++        $this->assertTrue(User::where('email', 'admin2@example.com')->firstOrFail()->isAdmin());
++    }
++
++    public function test_create_validates_input(): void
++    {
++        $admin = $this->admin();
++        $this->actingAs($admin);
++
++        $this->post(route('admin.users.store'), $this->newUserData(['email' => $admin->email]))->assertSessionHasErrors('email');
++        $this->post(route('admin.users.store'), $this->newUserData(['role' => 'superuser']))->assertSessionHasErrors('role');
++        $this->post(route('admin.users.store'), $this->newUserData(['password' => 'pendek', 'password_confirmation' => 'pendek']))->assertSessionHasErrors('password');
++        $this->post(route('admin.users.store'), $this->newUserData(['password_confirmation' => 'beda']))->assertSessionHasErrors('password');
++        $this->post(route('admin.users.store'), $this->newUserData(['name' => '']))->assertSessionHasErrors('name');
++
++        $this->assertDatabaseMissing('users', ['email' => 'baru@example.com']);
++    }
++
++    // ---------- Ubah ----------
++
++    public function test_admin_can_edit_another_user_including_role(): void
++    {
++        $this->actingAs($this->admin());
++        $user = User::factory()->create(['name' => 'Nama Lama', 'email' => 'lama@example.com']);
++        $oldHash = $user->password;
++
++        $this->put(route('admin.users.update', $user), [
++            'name' => 'Nama Baru', 'email' => 'baru2@example.com', 'role' => 'admin',
++            'password' => '', 'password_confirmation' => '',
++        ])->assertRedirect(route('admin.users.index'));
++
++        $user->refresh();
++        $this->assertSame('Nama Baru', $user->name);
++        $this->assertSame('baru2@example.com', $user->email);
++        $this->assertTrue($user->isAdmin());
++        $this->assertSame($oldHash, $user->password, 'Kata sandi kosong berarti tidak diubah');
++    }
++
++    public function test_admin_can_reset_a_user_password(): void
++    {
++        $this->actingAs($this->admin());
++        $user = User::factory()->create();
++
++        $this->put(route('admin.users.update', $user), [
++            'name' => $user->name, 'email' => $user->email, 'role' => 'customer',
++            'password' => 'kata-sandi-baru-1', 'password_confirmation' => 'kata-sandi-baru-1',
++        ])->assertSessionHasNoErrors();
++
++        $this->assertTrue(Hash::check('kata-sandi-baru-1', $user->fresh()->password));
++    }
++
++    public function test_edit_validates_unique_email_but_allows_keeping_own_email(): void
++    {
++        $this->actingAs($this->admin());
++        $a = User::factory()->create(['email' => 'a@example.com']);
++        $b = User::factory()->create(['email' => 'b@example.com']);
++
++        $this->put(route('admin.users.update', $a), ['name' => 'A', 'email' => 'b@example.com', 'role' => 'customer'])
++            ->assertSessionHasErrors('email');
++
++        $this->put(route('admin.users.update', $b), ['name' => 'B Baru', 'email' => 'b@example.com', 'role' => 'customer'])
++            ->assertSessionHasNoErrors();
++    }
++
++    public function test_admin_cannot_change_their_own_role_but_can_edit_their_own_name(): void
++    {
++        $admin = $this->admin();
++        $this->actingAs($admin);
++
++        $this->from(route('admin.users.edit', $admin))
++            ->put(route('admin.users.update', $admin), ['name' => $admin->name, 'email' => $admin->email, 'role' => 'customer'])
++            ->assertSessionHasErrors('role');
++        $this->assertTrue($admin->fresh()->isAdmin());
++
++        $this->put(route('admin.users.update', $admin), ['name' => 'Nama Admin Baru', 'email' => $admin->email, 'role' => 'admin'])
++            ->assertSessionHasNoErrors();
++        $this->assertSame('Nama Admin Baru', $admin->fresh()->name);
++    }
++
++    public function test_edit_form_locks_the_role_for_the_own_account(): void
++    {
++        $admin = $this->admin();
++        $other = User::factory()->create();
++
++        $this->actingAs($admin)->get(route('admin.users.edit', $admin))->assertOk()
++            ->assertSee('name="role" value="admin"', false)
++            ->assertSee('disabled', false);
++
++        $this->get(route('admin.users.edit', $other))->assertOk()
++            ->assertDontSee('name="role" value=', false);
++    }
++
++    // ---------- Hapus ----------
++
++    public function test_admin_can_delete_another_user_and_orders_are_kept(): void
++    {
++        $this->actingAs($this->admin());
++        $user  = User::factory()->create();
++        $order = Order::create([
++            'user_id' => $user->id, 'customer_name' => 'Pembeli', 'customer_phone' => '081234567890',
++            'subtotal' => 10000, 'payment_method' => 'cash', 'grand_total' => 10000, 'status' => 'pending',
++        ]);
++
++        $this->delete(route('admin.users.destroy', $user))
++            ->assertRedirect(route('admin.users.index'))
++            ->assertSessionHas('status');
++
++        $this->assertModelMissing($user);
++        $this->assertNull($order->fresh()->user_id);
++    }
++
++    public function test_admin_cannot_delete_themselves(): void
++    {
++        $admin = $this->admin();
++
++        $this->actingAs($admin)->delete(route('admin.users.destroy', $admin))
++            ->assertRedirect(route('admin.users.index'))
++            ->assertSessionHas('error');
++
++        $this->assertModelExists($admin);
++    }
++
++    // ---------- Regresi keamanan ----------
++
++    public function test_role_is_not_mass_assignable(): void
++    {
++        $user = User::create(['name' => 'X', 'email' => 'x@example.com', 'password' => 'sandi-12345678', 'role' => 'admin']);
++
++        $this->assertSame(User::ROLE_CUSTOMER, $user->fresh()->role);
++    }
++}
+-- 
+2.43.0
+
+
+From fc8850b93dd0a2002ce9f0acffe34b3632279b19 Mon Sep 17 00:00:00 2001
+From: Lumeria Dev <dev@lumeria.local>
+Date: Mon, 23 Nov 2026 22:39:28 +0000
+Subject: [PATCH 2/2] Footer: area sentuh lebih besar; panel admin: pintasan
+ Kelola Pengguna
+
+- tautan footer min. 32px (44px di layar sentuh) agar nyaman disentuh di HP
+- panel admin: kartu Kelola Pengguna dengan tombol daftar dan tambah pengguna
+- test: pintasan pengguna di panel admin
+---
+ public/css/lumeria-foodtech.css           |  8 +++++++-
+ resources/views/admin/dashboard.blade.php | 11 +++++++++++
+ tests/Feature/UserManagementTest.php      |  8 ++++++++
+ 3 files changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/public/css/lumeria-foodtech.css b/public/css/lumeria-foodtech.css
+index 9544157..97d2972 100644
+--- a/public/css/lumeria-foodtech.css
++++ b/public/css/lumeria-foodtech.css
+@@ -234,7 +234,13 @@ .ft-footer a:hover { color: var(--lumeria-ink); text-decoration: underline; text
+ .ft-footer a:focus-visible { outline: 3px solid var(--lumeria); outline-offset: 3px; border-radius: .25rem; }
+ 
+ .ft-footer-title { margin: 0 0 1rem; font-family: var(--bs-body-font-family); font-size: .95rem; font-weight: 800; color: var(--lumeria-ink); }
+-.ft-footer ul { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; font-size: .92rem; }
++.ft-footer ul { display: grid; gap: .15rem; margin: 0; padding: 0; list-style: none; font-size: .92rem; }
++/* Area sentuh tautan footer: minimal 32px di semua layar, 44px di layar sentuh */
++.ft-footer ul a { display: inline-flex; align-items: center; min-height: 2rem; }
++@media (pointer: coarse) {
++    .ft-footer ul a { min-height: 2.75rem; }
++    .ft-lang a { display: inline-flex; align-items: center; min-height: 2.75rem; }
++}
+ .ft-footer-note { margin: .75rem 0 0; font-size: .85rem; color: var(--lumeria-muted); }
+ 
+ /* Ubin metode pembayaran (teks saja, tanpa logo pihak ketiga) */
+diff --git a/resources/views/admin/dashboard.blade.php b/resources/views/admin/dashboard.blade.php
+index c44d69f..afb8bae 100644
+--- a/resources/views/admin/dashboard.blade.php
++++ b/resources/views/admin/dashboard.blade.php
+@@ -70,6 +70,17 @@
+                 </div>
+ 
+                 <div class="col-lg-5">
++                    <div class="card shadow-sm mb-4">
++                        <div class="card-body">
++                            <h2 class="h4">{{ __('users.title') }}</h2>
++                            <p class="text-muted">{{ __('users.subtitle') }}</p>
++                            <div class="d-flex flex-wrap gap-2">
++                                <a href="{{ route('admin.users.index') }}" class="btn btn-lumeria">{{ __('users.nav') }}</a>
++                                <a href="{{ route('admin.users.create') }}" class="btn btn-outline-dark">{{ __('users.add') }}</a>
++                            </div>
++                        </div>
++                    </div>
++
+                     <div class="card shadow-sm mb-4">
+                         <div class="card-body">
+                             <h2 class="h4">{{ __('foodtech.admin.materials') }}</h2>
+diff --git a/tests/Feature/UserManagementTest.php b/tests/Feature/UserManagementTest.php
+index 3ce3dc6..8dec9e8 100644
+--- a/tests/Feature/UserManagementTest.php
++++ b/tests/Feature/UserManagementTest.php
+@@ -74,6 +74,14 @@ public function test_customer_does_not_see_user_management_links(): void
+             ->assertSee(route('admin.users.index'), false);
+     }
+ 
++    public function test_admin_panel_links_to_user_management(): void
++    {
++        $this->actingAs($this->admin())->get(route('admin.dashboard'))
++            ->assertOk()
++            ->assertSee(route('admin.users.index'), false)
++            ->assertSee(route('admin.users.create'), false);
++    }
++
+     // ---------- Daftar ----------
+ 
+     public function test_admin_sees_the_user_list(): void
+-- 
+2.43.0
+

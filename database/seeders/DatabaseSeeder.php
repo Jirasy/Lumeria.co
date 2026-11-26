@@ -20,12 +20,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
        $this->call(ProductSeeder::class);
-
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+       $this->call(AdminSeeder::class);
 
         // Admin awal: hanya dibuat bila LUMERIA_ADMIN_EMAIL dan LUMERIA_ADMIN_PASSWORD diisi di .env.
         $email    = config('lumeria.admin.email');

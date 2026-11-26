@@ -195,6 +195,10 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'avatar'     => 'profile photo',
+        'birth_date' => 'date of birth',
+        'phone'      => 'phone number',
+    ],
 
 ];

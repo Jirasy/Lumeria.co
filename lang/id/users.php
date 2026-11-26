@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+// Panel admin: kelola pengguna
+return [
+    'nav'                    => 'Kelola Pengguna',
+    'admin_menu'             => 'Admin',
+    'title'                  => 'Kelola Pengguna',
+    'subtitle'               => 'Tambah, ubah, dan hapus akun admin atau pelanggan.',
+    'add'                    => 'Tambah Pengguna',
+    'create_title'           => 'Tambah Pengguna',
+    'edit_title'             => 'Ubah Pengguna',
+    'search_label'           => 'Cari nama atau email',
+    'search'                 => 'Cari',
+    'reset'                  => 'Atur ulang',
+    'all_roles'              => 'Semua peran',
+    'total'                  => ':count pengguna',
+    'col_name'               => 'Nama',
+    'col_email'              => 'Email',
+    'col_role'               => 'Peran',
+    'col_joined'             => 'Terdaftar',
+    'col_actions'            => 'Aksi',
+    'role'                   => 'Peran',
+    'role_admin'             => 'Admin',
+    'role_customer'          => 'Pelanggan',
+    'role_self_help'         => 'Peran akun Anda sendiri tidak dapat diubah.',
+    'password_edit_hint'     => 'Kosongkan jika tidak ingin mengubah kata sandi.',
+    'you'                    => 'Anda',
+    'edit'                   => 'Ubah',
+    'delete'                 => 'Hapus',
+    'save'                   => 'Simpan',
+    'back'                   => 'Kembali ke daftar',
+    'empty'                  => 'Tidak ada pengguna yang cocok.',
+    'confirm_delete'         => 'Hapus pengguna :name? Pesanan lamanya tetap tersimpan.',
+    'created'                => 'Pengguna :name berhasil ditambahkan.',
+    'updated'                => 'Data :name berhasil diperbarui.',
+    'deleted'                => 'Pengguna :name dihapus.',
+    'cannot_delete_self'     => 'Anda tidak dapat menghapus akun Anda sendiri.',
+    'last_admin_cannot_delete' => 'Anda admin terakhir, jadi akun ini tidak dapat dihapus. Jadikan pengguna lain admin terlebih dahulu.',
+    'cannot_change_own_role' => 'Anda tidak dapat mengubah peran akun Anda sendiri.',
+];

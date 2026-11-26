@@ -1,7 +1,8 @@
 <?php
 
-
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
@@ -11,29 +12,17 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
 
-
-/*
-|--------------------------------------------------------------------------
-| Tiga perspektif (arahan Pak CEO)
-|--------------------------------------------------------------------------
-| 1. TAMU      : etalase produk, detail produk, info pemesanan & simulasi Paylater.
-| 2. PELANGGAN : (group 'auth') keranjang, checkout, Pesanan Saya, profil, Our Team.
-| 3. ADMIN     : (group 'auth' + 'admin') panel toko dan materi Nilai Islam / Diskusi Ekonomi.
-*/
-
-
 // ---------- 1. Tamu (publik) ----------
 Route::get('/', [PageController::class, 'home'])->name('home');
+Route::get('/products', [ProductController::class, 'index'])->name('products');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+// Info pemesanan + simulator Paylater tetap publik.
+Route::get('/order', [OrderController::class, 'index'])->name('order');
 
 Route::get('/lang/{locale}', [LocaleController::class, 'switch'])
     ->whereIn('locale', SetLocale::SUPPORTED)
     ->name('lang.switch');
-
-Route::get('/products', [ProductController::class, 'index'])->name('products');
-Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
-
-// Info pemesanan + simulator Paylater tetap publik. Keranjang dan checkout ada di group 'auth' di bawah.
-Route::get('/order', [OrderController::class, 'index'])->name('order');
 
 // ---------- 2. Pelanggan (sudah login) ----------
 Route::middleware('auth')->group(function () {
@@ -50,23 +39,28 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove')->whereNumber('product');
 
     Route::post('/order', [OrderController::class, 'store'])->name('order.store');
-    // Detail pesanan: tamu diarahkan ke login; pemilik dan admin boleh, pengguna lain 403 (lihat OrderController::show).
     Route::get('/order/{order}', [OrderController::class, 'show'])->name('order.show')->whereNumber('order');
     Route::get('/orders', [OrderController::class, 'history'])->name('orders.index');
-
-    // Our Team: disembunyikan dari tamu. Untuk membatasi ke admin saja, pindahkan baris ini ke group admin di bawah.
-    Route::get('/our-team', [PageController::class, 'team'])->name('team');
 });
 
-
 // ---------- 3. Admin ----------
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::resource('products', AdminProductController::class);
+    Route::resource('users', AdminUserController::class);
+});
 
-    // Bagian khusus / materi keagamaan dan diskusi. URL tetap sama seperti sebelumnya.
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/our-team', [PageController::class, 'team'])->name('team');
     Route::get('/islamic-values', [PageController::class, 'islamic'])->name('islamic');
     Route::get('/economic-discussion', [PageController::class, 'economic'])->name('economic');
 });
 
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/avatar/{user}', [ProfileController::class, 'avatar'])->name('avatar.show');
+});
 
 require __DIR__.'/auth.php';

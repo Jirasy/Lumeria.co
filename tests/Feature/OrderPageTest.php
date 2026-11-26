@@ -101,6 +101,7 @@ class OrderPageTest extends TestCase
     public function test_order_page_is_available_in_english(): void
     {
         $this->actingAs(User::factory()->create())
+            ->disableCookieEncryption()
             ->withCookie('locale', 'en')
             ->get('/order')
             ->assertOk()

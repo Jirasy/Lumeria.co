@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Tests\Feature;
-
 
 use App\Models\Product;
 use App\Models\User;
@@ -10,20 +8,16 @@ use Database\Seeders\ProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-
 class PublicPagesTest extends TestCase
 {
     use RefreshDatabase;
-
 
     protected function setUp(): void
     {
         parent::setUp();
 
-
         $this->seed(ProductSeeder::class);
     }
-
 
     public function test_home_renders_in_indonesian(): void
     {
@@ -35,21 +29,20 @@ class PublicPagesTest extends TestCase
             ->assertSee('Original Milk');
     }
 
-
     public function test_home_renders_in_english(): void
     {
-        $this->withCookie('locale', 'en')->get('/')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/')
             ->assertOk()
             ->assertSee('Small, but meaningful')
             ->assertSee('A mood booster in one bite')
             ->assertDontSee('Our Team'); // menu Our Team tidak tampil untuk tamu
     }
 
-
     public function test_products_page_lists_all_six_products_with_prices(): void
     {
         $response = $this->get('/products')->assertOk();
-
 
         foreach ([
             'Original Milk', 'Bola Teh', 'Bola Kopi',
@@ -58,22 +51,21 @@ class PublicPagesTest extends TestCase
             $response->assertSee($name);
         }
 
-
         $response->assertSee('Rp 12.000')
             ->assertSee('Rp 15.000')
             ->assertSee('Rp 10.000')
             ->assertSee('Rp 8.000');
     }
 
-
     public function test_products_use_english_descriptions_when_locale_is_en(): void
     {
-        $this->withCookie('locale', 'en')->get('/products')
+        $this->disableCookieEncryption()
+            ->withCookie('locale', 'en')
+            ->get('/products')
             ->assertOk()
             ->assertSee('A soft milk ball with pure milky flavor')
             ->assertDontSee('Bola susu lembut dengan rasa susu murni');
     }
-
 
     public function test_navbar_has_language_switcher_links(): void
     {
@@ -82,11 +74,9 @@ class PublicPagesTest extends TestCase
             ->assertSee('/lang/id', false);
     }
 
-
     public function test_navbar_shows_cart_count_badge(): void
     {
         $id = Product::firstOrFail()->id;
-
 
         $this->actingAs(User::factory()->create())
             ->withSession(['lumeria_cart' => [$id => 3]])
@@ -94,8 +84,7 @@ class PublicPagesTest extends TestCase
             ->assertSee('text-bg-danger">3</span>', false);
     }
 
-
-        public function test_public_layout_loads_bootstrap_locally(): void
+    public function test_public_layout_loads_bootstrap_locally(): void
     {
         $this->get('/')
             ->assertOk()
@@ -103,7 +92,6 @@ class PublicPagesTest extends TestCase
             ->assertSee('vendor/bootstrap/bootstrap.bundle.min.js', false)
             ->assertDontSee('cdn.jsdelivr.net', false);
     }
-
 
     public function test_bootstrap_files_exist_and_are_not_empty(): void
     {
